@@ -5,20 +5,54 @@ using System.Text;
 
 namespace IngameScript
 {
-    public static class DisplayManager
+    public class DisplayManager
     {
         public static void Display(
             MonitoringData monitoringData,
             IEnumerable<Item> itemsWithThreshold,
-            List<IMyTextPanel> lcdBlocks)
+            List<IMyTerminalBlock> allBlocks)
         {
-            DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), lcdBlocks);
-            DisplayStorageCapacity(monitoringData, lcdBlocks);
-            DisplayPowerUsage(monitoringData, lcdBlocks);
-            DisplayProduction(monitoringData, lcdBlocks);
+            DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
+            DisplayStorageCapacity(monitoringData, allBlocks);
+            DisplayPowerUsage(monitoringData, allBlocks);
+            DisplayProduction(monitoringData, allBlocks);
         }
 
-        private static void DisplayProduction(MonitoringData monitoringData, IEnumerable<IMyTextPanel> lcdBlocks)
+        private static List<Surface> GetDisplayBlocks(
+            IEnumerable<IMyTerminalBlock> blocks,
+            string customDataKeyToLookup)
+        {
+            var results = new List<Surface>();
+
+            foreach (var block in blocks)
+            {
+                var customDataManager = new CustomDataManager(block.CustomData);
+                var customData = customDataManager.GetPropertyValue(customDataKeyToLookup);
+
+                if (customData == null) continue;
+
+                var index = 0;
+                if (customData.Length > 0)
+                    int.TryParse(customData, out index);
+
+                var textSurface = block as IMyTextSurfaceProvider;
+
+                if (textSurface == null || textSurface.SurfaceCount <= index) continue;
+
+                var result = new Surface
+                {
+                    BlockId = block.EntityId,
+                    TextSurface = textSurface.GetSurface(index),
+                    BlockCustomData = customDataManager
+                };
+
+                results.Add(result);
+            }
+
+            return results;
+        }
+
+        private static void DisplayProduction(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
         {
             var textBuilder = new StringBuilder();
 
@@ -30,169 +64,251 @@ namespace IngameScript
                 .GetItemsInProduction()
                 .ForEach(inProd =>
                 {
-
                     textBuilder.AppendLine(inProd.ItemType == Item.ItemTypes.Ingot
-                        ? $"{inProd.Amount / inProd.Volume} {inProd.Name}"
-                        : $"{inProd.Amount} {inProd.Name}");
+                        ? $"{ToFriendlyQuantity(inProd.Amount / inProd.Volume)} {inProd.Name}"
+                        : $"{ToFriendlyQuantity(inProd.Amount)} {inProd.Name}");
                 });
 
-            lcdBlocks
-                .Where(ForProductionDisplay)
-                .ToList()
-                .ForEach(block => block.WriteText(textBuilder));
+            var textSurfaceBlock = GetDisplayBlocks(blocks, "in-production-statistics");
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+        }
+
+        private static string ToFriendlyQuantity(float quantity) =>
+            quantity >= 1000
+                ? $"{quantity / 1000:0.##}K"
+                : quantity.ToString("0.##");
+
+        private static void DisplayInventoryForTypes(
+            Surface block,
+            List<Item> itemsToDisplay,
+            IReadOnlyCollection<Item> itemsWithThreshold,
+            MonitoringData monitoringData,
+            IEnumerable<Item.ItemTypes> itemTypes)
+        {
+            var textBuilder = new StringBuilder();
+            var alreadyHasType = new Dictionary<Item.ItemTypes, bool>();
+            var hasSomethingToDisplay = false;
+
+            itemsToDisplay.ForEach(item =>
+            {
+                if (ShouldHideItem(block.BlockCustomData, item))
+                    return;
+
+                if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.BlockCustomData))
+                    return;
+
+                itemTypes
+                    .ToList()
+                    .ForEach(type =>
+                    {
+                        if (item.ItemType != type)
+                            return;
+
+                        if (!alreadyHasType.ContainsKey(type))
+                            alreadyHasType.Add(type, false);
+
+                        alreadyHasType[type] = DisplayItems(
+                            type,
+                            item,
+                            alreadyHasType[type],
+                            textBuilder,
+                            ref hasSomethingToDisplay);
+                    });
+            });
+
+            block.TextSurface.WriteText(textBuilder);
+        }
+
+        private static bool ShouldHideBecauseMetThreshold(
+            Item item,
+            IReadOnlyCollection<Item> itemsWithThreshold,
+            MonitoringData monitoringData,
+            CustomDataManager customData)
+        {
+            var hideWhenMetThreshold = customData.GetPropertyValue("hide-when-meets-threshold") != null;
+
+            var itemMetThreshold = IsItemMetThreshold(
+                item,
+                itemsWithThreshold,
+                monitoringData);
+
+            var itemHasThresholdDefined = HasItemThresholdDefined(item, itemsWithThreshold);
+
+            return hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold;
+        }
+
+        private static bool ShouldHideItem(CustomDataManager customData, Item item)
+        {
+            var show = customData.GetPropertyValue($"hide-{item.ItemSubType}") == null;
+
+            return show == false;
+        }
+
+        private static bool DisplayItems(
+            Item.ItemTypes itemType,
+            Item item,
+            bool alreadyHasItem,
+            StringBuilder textBuilder,
+            ref bool hasSomethingToDisplay)
+        {
+            if (item.ItemType == itemType)
+                if (!alreadyHasItem)
+                {
+                    if (hasSomethingToDisplay)
+                        textBuilder.AppendLine();
+
+                    textBuilder.AppendLine($"** Owned {itemType.ToString()} **");
+                    alreadyHasItem = true;
+                }
+
+            hasSomethingToDisplay = true;
+            textBuilder.AppendLine($"{ToFriendlyQuantity(item.Amount)} {item.Name}");
+
+            return alreadyHasItem;
         }
 
         private static void DisplayItemInventory(
             MonitoringData monitoringData,
             IReadOnlyCollection<Item> itemsWithThreshold,
-            List<IMyTextPanel> lcdBlocks)
+            IReadOnlyCollection<IMyTerminalBlock> blocks)
         {
-            lcdBlocks.ForEach(block =>
+            var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
+
+            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-inventory");
+            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-component");
+            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ore");
+            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ingot");
+            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-tool");
+            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ammunition");
+
+            var combinations = Combine(
+                displayAllSurfaceBlocks,
+                displayComponentSurfaceBlocks,
+                displayOreSurfaceBlocks,
+                displayIngotSurfaceBlocks,
+                displayToolsSurfaceBlocks,
+                displayAmmunitionSurfaceBlocks);
+
+            combinations.ForEach(combination =>
             {
-                var textBuilder = new StringBuilder();
-                var customData = new CustomDataManager(block.CustomData);
-                var displayAll = customData.GetPropertyValue("display-all-inventory") != null;
-                var displayComponents = customData.GetPropertyValue("display-all-component") != null;
-                var displayOres = customData.GetPropertyValue("display-all-ore") != null;
-                var displayIngots = customData.GetPropertyValue("display-all-ingot") != null;
-                var displayTools = customData.GetPropertyValue("display-all-tool") != null;
-                var displayAmmunition = customData.GetPropertyValue("display-all-ammunition") != null;
-                var hideWhenMetThreshold = customData.GetPropertyValue("hide-when-meets-threshold") != null;
-
-                var hasUnknowns = false;
-                var hasComponents = false;
-                var hasOres = false;
-                var hasIngots = false;
-                var hasTools = false;
-                var hasAmmunition = false;
-                var hasSomethingToDisplay = false;
-
-                var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
-
-                itemsToDisplay.ForEach(item =>
-                {
-                    if (item.ItemType == Item.ItemTypes.Unknown)
-                        if (displayAll ||
-                            displayComponents ||
-                            displayOres ||
-                            displayIngots ||
-                            displayTools ||
-                            displayAmmunition)
-                        {
-                            if (!hasUnknowns)
-                            {
-                                if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                textBuilder.AppendLine("** Unknown Items **");
-                                hasUnknowns = true;
-                            }
-
-                            hasSomethingToDisplay = true;
-                            textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                        }
-
-                    var show = customData.GetPropertyValue($"hide-{item.ItemSubType}") == null;
-
-                    if (show == false)
-                        return;
-
-                    var itemMetThreshold = IsItemMetThreshold(
-                        item,
-                        itemsWithThreshold,
-                        monitoringData);
-
-                    var itemHasThresholdDefined = HasItemThresholdDefined(item, itemsWithThreshold);
-
-                    if (hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold)
-                        return;
-
-                    switch (item.ItemType)
-                    {
-                        case Item.ItemTypes.Component:
-                            if (displayAll || displayComponents)
-                            {
-                                if (!hasComponents)
-                                {
-                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                    textBuilder.AppendLine("** Owned Components **");
-                                    hasComponents = true;
-                                }
-
-                                hasSomethingToDisplay = true;
-                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                            }
-
-                            break;
-                        case Item.ItemTypes.Ore:
-                            if (displayAll || displayOres)
-                            {
-                                if (!hasOres)
-                                {
-                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                    textBuilder.AppendLine("** Owned Ores **");
-                                    hasOres = true;
-                                }
-
-                                hasSomethingToDisplay = true;
-                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                            }
-
-                            break;
-                        case Item.ItemTypes.Ingot:
-                            if (displayAll || displayIngots)
-                            {
-                                if (!hasIngots)
-                                {
-                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                    textBuilder.AppendLine("** Owned Ingots **");
-                                    hasIngots = true;
-                                }
-
-                                hasSomethingToDisplay = true;
-                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                            }
-
-                            break;
-                        case Item.ItemTypes.Tools:
-                            if (displayAll || displayTools)
-                            {
-                                if (!hasTools)
-                                {
-                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                    textBuilder.AppendLine("** Owned Tools **");
-                                    hasTools = true;
-                                }
-
-                                hasSomethingToDisplay = true;
-                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                            }
-
-                            break;
-                        case Item.ItemTypes.Ammunition:
-                            if (displayAll || displayAmmunition)
-                            {
-                                if (!hasAmmunition)
-                                {
-                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
-
-                                    textBuilder.AppendLine("** Owned Ammunition **");
-                                    hasAmmunition = true;
-                                }
-
-                                hasSomethingToDisplay = true;
-                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                            }
-
-                            break;
-                    }
-                });
-
-                block.WriteText(textBuilder);
+                DisplayInventoryForTypes(
+                    combination.Block,
+                    itemsToDisplay,
+                    itemsWithThreshold,
+                    monitoringData,
+                    combination.ItemTypes);
             });
+        }
+
+        private static List<SurfaceByType> Combine(
+            IEnumerable<Surface> allSurfaceBlocks,
+            IEnumerable<Surface> componentSurfaceBlocks,
+            IEnumerable<Surface> oreSurfaceBlocks,
+            IEnumerable<Surface> ingotSurfaceBlocks,
+            IEnumerable<Surface> toolsSurfaceBlocks,
+            IEnumerable<Surface> ammunitionSurfaceBlocks)
+        {
+            var allBlocks = allSurfaceBlocks
+                .Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ammunition,
+                        Item.ItemTypes.Component,
+                        Item.ItemTypes.Consumable,
+                        Item.ItemTypes.Ingot,
+                        Item.ItemTypes.Ore,
+                        Item.ItemTypes.Tools,
+                        Item.ItemTypes.Unknown
+                    }
+                })
+                .Concat(componentSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Component,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(oreSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ore,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(ingotSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ingot,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(toolsSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Tools,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(ammunitionSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ammunition,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .ToList();
+
+            var dictionary = new Dictionary<long, SurfaceByType>();
+
+            allBlocks.ForEach(block =>
+            {
+                if (dictionary.ContainsKey(block.Block.BlockId))
+                {
+                    var actualTypes = dictionary[block.Block.BlockId].ItemTypes.ToList();
+                    var typesToAdd = block.ItemTypes.ToList();
+                    var newTypesToAdd = new List<Item.ItemTypes>(actualTypes);
+
+                    typesToAdd.ForEach(type =>
+                    {
+                        if (actualTypes.All(x => x != type))
+                            newTypesToAdd.Add(type);
+                    });
+
+                    dictionary[block.Block.BlockId].ItemTypes = newTypesToAdd;
+                }
+                else
+                {
+                    var typesToAdd = block.ItemTypes.ToList();
+
+                    dictionary.Add(
+                        block.Block.BlockId,
+                        new SurfaceByType
+                        {
+                            Block = block.Block,
+                            ItemTypes = typesToAdd
+                        });
+                }
+            });
+
+            return dictionary.Select(d => new SurfaceByType
+                {
+                    Block = allBlocks.First(b => b.Block.BlockId == d.Key).Block,
+                    ItemTypes = d.Value.ItemTypes
+                })
+                .ToList();
         }
 
         private static List<Item> BuildItemsToDisplay(
@@ -207,10 +323,7 @@ namespace IngameScript
                         itemToDisplay.ItemSubType == itemWithThreshold.ItemSubType))
                     itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinition.ToString(), 0));
 
-            return itemsToDisplay
-                .OrderBy(item => item.ItemType)
-                .ThenBy(item => item.Name)
-                .ToList();
+            return itemsToDisplay.OrderBy(item => item.ItemType).ThenBy(item => item.Name).ToList();
         }
 
         private static bool HasItemThresholdDefined(Item item, IEnumerable<Item> itemsWithThreshold)
@@ -240,7 +353,9 @@ namespace IngameScript
             return inventoryCount >= item.Amount;
         }
 
-        private static void DisplayStorageCapacity(MonitoringData monitoringData, IEnumerable<IMyTextPanel> lcdBlocks)
+        private static void DisplayStorageCapacity(
+            MonitoringData monitoringData,
+            IEnumerable<IMyTerminalBlock> blocks)
         {
             var textBuilder = new StringBuilder();
 
@@ -255,13 +370,12 @@ namespace IngameScript
                 .AppendLine()
                 .AppendLine($"Current Mass: {monitoringData.CurrentMass} Kg");
 
-            lcdBlocks
-                .Where(ForCargoCapacityStatisticsDisplay)
-                .ToList()
-                .ForEach(block => block.WriteText(textBuilder));
+            var textSurfaceBlock = GetDisplayBlocks(blocks, "storage-capacity-statistics");
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
 
-        private static void DisplayPowerUsage(MonitoringData monitoringData, IEnumerable<IMyTextPanel> lcdBlocks)
+        private static void DisplayPowerUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
         {
             var textBuilder = new StringBuilder();
             var shortage = monitoringData.MaxPowerOutput - monitoringData.CurrentPowerOutput;
@@ -285,31 +399,25 @@ namespace IngameScript
                     ? $"Power shortage of: {shortage} MW"
                     : $"Power exceeding of: {shortage} MW");
 
-            lcdBlocks
-                .Where(ForPowerStatisticsDisplay)
-                .ToList()
-                .ForEach(block => block.WriteText(textBuilder));
+            var textSurfaceBlock = GetDisplayBlocks(blocks, "power-usage-statistics");
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
 
-        private static bool ForCargoCapacityStatisticsDisplay(IMyTextPanel block)
+        private class Surface
         {
-            var customData = new CustomDataManager(block.CustomData);
+            public IMyTextSurface TextSurface { get; set; }
 
-            return customData.GetPropertyValue("storage-capacity-statistics") != null;
+            public CustomDataManager BlockCustomData { get; set; }
+
+            public long BlockId { get; set; }
         }
 
-        private static bool ForProductionDisplay(IMyTextPanel block)
+        private class SurfaceByType
         {
-            var customData = new CustomDataManager(block.CustomData);
+            public IEnumerable<Item.ItemTypes> ItemTypes { get; set; }
 
-            return customData.GetPropertyValue("in-production-statistics") != null;
-        }
-
-        private static bool ForPowerStatisticsDisplay(IMyTextPanel block)
-        {
-            var customData = new CustomDataManager(block.CustomData);
-
-            return customData.GetPropertyValue("power-usage-statistics") != null;
+            public Surface Block { get; set; }
         }
     }
 }

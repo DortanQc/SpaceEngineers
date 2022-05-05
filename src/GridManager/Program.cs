@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IngameScript
 {
@@ -31,30 +32,52 @@ namespace IngameScript
             new Item("MyObjectBuilder_BlueprintDefinition/ThrustComponent", 20)
         };
 
+        private readonly MenuNavigationSystem _menuNavigationSystem;
         private GridMonitoring _monitoring;
 
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+
+            _menuNavigationSystem = new MenuNavigationSystem();
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
-            Echo("** ************ **");
-            Echo("** Grid Manager **");
-            Echo("** ************ **");
-            Echo($"Script Update Source: {updateSource}");
-            Echo($"Script Argument: {argument}");
-            Echo("");
+            var action = GetScriptActionRequest(updateSource, argument);
+            var blocks = ExtractAllTerminalBlocks();
 
-            var blocksProducingPower = ExtractPowerBlocks();
-            var blocksWithStorage = ExtractStorageBlocks();
-            var blocksProducingItems = ExtractItemProductionBlocks();
-            var lcdBlocks = ExtractLCDBlocks();
+            if (action == MenuNavigationSystem.ScriptActions.Normal)
+            {
+                var blocksProducingPower = ExtractPowerBlocks(blocks);
+                var blocksWithStorage = ExtractStorageBlocks(blocks);
+                var blocksProducingItems = ExtractItemProductionBlocks(blocks);
 
-            Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
-            AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
-            DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, lcdBlocks);
+                Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
+                AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
+                DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, blocks);
+            }
+            else
+            {
+                _menuNavigationSystem.RunAction(action);
+            }
+
+            _menuNavigationSystem.DisplayMenu(blocks);
+        }
+
+        private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(
+            UpdateType updateSource,
+            string argument)
+        {
+            if (updateSource == UpdateType.Trigger)
+                switch (argument.ToUpper())
+                {
+                    case "UP": return MenuNavigationSystem.ScriptActions.NavigationUp;
+                    case "DOWN": return MenuNavigationSystem.ScriptActions.NavigationDown;
+                    case "SELECT": return MenuNavigationSystem.ScriptActions.NavigationSelect;
+                }
+
+            return MenuNavigationSystem.ScriptActions.Normal;
         }
 
         private void Monitor(
@@ -65,50 +88,22 @@ namespace IngameScript
             _monitoring = new GridMonitoring(Echo, blocksProducingPower, blocksWithStorage, blocksProducingItems);
         }
 
-        private List<IMyProductionBlock> ExtractItemProductionBlocks()
-        {
-            var blocks = new List<IMyProductionBlock>();
-
-            GridTerminalSystem.GetBlocksOfType(
-                blocks,
-                block => block.HasInventory &&
-                         block.IsSameConstructAs(Me));
-
-            return blocks;
-        }
-
-        private List<IMyTerminalBlock> ExtractStorageBlocks()
+        private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
         {
             var blocks = new List<IMyTerminalBlock>();
 
-            GridTerminalSystem.GetBlocksOfType(
-                blocks,
-                block => block.HasInventory &&
-                         block.IsSameConstructAs(Me));
+            GridTerminalSystem.GetBlocks(blocks);
 
-            return blocks;
+            return blocks.Where(block => block.IsSameConstructAs(Me)).ToList();
         }
 
-        private List<IMyPowerProducer> ExtractPowerBlocks()
-        {
-            var blocks = new List<IMyPowerProducer>();
+        private static List<IMyProductionBlock> ExtractItemProductionBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks.OfType<IMyProductionBlock>().Where(block => block.HasInventory).ToList();
 
-            GridTerminalSystem.GetBlocksOfType(
-                blocks,
-                block => block.IsSameConstructAs(Me));
+        private static List<IMyTerminalBlock> ExtractStorageBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks.Where(block => block.HasInventory).ToList();
 
-            return blocks;
-        }
-
-        private List<IMyTextPanel> ExtractLCDBlocks()
-        {
-            var blocks = new List<IMyTextPanel>();
-
-            GridTerminalSystem.GetBlocksOfType(
-                blocks,
-                block => block.IsSameConstructAs(Me));
-
-            return blocks;
-        }
+        private static List<IMyPowerProducer> ExtractPowerBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks.OfType<IMyPowerProducer>().ToList();
     }
 }

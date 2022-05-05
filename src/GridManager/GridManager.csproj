@@ -41,6 +41,7 @@
     <Compile Include="Display\DisplayManager.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="CustomDataManager.cs" />
+    <Compile Include="MenuNavigation\MenuNavigationSystem.cs" />
     <Compile Include="Monitoring\GridMonitoring.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">

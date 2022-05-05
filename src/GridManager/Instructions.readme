@@ -16,6 +16,12 @@ Add "display-all-ore" in any LCD's custom data you wish to show all of your ores
 Add "display-all-ingot" in any LCD's custom data you wish to show all of your ingots
 Add "display-all-tool" in any LCD's custom data you wish to show all of your tools
 Add "display-all-ammunition" in any LCD's custom data you wish to show all of your ammunition
-Add "hide-{item_name}"" in any LCD's custom data you wish to hide a specific item
+Add "hide-{item_name}" in any LCD's custom data you wish to hide a specific item
 Add "hide-when-meets-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met
 Add "in-production-statistics" in any LCD's custom data you wish to show all items currently in production
+
+
+-- Menu Navigation --
+Add "grid-manager-menu" in any LCD's custom data you wish to show the menu
+    - By default, le lcd panel used will be the first one. However, if a block contains more than one, you can
+      add an zero base index value to the key ex.: grid-manager-menu=1
