@@ -7,7 +7,7 @@
     <ProjectGuid>{27CFEB01-7ADD-4E3B-9FF7-16F056991286}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>IngameScript</RootNamespace>
-    <AssemblyName>GridMonitoring</AssemblyName>
+    <AssemblyName>GridManager</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -40,6 +40,7 @@
   <ItemGroup>
     <Compile Include="Component.cs" />
     <Compile Include="CustomDataManager.cs" />
+    <Compile Include="Monitoring\GridMonitoring.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -47,7 +48,7 @@
     <AdditionalFiles Include="MDK\MDK.paths.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
-    <Compile Include="MonitoringData.cs" />
+    <Compile Include="Monitoring\MonitoringData.cs" />
     <Compile Include="Program.cs" />
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />

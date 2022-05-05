@@ -6,14 +6,17 @@ namespace IngameScript
     {
         private MyDefinitionId _itemDefinition;
 
-        public Component(string subtypeId)
+        public Component(string subtypeId, int amount)
         {
+            Amount = amount;
             Build(subtypeId);
         }
 
-        public string Name { get; set; }
+        public int Amount { get; }
 
-        public int Volume { get; set; }
+        public string Name { get; private set; }
+
+        public int Volume { get; private set; }
 
         private void Build(string subtypeId)
         {

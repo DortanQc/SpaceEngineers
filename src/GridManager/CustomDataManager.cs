@@ -30,7 +30,7 @@ namespace IngameScript
                     });
         }
 
-        public string GetStringProperty(string key)
+        public string GetPropertyValue(string key)
         {
             string value;
 
@@ -41,7 +41,10 @@ namespace IngameScript
 
         public void AddValue(string key, string value)
         {
-            _settings.Add(key, value);
+            if (_settings.ContainsKey(key))
+                _settings[key] = value;
+            else
+                _settings.Add(key, value);
         }
     }
 }

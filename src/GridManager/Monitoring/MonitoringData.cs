@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
 using VRage;
 using VRage.Game.ModAPI.Ingame;
 
@@ -7,24 +7,34 @@ namespace IngameScript
 {
     public class MonitoringData
     {
-        private readonly Dictionary<string, int> _components;
         private readonly CustomDataManager _dataManager = new CustomDataManager();
+        private readonly Dictionary<string, int> _components;
 
         public MonitoringData()
         {
             MaxVolume = MyFixedPoint.Zero;
             CurrentVolume = MyFixedPoint.Zero;
             CurrentMass = MyFixedPoint.Zero;
-            CurrentOutput = 0f;
-            MaxOutput = 0f;
+            CurrentPowerOutput = 0f;
+            MaxPowerOutput = 0f;
             _components = new Dictionary<string, int>();
+        }
+
+        public List<Component> Components
+        {
+            get
+            {
+                return _components
+                    .Select(c => new Component(c.Key, c.Value))
+                    .ToList();
+            }
         }
 
         public MyFixedPoint MaxVolume
         {
             get
             {
-                var value = _dataManager.GetStringProperty(nameof(MaxVolume));
+                var value = _dataManager.GetPropertyValue(nameof(MaxVolume));
 
                 return MyFixedPoint.DeserializeStringSafe(value);
             }
@@ -35,7 +45,7 @@ namespace IngameScript
         {
             get
             {
-                var value = _dataManager.GetStringProperty(nameof(CurrentVolume));
+                var value = _dataManager.GetPropertyValue(nameof(CurrentVolume));
 
                 return MyFixedPoint.DeserializeStringSafe(value);
             }
@@ -46,33 +56,33 @@ namespace IngameScript
         {
             get
             {
-                var value = _dataManager.GetStringProperty(nameof(CurrentMass));
+                var value = _dataManager.GetPropertyValue(nameof(CurrentMass));
 
                 return MyFixedPoint.DeserializeStringSafe(value);
             }
             set { _dataManager.AddValue(nameof(CurrentMass), value.SerializeString()); }
         }
 
-        public float CurrentOutput
+        public float CurrentPowerOutput
         {
             get
             {
-                var value = _dataManager.GetStringProperty(nameof(CurrentOutput));
+                var value = _dataManager.GetPropertyValue(nameof(CurrentPowerOutput));
 
                 return float.Parse(value);
             }
-            set { _dataManager.AddValue(nameof(CurrentOutput), value.ToString(CultureInfo.InvariantCulture)); }
+            set { _dataManager.AddValue(nameof(CurrentPowerOutput), value.ToString()); }
         }
 
-        public float MaxOutput
+        public float MaxPowerOutput
         {
             get
             {
-                var value = _dataManager.GetStringProperty(nameof(MaxOutput));
+                var value = _dataManager.GetPropertyValue(nameof(MaxPowerOutput));
 
                 return float.Parse(value);
             }
-            set { _dataManager.AddValue(nameof(MaxOutput), value.ToString(CultureInfo.InvariantCulture)); }
+            set { _dataManager.AddValue(nameof(MaxPowerOutput), value.ToString()); }
         }
 
         public void AddToInventory(MyInventoryItem item)
@@ -83,7 +93,5 @@ namespace IngameScript
                 else
                     _components.Add(item.Type.SubtypeId, item.Amount.ToIntSafe());
         }
-
-        public void Save() { }
     }
 }
