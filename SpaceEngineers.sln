@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryManager", "src\Inv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceMonitoring", "src\ResourceMonitoring\ResourceMonitoring.csproj", "{BB3E8DB8-B3A0-4BB1-8903-72CADF8C775E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridMonitoring", "src\GridMonitoring\GridMonitoring.csproj", "{27CFEB01-7ADD-4E3B-9FF7-16F056991286}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -20,6 +22,8 @@ Global
 		{74179F56-1229-4F77-A0ED-22D2B051942A}.Debug|x64.Build.0 = Debug|x64
 		{BB3E8DB8-B3A0-4BB1-8903-72CADF8C775E}.Debug|x64.ActiveCfg = Debug|x64
 		{BB3E8DB8-B3A0-4BB1-8903-72CADF8C775E}.Debug|x64.Build.0 = Debug|x64
+		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.ActiveCfg = Debug|x64
+		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
