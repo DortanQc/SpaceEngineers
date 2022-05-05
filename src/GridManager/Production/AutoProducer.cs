@@ -66,23 +66,7 @@ namespace IngameScript
             decimal amount,
             IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
         {
-            var dict = new Dictionary<long, int>();
-
-            foreach (var block in blocksProducingItems)
-            {
-                if (!block.CanUseBlueprint(itemDefinitionId)) continue;
-
-                var queue = new List<MyProductionItem>();
-                block.GetQueue(queue);
-
-                dict.Add(block.EntityId, queue.Count);
-            }
-
-            var best = dict
-                .OrderBy(x => x.Value)
-                .Select(orderedBlocks =>
-                    blocksProducingItems.First(x => x.EntityId == orderedBlocks.Key))
-                .FirstOrDefault();
+            var best = GetBestBlockForJob(itemDefinitionId, blocksProducingItems);
 
             if (best != null)
             {
@@ -93,6 +77,32 @@ namespace IngameScript
             {
                 _logger($"No Block found for producing {amount} {itemDefinitionId.SubtypeName}");
             }
+        }
+
+        private static IMyProductionBlock GetBestBlockForJob(
+            MyDefinitionId itemDefinitionId,
+            IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
+        {
+            var dict = new Dictionary<long, int>();
+
+            foreach (var block in blocksProducingItems)
+            {
+                if (!block.CanUseBlueprint(itemDefinitionId)) continue;
+
+                var queue = new List<MyProductionItem>();
+                block.GetQueue(queue);
+
+                var count = queue.Sum(q => q.Amount.ToIntSafe());
+                dict.Add(block.EntityId, count);
+            }
+
+            var best = dict
+                .OrderBy(x => x.Value)
+                .Select(orderedBlocks =>
+                    blocksProducingItems.First(x => x.EntityId == orderedBlocks.Key))
+                .FirstOrDefault();
+
+            return best;
         }
     }
 }

@@ -15,6 +15,31 @@ namespace IngameScript
             DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), lcdBlocks);
             DisplayStorageCapacity(monitoringData, lcdBlocks);
             DisplayPowerUsage(monitoringData, lcdBlocks);
+            DisplayProduction(monitoringData, lcdBlocks);
+        }
+
+        private static void DisplayProduction(MonitoringData monitoringData, IEnumerable<IMyTextPanel> lcdBlocks)
+        {
+            var textBuilder = new StringBuilder();
+
+            textBuilder
+                .AppendLine("** Currently in production **")
+                .AppendLine();
+
+            monitoringData
+                .GetItemsInProduction()
+                .ForEach(inProd =>
+                {
+
+                    textBuilder.AppendLine(inProd.ItemType == Item.ItemTypes.Ingot
+                        ? $"{inProd.Amount / inProd.Volume} {inProd.Name}"
+                        : $"{inProd.Amount} {inProd.Name}");
+                });
+
+            lcdBlocks
+                .Where(ForProductionDisplay)
+                .ToList()
+                .ForEach(block => block.WriteText(textBuilder));
         }
 
         private static void DisplayItemInventory(
@@ -271,6 +296,13 @@ namespace IngameScript
             var customData = new CustomDataManager(block.CustomData);
 
             return customData.GetPropertyValue("storage-capacity-statistics") != null;
+        }
+
+        private static bool ForProductionDisplay(IMyTextPanel block)
+        {
+            var customData = new CustomDataManager(block.CustomData);
+
+            return customData.GetPropertyValue("in-production-statistics") != null;
         }
 
         private static bool ForPowerStatisticsDisplay(IMyTextPanel block)

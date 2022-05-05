@@ -45,13 +45,13 @@ namespace IngameScript
             PreciseAutomaticRifle,
             RapidFireAutomaticRifle,
             UltimateAutomaticRifle,
-            NATO_5p56x45mmMagazine,
-            NATO_25x184mmMagazine,
-            Missile200mm,
-            RapidFireAutomaticRifleGun_Mag_50rd,
-            AutomaticRifleGun_Mag_20rd,
+            Nato5P56X45MmMagazine,
+            Nato25X184MmMagazine,
+            Missile200Mm,
+            RapidFireAutomaticRifleGunMag50Rd,
+            AutomaticRifleGunMag20Rd,
             SpaceCredit,
-            aFullAutoPistolMagazine,
+            AFullAutoPistolMagazine,
             HydrogenBottle,
             OxygenBottle,
             Welder,
@@ -525,10 +525,6 @@ namespace IngameScript
 
                     break;
 
-
-
-
-
                 case "MyObjectBuilder_PhysicalGunObject/WelderItem":
                 case "MyObjectBuilder_BlueprintDefinition/Welder":
                     ItemType = ItemTypes.Tools;
@@ -584,14 +580,10 @@ namespace IngameScript
 
                     break;
 
-
-
-
-
                 case "MyObjectBuilder_AmmoMagazine/NATO_5p56x45mm":
                 case "MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.NATO_5p56x45mmMagazine;
+                    ItemSubType = ItemSubTypes.Nato5P56X45MmMagazine;
                     Name = "NATO 5.56x45mm";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
                     Volume = 0.2f;
@@ -600,7 +592,7 @@ namespace IngameScript
                 case "MyObjectBuilder_AmmoMagazine/NATO_25x184mm":
                 case "MyObjectBuilder_BlueprintDefinition/NATO_25x184mmMagazine":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.NATO_25x184mmMagazine;
+                    ItemSubType = ItemSubTypes.Nato25X184MmMagazine;
                     Name = "NATO 25x184mm";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
                     Volume = 16f;
@@ -609,7 +601,7 @@ namespace IngameScript
                 case "MyObjectBuilder_AmmoMagazine/Missile200mm":
                 case "MyObjectBuilder_BlueprintDefinition/Missile200mm":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.Missile200mm;
+                    ItemSubType = ItemSubTypes.Missile200Mm;
                     Name = "Missile 200mm";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Missile200mm");
                     Volume = 60f;
@@ -618,32 +610,34 @@ namespace IngameScript
                 case "MyObjectBuilder_AmmoMagazine/RapidFireAutomaticRifleGun_Mag_50rd":
                 case "MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.RapidFireAutomaticRifleGun_Mag_50rd;
+                    ItemSubType = ItemSubTypes.RapidFireAutomaticRifleGunMag50Rd;
                     Name = "MR-50A Magazine";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd");
+                    ItemDefinition =
+                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd");
+
                     Volume = 2.7f;
 
                     break;
                 case "MyObjectBuilder_AmmoMagazine/AutomaticRifleGun_Mag_20rd":
                 case "MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.AutomaticRifleGun_Mag_20rd;
+                    ItemSubType = ItemSubTypes.AutomaticRifleGunMag20Rd;
                     Name = "MR-50A Magazine";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd");
+                    ItemDefinition =
+                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd");
+
                     Volume = 1.8f;
 
                     break;
                 case "MyObjectBuilder_AmmoMagazine/FullAutoPistolMagazine":
                 case "MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine":
                     ItemType = ItemTypes.Ammunition;
-                    ItemSubType = ItemSubTypes.aFullAutoPistolMagazine;
+                    ItemSubType = ItemSubTypes.AFullAutoPistolMagazine;
                     Name = "S-20A Magazine";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine");
                     Volume = 3.45f;
 
                     break;
-
-
 
                 case "MyObjectBuilder_PhysicalObject/SpaceCredit":
                 case "MyObjectBuilder_BlueprintDefinition/SpaceCredit":
@@ -672,7 +666,6 @@ namespace IngameScript
                     Volume = 120f;
 
                     break;
-
 
                 default:
                     ItemType = ItemTypes.Unknown;

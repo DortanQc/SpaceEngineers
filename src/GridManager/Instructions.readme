@@ -18,3 +18,4 @@ Add "display-all-tool" in any LCD's custom data you wish to show all of your too
 Add "display-all-ammunition" in any LCD's custom data you wish to show all of your ammunition
 Add "hide-{item_name}"" in any LCD's custom data you wish to hide a specific item
 Add "hide-when-meets-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met
+Add "in-production-statistics" in any LCD's custom data you wish to show all items currently in production
