@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IngameScript.Scripts.AirLock
+namespace IngameScript
 {
-    public class Program : MyGridProgram
+    partial class Program : MyGridProgram
     {
         private const int ALLOWED_OPEN_SECOND = 5;
         private readonly string[,] _doorGroups =
@@ -62,7 +62,7 @@ namespace IngameScript.Scripts.AirLock
             var doors = new List<IMyTerminalBlock>();
             GridTerminalSystem.GetBlocksOfType<IMyDoor>(doors);
 
-            foreach (var door in doors.OfType<IMyDoor>())
+            foreach (var door in doors.OfType<IMyDoor>().Where(d => d.BlockDefinition.TypeIdString != "MyObjectBuilder_AirtightHangarDoor"))
             {
                 if (!_doorOpenedCount.ContainsKey(door.EntityId))
                     _doorOpenedCount.Add(door.EntityId, DateTime.Now);

@@ -246,7 +246,7 @@ namespace IngameScript.Scripts.InventoryDisplay
 
             _grid.CleanupProductionInputInventory(assemblyBlocks);
             _grid.CleanupProductionOutputInventory(assemblyBlocks);
-            _grid.CleanupStorageInventory(storageBlocks);
+            Grid.CleanupStorageInventory(storageBlocks);
         }
 
         private void ResetQuantities()
@@ -450,29 +450,83 @@ namespace IngameScript.Scripts.InventoryDisplay
                 }
             }
 
-            public void CleanupStorageInventory(IEnumerable<IMyTerminalBlock> storages)
+            public static void CleanupStorageInventory(IEnumerable<IMyTerminalBlock> storages)
             {
-                foreach (var cargo in storages.OfType<IMyCargoContainer>())
-                {
-                    var customData = cargo.CustomData;
-                    var aaa = customData.Split(
-                            new string[] { "\r\n", "\r", "\n" },
-                            StringSplitOptions.None)
-                        .ToList();
+                var storageSettings = ScanStorageForSettings(storages);
 
-                    aaa.ForEach(a => _logger("-> " + a));
+                foreach (var cargo in storageSettings.Where(s => !s.SkipCleanup == false))
+                {
                     var items = new List<MyInventoryItem>();
 
-                    cargo.GetInventory().GetItems(items);
+                    cargo.Block.GetInventory().GetItems(items);
 
                     for (var i = 0; i < items.Count; i++)
-                        cargo.GetInventory()
+                        cargo.Block.GetInventory()
                             .TransferItemTo(
-                                cargo.GetInventory(),
+                                cargo.Block.GetInventory(),
                                 i,
                                 null,
                                 true);
                 }
+            }
+
+            private static IEnumerable<CustomDataManager.CustomDataSettings> ScanStorageForSettings(
+                IEnumerable<IMyTerminalBlock> storages)
+            {
+                return storages.OfType<IMyCargoContainer>()
+                    .Select(storage =>
+                    {
+                        var customDataManager = new CustomDataManager(storage);
+
+                        return customDataManager.GetCustomSettings();
+                    })
+                    .ToList();
+            }
+        }
+
+        private class CustomDataManager
+        {
+            private readonly IMyTerminalBlock _block;
+            private readonly List<string> _settings;
+
+            public CustomDataManager(IMyTerminalBlock block)
+            {
+                _block = block;
+                var customData = block.CustomData;
+                _settings = customData.Split(
+                        new[] { "\r\n", "\r", "\n" },
+                        StringSplitOptions.None)
+                    .ToList();
+            }
+
+            public CustomDataSettings GetCustomSettings()
+            {
+                var settings = _settings.OrderBy(s => s)
+                    .ToDictionary(
+                        s => s.Split('=')[0].Trim(),
+                        s =>
+                        {
+                            var setting = s.Split('=');
+
+                            return setting.Length > 1
+                                ? setting[1].Trim()
+                                : null;
+                        });
+
+                var customSettings = new CustomDataSettings()
+                {
+                    Block = _block,
+                    SkipCleanup = settings.ContainsKey("SkipCleanup")
+                };
+
+                return customSettings;
+            }
+
+            public class CustomDataSettings
+            {
+                public IMyTerminalBlock Block { get; set; }
+
+                public bool SkipCleanup { get; set; }
             }
         }
 

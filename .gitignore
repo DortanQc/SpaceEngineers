@@ -3,6 +3,6 @@
 
 .vs/
 
-src/obj/
+src/**/obj/
 
-src/bin/
+src/**/bin/
