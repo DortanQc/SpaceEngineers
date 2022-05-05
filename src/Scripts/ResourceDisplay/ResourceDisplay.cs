@@ -57,8 +57,6 @@ namespace IngameScript.Scripts.ResourceDisplay
             _lcdPanels.ForEach(lcd => lcd.WriteText(message));
         }
 
-        public void Save() { }
-
         public void Main(string argument, UpdateType updateSource)
         {
             try
@@ -146,6 +144,120 @@ namespace IngameScript.Scripts.ResourceDisplay
             public long CountInStorage { get; set; }
 
             public int Threshold { get; set; }
+        }
+
+        private class Grid
+        {
+            private readonly Action<string> _logger;
+            private readonly List<IMyTerminalBlock> _productionBlocks;
+            private readonly List<IMyTerminalBlock> _storageBlocks;
+
+            public Grid(
+                List<IMyTerminalBlock> storageBlocks,
+                List<IMyTerminalBlock> productionBlocks,
+                Action<string> logger)
+            {
+                _storageBlocks = storageBlocks;
+                _productionBlocks = productionBlocks;
+                _logger = logger;
+            }
+
+            public long GetItemAmountInStorage(Resource resource)
+            {
+                var currentAmount = 0L;
+
+                foreach (var block in _storageBlocks)
+                    currentAmount = CountItemInStorage(resource.Code, block, currentAmount);
+
+                foreach (var block in _productionBlocks)
+                    currentAmount = CountItemInProductionOutputStorage(
+                        resource.Code,
+                        block as IMyProductionBlock,
+                        currentAmount);
+
+                return currentAmount;
+            }
+
+            private static long CountItemInStorage(string code, IMyEntity block, long currentAmount)
+            {
+                var items = new List<MyInventoryItem>();
+
+                block.GetInventory().GetItems(items, item => item.Type.SubtypeId == code);
+
+                return currentAmount + items.Sum(item => item.Amount.RawValue);
+            }
+
+            private static long CountItemInProductionOutputStorage(
+                string code,
+                IMyProductionBlock block,
+                long currentAmount)
+            {
+                var items = new List<MyInventoryItem>();
+
+                block.OutputInventory.GetItems(items, item => item.Type.SubtypeId == code);
+
+                return currentAmount + items.Sum(item => item.Amount.RawValue);
+            }
+        }
+
+        private class Resource
+        {
+            public enum Type
+            {
+                Stone,
+                Iron,
+                Nickel,
+                Cobalt,
+                Magnesium,
+                Silicon,
+                Silver,
+                Gold,
+                Platinum,
+                Uranium,
+                Ice
+            }
+
+            private readonly Type _resource;
+
+            public Resource(Type resource)
+            {
+                _resource = resource;
+            }
+
+            public string Code => _resource.ToString();
+
+            public string FriendlyName
+            {
+                get
+                {
+                    switch (_resource)
+                    {
+                        case Type.Stone: return "Stone / Gravel";
+                        case Type.Iron: return "Iron";
+                        case Type.Nickel: return "Nickel";
+                        case Type.Cobalt: return "Cobalt";
+                        case Type.Magnesium: return "Magnesium";
+                        case Type.Silicon: return "Silicon";
+                        case Type.Silver: return "Silver";
+                        case Type.Gold: return "Gold";
+                        case Type.Platinum: return "Platinum";
+                        case Type.Uranium: return "Uranium";
+                        case Type.Ice: return "Ice";
+                        default: return "";
+                    }
+                }
+            }
+
+            public int Divider
+            {
+                get
+                {
+                    switch (_resource)
+                    {
+                        default: return 1000000;
+                    }
+                }
+            }
         }
     }
 }
