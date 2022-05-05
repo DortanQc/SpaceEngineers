@@ -1,13 +1,18 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IngameScript.Scripts.AirLock
 {
     public class Program : MyGridProgram
     {
         private const int ALLOWED_OPEN_SECOND = 5;
-        private readonly string[,] _doorGroups = { { "Station - Door01", "Station - Door02" } };
+        private readonly string[,] _doorGroups =
+        {
+            { "Station - Door 1 - Airlock 1", "Station - Door 2 - Airlock 1" },
+            { "Station - Door 1 - Airlock 2", "Station - Door 2 - Airlock 2" }
+        };
         private readonly Dictionary<long, DateTime> _doorOpenedCount = new Dictionary<long, DateTime>();
         private readonly List<AirLockDoors> _doors = new List<AirLockDoors>();
 
@@ -48,6 +53,39 @@ namespace IngameScript.Scripts.AirLock
 
         public void Main(string argument, UpdateType updateSource)
         {
+            SetDoorLockStatus();
+            ShutDownDoorWhenOpenedLongerThanExpected();
+        }
+
+        private void ShutDownDoorWhenOpenedLongerThanExpected()
+        {
+            var doors = new List<IMyTerminalBlock>();
+            GridTerminalSystem.GetBlocksOfType<IMyDoor>(doors);
+
+            foreach (var door in doors.OfType<IMyDoor>())
+            {
+                if (!_doorOpenedCount.ContainsKey(door.EntityId))
+                    _doorOpenedCount.Add(door.EntityId, DateTime.Now);
+
+                if (door.Status == DoorStatus.Closed)
+                {
+                    _doorOpenedCount[door.EntityId] = DateTime.Now;
+                    Echo($"{door.CustomName}: Closed");
+                }
+                else
+                {
+                    var totalSeconds = DateTime.Now.Subtract(_doorOpenedCount[door.EntityId]).TotalSeconds;
+
+                    Echo($"{door.CustomName}: Opened, {totalSeconds}");
+
+                    if (totalSeconds > ALLOWED_OPEN_SECOND)
+                        door.CloseDoor();
+                }
+            }
+        }
+
+        private void SetDoorLockStatus()
+        {
             _doors.ForEach(doors =>
             {
                 doors.Door1.ApplyAction(doors.Door2.Status != DoorStatus.Closed
@@ -57,26 +95,7 @@ namespace IngameScript.Scripts.AirLock
                 doors.Door2.ApplyAction(doors.Door1.Status != DoorStatus.Closed
                     ? "OnOff_Off"
                     : "OnOff_On");
-
-                UpdateDoorStatus(doors.Door1);
-                UpdateDoorStatus(doors.Door2);
             });
-        }
-
-        private void UpdateDoorStatus(IMyDoor door)
-        {
-            if (!_doorOpenedCount.ContainsKey(door.EntityId))
-                _doorOpenedCount.Add(door.EntityId, DateTime.Now);
-
-            if (door.Status == DoorStatus.Closed)
-            {
-                _doorOpenedCount[door.EntityId] = DateTime.Now;
-            }
-            else
-            {
-                if (DateTime.Now.Subtract(_doorOpenedCount[door.EntityId]).TotalSeconds > ALLOWED_OPEN_SECOND)
-                    door.CloseDoor();
-            }
         }
 
         private class AirLockDoors
