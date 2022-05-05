@@ -26,7 +26,7 @@ namespace IngameScript
 
                         return setting.Length > 1
                             ? setting[1].Trim()
-                            : null;
+                            : "";
                     });
         }
 

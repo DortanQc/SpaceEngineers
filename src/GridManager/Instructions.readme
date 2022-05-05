@@ -2,3 +2,6 @@
 -----------
 
 ** Grid Monitoring **
+
+-- Auto Item Production --
+Add "ignore-auto-production" in any production building's custom data you wish to skip for auto productions

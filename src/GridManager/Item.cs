@@ -82,6 +82,14 @@ namespace IngameScript
                     Volume = 6;
 
                     break;
+                case "MyObjectBuilder_BlueprintDefinition/ExplosivesComponent":
+                case "MyObjectBuilder_Component/Explosives":
+                    ItemType = ItemTypes.Component;
+                    Name = "Explosives";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent");
+                    Volume = 2;
+
+                    break;
                 case "MyObjectBuilder_BlueprintDefinition/GirderComponent":
                 case "MyObjectBuilder_Component/Girder":
                     ItemType = ItemTypes.Component;
@@ -204,14 +212,6 @@ namespace IngameScript
                     Name = "Thruster Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ThrustComponent");
                     Volume = 10;
-
-                    break;
-                case "MyObjectBuilder_BlueprintDefinition/ExplosivesComponent":
-                case "MyObjectBuilder_Component/Explosives":
-                    ItemType = ItemTypes.Component;
-                    Name = "Explosives";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent");
-                    Volume = 2;
 
                     break;
 

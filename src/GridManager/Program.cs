@@ -5,6 +5,32 @@ namespace IngameScript
 {
     public class Program : MyGridProgram
     {
+        private readonly Item[] _itemsToProduce =
+        {
+            new Item("MyObjectBuilder_BlueprintDefinition/BulletproofGlass", 5),
+            new Item("MyObjectBuilder_BlueprintDefinition/Canvas", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/ComputerComponent", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/ConstructionComponent", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/DetectorComponent", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/Display", 20),
+            new Item("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/GirderComponent", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/InteriorPlate", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/LargeTube", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/MedicalComponent", 5),
+            new Item("MyObjectBuilder_BlueprintDefinition/MetalGrid", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/MotorComponent", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/PowerCell", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent", 10),
+            new Item("MyObjectBuilder_BlueprintDefinition/ReactorComponent", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/SmallTube", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/SolarCell", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/SteelPlate", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/Superconductor", 1),
+            new Item("MyObjectBuilder_BlueprintDefinition/ThrustComponent", 1)
+        };
+
         private GridMonitoring _monitoring;
 
         public Program()
@@ -14,12 +40,12 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            Echo($"** ************ **");
-            Echo($"** Grid Manager **");
-            Echo($"** ************ **");
+            Echo("** ************ **");
+            Echo("** Grid Manager **");
+            Echo("** ************ **");
             Echo($"Script Update Source: {updateSource.ToString()}");
             Echo($"Script Argument: {argument}");
-            Echo($"");
+            Echo("");
 
             var blocksProducingPower = ExtractPowerBlocks();
             var blocksWithStorage = ExtractStorageBlocks();
@@ -28,11 +54,13 @@ namespace IngameScript
             Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
         }
 
-        private void Monitor(List<IMyPowerProducer> blocksProducingPower, List<IMyTerminalBlock> blocksWithStorage, List<IMyProductionBlock> blocksProducingItems)
+        private void Monitor(
+            List<IMyPowerProducer> blocksProducingPower,
+            List<IMyTerminalBlock> blocksWithStorage,
+            List<IMyProductionBlock> blocksProducingItems)
         {
             _monitoring = new GridMonitoring(Echo, blocksProducingPower, blocksWithStorage, blocksProducingItems);
-
-            _monitoring.Scan();
+            AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
         }
 
         private List<IMyProductionBlock> ExtractItemProductionBlocks()

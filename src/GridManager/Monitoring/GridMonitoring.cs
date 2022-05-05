@@ -11,7 +11,6 @@ namespace IngameScript
         private readonly List<IMyPowerProducer> _powerBlocks;
         private readonly List<IMyProductionBlock> _productionBlocks;
         private readonly List<IMyTerminalBlock> _storageBlocks;
-        private MonitoringData _monitoringData;
 
         public GridMonitoring(
             Action<string> logAction,
@@ -23,30 +22,29 @@ namespace IngameScript
             _powerBlocks = powerBlocks;
             _storageBlocks = storageBlocks;
             _productionBlocks = productionBlocks;
-        }
+            MonitoringData = new MonitoringData();
 
-        public void Scan()
-        {
-            _monitoringData = new MonitoringData();
             ScanAllInventory();
             ScanPower();
             ScanProduction();
         }
 
+        public MonitoringData MonitoringData { get; }
+
         private void ScanPower()
         {
             _powerBlocks.ForEach(block =>
             {
-                _monitoringData.CurrentPowerOutput += block.CurrentOutput;
-                _monitoringData.MaxPowerOutput += block.MaxOutput;
+                MonitoringData.CurrentPowerOutput += block.CurrentOutput;
+                MonitoringData.MaxPowerOutput += block.MaxOutput;
             });
 
             _logger("");
             _logger("** Power **");
-            _logger($"Current Power Output: {_monitoringData.CurrentPowerOutput} MW");
-            _logger($"Max Power Output: {_monitoringData.MaxPowerOutput} MW");
+            _logger($"Current Power Output: {MonitoringData.CurrentPowerOutput} MW");
+            _logger($"Max Power Output: {MonitoringData.MaxPowerOutput} MW");
 
-            var shortage = _monitoringData.MaxPowerOutput - _monitoringData.CurrentPowerOutput;
+            var shortage = MonitoringData.MaxPowerOutput - MonitoringData.CurrentPowerOutput;
             _logger(shortage < 0
                 ? $"Power Shortage of: {shortage} MW"
                 : $"Power exceeding of: {shortage} MW");
@@ -56,15 +54,15 @@ namespace IngameScript
         {
             var items = new List<MyInventoryItem>();
 
-            _monitoringData.MaxVolume += inventory.MaxVolume;
-            _monitoringData.CurrentVolume += inventory.CurrentVolume;
-            _monitoringData.CurrentMass += inventory.CurrentMass;
+            MonitoringData.MaxVolume += inventory.MaxVolume;
+            MonitoringData.CurrentVolume += inventory.CurrentVolume;
+            MonitoringData.CurrentMass += inventory.CurrentMass;
 
             inventory.GetItems(items);
 
             items.ForEach(item =>
             {
-                _monitoringData.AddToInventory(item);
+                MonitoringData.AddToInventory(item);
             });
         }
 
@@ -82,14 +80,14 @@ namespace IngameScript
 
             _logger("");
             _logger("** Items **");
-            _logger($"Max Item Volume Capacity: {_monitoringData.MaxVolume} m^3");
-            _logger($"Current Item Volume: {_monitoringData.CurrentVolume} m^3");
-            _logger($"Current Item Mass: {_monitoringData.CurrentVolume} Kg");
+            _logger($"Max Item Volume Capacity: {MonitoringData.MaxVolume} m^3");
+            _logger($"Current Item Volume: {MonitoringData.CurrentVolume} m^3");
+            _logger($"Current Item Mass: {MonitoringData.CurrentVolume} Kg");
 
-            var components = _monitoringData.GetItems(Item.ItemTypes.Component);
-            var ingots = _monitoringData.GetItems(Item.ItemTypes.Ingot);
-            var ores = _monitoringData.GetItems(Item.ItemTypes.Ore);
-            var unknowns = _monitoringData.GetItems(Item.ItemTypes.Unknown);
+            var components = MonitoringData.GetItems(Item.ItemTypes.Component);
+            var ingots = MonitoringData.GetItems(Item.ItemTypes.Ingot);
+            var ores = MonitoringData.GetItems(Item.ItemTypes.Ore);
+            var unknowns = MonitoringData.GetItems(Item.ItemTypes.Unknown);
 
             if (components.Count > 0)
             {
@@ -142,13 +140,13 @@ namespace IngameScript
 
                 items.ForEach(item =>
                 {
-                    _monitoringData.AddToQueuedList(item);
+                    MonitoringData.AddToQueuedList(item);
                 });
             });
 
-            var components = _monitoringData.GetItemsInProduction(Item.ItemTypes.Component);
-            var ingots = _monitoringData.GetItemsInProduction(Item.ItemTypes.Ingot);
-            var unknowns = _monitoringData.GetItemsInProduction(Item.ItemTypes.Unknown);
+            var components = MonitoringData.GetItemsInProduction(Item.ItemTypes.Component);
+            var ingots = MonitoringData.GetItemsInProduction(Item.ItemTypes.Ingot);
+            var unknowns = MonitoringData.GetItemsInProduction(Item.ItemTypes.Unknown);
 
             if (components.Count > 0)
             {

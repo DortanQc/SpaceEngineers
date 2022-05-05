@@ -32,11 +32,25 @@ namespace IngameScript
 
         public float MaxPowerOutput { get; set; }
 
+        public List<Item> GetItemsInProduction()
+        {
+            return _itemsInProduction
+                .Select(c => new Item(c.Key, c.Value))
+                .ToList();
+        }
+
         public List<Item> GetItemsInProduction(Item.ItemTypes type)
         {
             return _itemsInProduction
                 .Select(c => new Item(c.Key, c.Value))
                 .Where(c => c.ItemType == type)
+                .ToList();
+        }
+
+        public List<Item> GetItems()
+        {
+            return _items
+                .Select(c => new Item(c.Key, c.Value))
                 .ToList();
         }
 
