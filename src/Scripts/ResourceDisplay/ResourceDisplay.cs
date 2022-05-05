@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using VRage.Game.ModAPI.Ingame;
 
@@ -8,8 +9,7 @@ namespace IngameScript.Scripts.ResourceDisplay
 {
     public class Program : MyGridProgram
     {
-        private const string LCD_BLOC_NAME = "Base - LCD Panel - Resources";
-        private const bool LOG = false;
+        private const string LCD_GROUP_NAME = "Base - LCD Panel - Resources";
 
         private readonly ResourceToScan[] _itemsToScan =
         {
@@ -26,7 +26,7 @@ namespace IngameScript.Scripts.ResourceDisplay
             new ResourceToScan { ResourceType = Resource.Type.Stone, Threshold = 1000 }
         };
 
-        private readonly IMyTextSurface _lcdPanel;
+        private readonly List<IMyTextSurface> _lcdPanels = new List<IMyTextSurface>();
         private Grid _grid;
 
         public Program()
@@ -35,12 +35,14 @@ namespace IngameScript.Scripts.ResourceDisplay
 
             try
             {
-                _lcdPanel = GridTerminalSystem.GetBlockWithName(LCD_BLOC_NAME) as IMyTextSurface;
+                var lcdGroups = GridTerminalSystem.GetBlockGroupWithName(LCD_GROUP_NAME);
 
-                if (_lcdPanel == null)
-                    throw new Exception($"{LCD_BLOC_NAME} block name does noes exists");
+                lcdGroups?.GetBlocksOfType(_lcdPanels);
 
-                _lcdPanel.WriteText("Ready...");
+                if (_lcdPanels == null || !_lcdPanels.Any())
+                    throw new Exception($"{LCD_GROUP_NAME} block name does noes exists");
+
+                WriteText("Ready...");
             }
             catch (Exception ex)
             {
@@ -48,6 +50,11 @@ namespace IngameScript.Scripts.ResourceDisplay
                 Echo(ex.ToString());
                 Runtime.UpdateFrequency = UpdateFrequency.None;
             }
+        }
+
+        private void WriteText(string message)
+        {
+            _lcdPanels.ForEach(lcd => lcd.WriteText(message));
         }
 
         public void Save() { }
@@ -62,7 +69,7 @@ namespace IngameScript.Scripts.ResourceDisplay
             }
             catch (Exception ex)
             {
-                _lcdPanel.WriteText("ERRORS...");
+                WriteText("ERRORS...");
                 Echo("Error");
                 Echo(ex.ToString());
 
@@ -78,7 +85,7 @@ namespace IngameScript.Scripts.ResourceDisplay
             GridTerminalSystem.GetBlocksOfType<IMyCubeBlock>(storageBlocks, block => block.HasInventory);
             GridTerminalSystem.GetBlocksOfType<IMyProductionBlock>(productionBlocks);
 
-            _grid = new Grid(storageBlocks, productionBlocks, Echo, LOG);
+            _grid = new Grid(storageBlocks, productionBlocks, Echo);
         }
 
         private void Scan()
@@ -118,7 +125,7 @@ namespace IngameScript.Scripts.ResourceDisplay
 
             if (hasItemToDisplay == false) stringBuilder.AppendLine("All good...");
 
-            _lcdPanel.WriteText(stringBuilder.ToString());
+            WriteText(stringBuilder.ToString());
         }
 
         private class ResourceToScan

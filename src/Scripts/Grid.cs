@@ -8,7 +8,6 @@ namespace IngameScript.Scripts
 {
     public class Grid
     {
-        private readonly bool _activateLog;
         private readonly Action<string> _logger;
         private readonly List<IMyTerminalBlock> _productionBlocks;
         private readonly List<IMyTerminalBlock> _storageBlocks;
@@ -16,13 +15,11 @@ namespace IngameScript.Scripts
         public Grid(
             List<IMyTerminalBlock> storageBlocks,
             List<IMyTerminalBlock> productionBlocks,
-            Action<string> logger,
-            bool activateLog)
+            Action<string> logger)
         {
             _storageBlocks = storageBlocks;
             _productionBlocks = productionBlocks;
             _logger = logger;
-            _activateLog = activateLog;
         }
 
         public long GetItemAmountInStorage(Component component)
@@ -70,14 +67,11 @@ namespace IngameScript.Scripts
             return currentAmount;
         }
 
-        private long CountItemInStorage(string code, IMyEntity block, long currentAmount)
+        private static long CountItemInStorage(string code, IMyEntity block, long currentAmount)
         {
             var items = new List<MyInventoryItem>();
 
             block.GetInventory().GetItems(items, item => item.Type.SubtypeId == code);
-
-            foreach (var item in items)
-                Log(item.Type.SubtypeId);
 
             return currentAmount + items.Sum(item => item.Amount.RawValue);
         }
@@ -94,14 +88,14 @@ namespace IngameScript.Scripts
                        .Sum(itemInProd => itemInProd.Amount.RawValue);
         }
 
-        private long CountItemInProductionOutputStorage(string code, IMyProductionBlock block, long currentAmount)
+        private static long CountItemInProductionOutputStorage(
+            string code,
+            IMyProductionBlock block,
+            long currentAmount)
         {
             var items = new List<MyInventoryItem>();
 
             block.OutputInventory.GetItems(items, item => item.Type.SubtypeId == code);
-
-            foreach (var item in items)
-                Log(item.Type.SubtypeId);
 
             return currentAmount + items.Sum(item => item.Amount.RawValue);
         }
@@ -121,12 +115,10 @@ namespace IngameScript.Scripts
                 assembler.GetQueue(queue);
 
                 dict.Add(assembler.EntityId, queue.Count);
-
-                break;
             }
 
             var bestAssembler = dict
-                .OrderByDescending(x => x.Value)
+                .OrderBy(x => x.Value)
                 .Select(orderedAssemblersByQueueCount =>
                     assemblers
                         .OfType<IMyProductionBlock>()
@@ -134,13 +126,6 @@ namespace IngameScript.Scripts
                 .First();
 
             bestAssembler.AddQueueItem(item.ItemDefinition, amount);
-        }
-
-        private void Log(string message)
-        {
-            if (!_activateLog) return;
-
-            _logger(message);
         }
     }
 }
