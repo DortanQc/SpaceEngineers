@@ -50,7 +50,6 @@
         <AdditionalFiles Include="thumb.png" />
         <AdditionalFiles Include="MDK\whitelist.cache" />
         <Compile Include="Scripts\AirLock\AirLock.cs" />
-        <Compile Include="Scripts\Component.cs" />
         <Compile Include="Scripts\Grid.cs" />
         <Compile Include="Scripts\InventoryDisplay\InventoryDisplay.cs" />
         <Compile Include="Scripts\Resource.cs" />
