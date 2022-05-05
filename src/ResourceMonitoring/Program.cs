@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using VRage.Game.ModAPI.Ingame;
 
-namespace IngameScript.Scripts.ResourceDisplay
+namespace IngameScript
 {
-    public class Program : MyGridProgram
+    partial class Program : MyGridProgram
     {
         private const string LCD_GROUP_NAME = "Base - LCD Panel - Resources";
 
