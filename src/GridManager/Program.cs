@@ -52,8 +52,10 @@ namespace IngameScript
                 var blocksProducingPower = ExtractPowerBlocks(blocks);
                 var blocksWithStorage = ExtractStorageBlocks(blocks);
                 var blocksProducingItems = ExtractItemProductionBlocks(blocks);
+                var blocksHoldingGas = ExtractGasTanksBlocks(blocks);
 
-                Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
+                GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
+
                 AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
                 DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, blocks);
             }
@@ -62,7 +64,7 @@ namespace IngameScript
                 _menuNavigationSystem.RunAction(action);
             }
 
-            _menuNavigationSystem.DisplayMenu(blocks);
+            _menuNavigationSystem.RenderMenu(blocks);
         }
 
         private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(
@@ -80,12 +82,17 @@ namespace IngameScript
             return MenuNavigationSystem.ScriptActions.Normal;
         }
 
-        private void Monitor(
+        private void GetMonitoringData(
             List<IMyPowerProducer> blocksProducingPower,
             List<IMyTerminalBlock> blocksWithStorage,
-            List<IMyProductionBlock> blocksProducingItems)
+            List<IMyProductionBlock> blocksProducingItems,
+            List<IMyGasTank> blocksHoldingGas)
         {
-            _monitoring = new GridMonitoring(Echo, blocksProducingPower, blocksWithStorage, blocksProducingItems);
+            _monitoring = new GridMonitoring(Echo,
+                blocksProducingPower,
+                blocksWithStorage,
+                blocksProducingItems,
+                blocksHoldingGas);
         }
 
         private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
@@ -96,6 +103,9 @@ namespace IngameScript
 
             return blocks.Where(block => block.IsSameConstructAs(Me)).ToList();
         }
+
+        private static List<IMyGasTank> ExtractGasTanksBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks.OfType<IMyGasTank>().ToList();
 
         private static List<IMyProductionBlock> ExtractItemProductionBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
             blocks.OfType<IMyProductionBlock>().Where(block => block.HasInventory).ToList();

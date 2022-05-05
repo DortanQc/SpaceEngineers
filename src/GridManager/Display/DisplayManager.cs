@@ -16,6 +16,7 @@ namespace IngameScript
             DisplayStorageCapacity(monitoringData, allBlocks);
             DisplayPowerUsage(monitoringData, allBlocks);
             DisplayProduction(monitoringData, allBlocks);
+            DisplayHydrogenStatistics(monitoringData, allBlocks);
         }
 
         private static List<Surface> GetDisplayBlocks(
@@ -400,6 +401,24 @@ namespace IngameScript
                     : $"Power exceeding of: {shortage} MW");
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, "power-usage-statistics");
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+        }
+
+        private static void DisplayHydrogenStatistics(
+            MonitoringData monitoringData,
+            IEnumerable<IMyTerminalBlock> blocks)
+        {
+            var textBuilder = new StringBuilder();
+            var shortage = monitoringData.MaxPowerOutput - monitoringData.CurrentPowerOutput;
+
+            textBuilder
+                .AppendLine("** Hydrogen **")
+                .AppendLine()
+                .AppendLine($"Current Hydrogen Capacity: {monitoringData.HydrogenCapacity:0.##}")
+                .AppendLine($"Current Hydrogen Filled Ratio: {monitoringData.HydrogenFilledRatio * 100:0.##} %");
+
+            var textSurfaceBlock = GetDisplayBlocks(blocks, "hydrogen-usage-statistics");
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }

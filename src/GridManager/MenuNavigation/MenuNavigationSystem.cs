@@ -68,7 +68,7 @@ namespace IngameScript
             _selectedMenuIndex = newPosition;
         }
 
-        public void DisplayMenu(IEnumerable<IMyTerminalBlock> blocks)
+        public void RenderMenu(IEnumerable<IMyTerminalBlock> blocks)
         {
             var displayBlocks = GetDisplayBlocks(blocks, "grid-manager-menu");
 

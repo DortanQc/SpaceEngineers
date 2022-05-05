@@ -11,24 +11,46 @@ namespace IngameScript
         private readonly Action<string> _logger;
         private readonly List<IMyPowerProducer> _powerBlocks;
         private readonly List<IMyProductionBlock> _productionBlocks;
+        private readonly List<IMyGasTank> _gasTanks;
         private readonly List<IMyTerminalBlock> _storageBlocks;
 
         public GridMonitoring(
             Action<string> logAction,
             List<IMyPowerProducer> powerBlocks,
             List<IMyTerminalBlock> storageBlocks,
-            List<IMyProductionBlock> productionBlocks)
+            List<IMyProductionBlock> productionBlocks,
+            List<IMyGasTank> gasTanks)
         {
             _logger = logAction;
             _powerBlocks = powerBlocks;
             _storageBlocks = storageBlocks;
             _productionBlocks = productionBlocks;
+            _gasTanks = gasTanks;
             MonitoringData = new MonitoringData();
 
             ScanStorageCapacity();
             ScanAllInventory();
             ScanPower();
             ScanProduction();
+            ScanHydrogen();
+        }
+
+        private void ScanHydrogen()
+        {
+            var tanks = _gasTanks
+                .Where(tank => tank.BlockDefinition.SubtypeName.ToUpper().Contains("HYDROGEN"))
+                .ToList();
+
+            tanks.ForEach(tank =>
+            {
+                MonitoringData.HydrogenCapacity += tank.Capacity;
+                MonitoringData.HydrogenFilledRatio += tank.FilledRatio / tanks.Count;
+            });
+
+            _logger("");
+            _logger("** Hydrogen **");
+            _logger($"Current Hydrogen Capacity: {MonitoringData.HydrogenCapacity:0.##}");
+            _logger($"Current Hydrogen Filled Ratio: {(MonitoringData.HydrogenFilledRatio * 100):0.##} %");
         }
 
         public MonitoringData MonitoringData { get; }

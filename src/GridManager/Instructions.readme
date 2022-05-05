@@ -10,6 +10,7 @@ Add "ignore-auto-production" in any production block's custom data you wish to s
 -- Display Manager --
 Add "storage-capacity-statistics" in any LCD's custom data you wish to show storage capacity related statistics
 Add "power-usage-statistics" in any LCD's custom data you wish to show power usage statistics
+Add "hydrogen-usage-statistics" in any LCD's custom data you wish to show hydrogen usage statistics
 Add "display-all-inventory" in any LCD's custom data you wish to show all of your inventory
 Add "display-all-component" in any LCD's custom data you wish to show all of your components
 Add "display-all-ore" in any LCD's custom data you wish to show all of your ores

@@ -71,10 +71,12 @@ namespace IngameScript
             if (best != null)
             {
                 best.AddQueueItem(itemDefinitionId, amount);
+                _logger($"");
                 _logger($"Queued item: {amount} {itemDefinitionId.SubtypeName} into {best.CustomName}");
             }
             else
             {
+                _logger($"");
                 _logger($"No Block found for producing {amount} {itemDefinitionId.SubtypeName}");
             }
         }

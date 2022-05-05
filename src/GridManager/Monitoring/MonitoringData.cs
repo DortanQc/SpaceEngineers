@@ -38,6 +38,10 @@ namespace IngameScript
 
         public int TotalBatteries { get; set; }
 
+        public float HydrogenCapacity { get; set; }
+
+        public double HydrogenFilledRatio { get; set; }
+
         public List<Item> GetItemsInProduction()
         {
             return _itemsInProduction
