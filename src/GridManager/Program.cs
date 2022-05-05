@@ -14,10 +14,22 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            Echo($"** ************ **");
+            Echo($"** Grid Manager **");
+            Echo($"** ************ **");
+            Echo($"Script Update Source: {updateSource.ToString()}");
+            Echo($"Script Argument: {argument}");
+            Echo($"");
+
             var blocksProducingPower = ExtractPowerBlocks();
             var blocksWithStorage = ExtractStorageBlocks();
             var blocksProducingItems = ExtractItemProductionBlocks();
 
+            Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
+        }
+
+        private void Monitor(List<IMyPowerProducer> blocksProducingPower, List<IMyTerminalBlock> blocksWithStorage, List<IMyProductionBlock> blocksProducingItems)
+        {
             _monitoring = new GridMonitoring(Echo, blocksProducingPower, blocksWithStorage, blocksProducingItems);
 
             _monitoring.Scan();

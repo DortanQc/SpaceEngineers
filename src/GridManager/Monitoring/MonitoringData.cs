@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Sandbox.ModAPI.Ingame;
+using System.Collections.Generic;
 using System.Linq;
 using VRage;
 using VRage.Game.ModAPI.Ingame;
@@ -7,8 +8,8 @@ namespace IngameScript
 {
     public class MonitoringData
     {
-        private readonly CustomDataManager _dataManager = new CustomDataManager();
-        private readonly Dictionary<string, int> _components;
+        private readonly Dictionary<string, int> _items;
+        private readonly Dictionary<string, int> _itemsInProduction;
 
         public MonitoringData()
         {
@@ -17,81 +18,54 @@ namespace IngameScript
             CurrentMass = MyFixedPoint.Zero;
             CurrentPowerOutput = 0f;
             MaxPowerOutput = 0f;
-            _components = new Dictionary<string, int>();
+            _items = new Dictionary<string, int>();
+            _itemsInProduction = new Dictionary<string, int>();
         }
 
-        public List<Component> Components
+        public MyFixedPoint MaxVolume { get; set; }
+
+        public MyFixedPoint CurrentVolume { get; set; }
+
+        public MyFixedPoint CurrentMass { get; set; }
+
+        public float CurrentPowerOutput { get; set; }
+
+        public float MaxPowerOutput { get; set; }
+
+        public List<Item> GetItemsInProduction(Item.ItemTypes type)
         {
-            get
-            {
-                return _components
-                    .Select(c => new Component(c.Key, c.Value))
-                    .ToList();
-            }
+            return _itemsInProduction
+                .Select(c => new Item(c.Key, c.Value))
+                .Where(c => c.ItemType == type)
+                .ToList();
         }
 
-        public MyFixedPoint MaxVolume
+        public List<Item> GetItems(Item.ItemTypes type)
         {
-            get
-            {
-                var value = _dataManager.GetPropertyValue(nameof(MaxVolume));
-
-                return MyFixedPoint.DeserializeStringSafe(value);
-            }
-            set { _dataManager.AddValue(nameof(MaxVolume), value.SerializeString()); }
-        }
-
-        public MyFixedPoint CurrentVolume
-        {
-            get
-            {
-                var value = _dataManager.GetPropertyValue(nameof(CurrentVolume));
-
-                return MyFixedPoint.DeserializeStringSafe(value);
-            }
-            set { _dataManager.AddValue(nameof(CurrentVolume), value.SerializeString()); }
-        }
-
-        public MyFixedPoint CurrentMass
-        {
-            get
-            {
-                var value = _dataManager.GetPropertyValue(nameof(CurrentMass));
-
-                return MyFixedPoint.DeserializeStringSafe(value);
-            }
-            set { _dataManager.AddValue(nameof(CurrentMass), value.SerializeString()); }
-        }
-
-        public float CurrentPowerOutput
-        {
-            get
-            {
-                var value = _dataManager.GetPropertyValue(nameof(CurrentPowerOutput));
-
-                return float.Parse(value);
-            }
-            set { _dataManager.AddValue(nameof(CurrentPowerOutput), value.ToString()); }
-        }
-
-        public float MaxPowerOutput
-        {
-            get
-            {
-                var value = _dataManager.GetPropertyValue(nameof(MaxPowerOutput));
-
-                return float.Parse(value);
-            }
-            set { _dataManager.AddValue(nameof(MaxPowerOutput), value.ToString()); }
+            return _items
+                .Select(c => new Item(c.Key, c.Value))
+                .Where(c => c.ItemType == type)
+                .ToList();
         }
 
         public void AddToInventory(MyInventoryItem item)
         {
-            if (item.Type.GetItemInfo().IsComponent)
-                if (_components.ContainsKey(item.Type.SubtypeId))
-                    _components[item.Type.SubtypeId] += item.Amount.ToIntSafe();
-                else
-                    _components.Add(item.Type.SubtypeId, item.Amount.ToIntSafe());
+            var key = item.Type.ToString();
+
+            if (_items.ContainsKey(key))
+                _items[key] += item.Amount.ToIntSafe();
+            else
+                _items.Add(key, item.Amount.ToIntSafe());
+        }
+
+        public void AddToQueuedList(MyProductionItem queuedItem)
+        {
+            var key = queuedItem.BlueprintId.ToString();
+
+            if (_itemsInProduction.ContainsKey(key))
+                _itemsInProduction[key] += queuedItem.Amount.ToIntSafe();
+            else
+                _itemsInProduction.Add(key, queuedItem.Amount.ToIntSafe());
         }
     }
 }
