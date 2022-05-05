@@ -4,26 +4,26 @@
 ** Grid Monitoring **
 
 -- Auto Item Production --
-Add "ignore-auto-production" in any production block's custom data you wish to skip for auto productions
+Add "exclude-from-auto-production" in any production block's custom data you wish to skip for auto productions
 
 
 -- Display Manager --
-Add "storage-capacity-statistics" in any LCD's custom data you wish to show storage capacity related statistics
-Add "power-usage-statistics" in any LCD's custom data you wish to show power usage statistics
-Add "hydrogen-usage-statistics" in any LCD's custom data you wish to show hydrogen usage statistics
-Add "display-all-inventory" in any LCD's custom data you wish to show all of your inventory
-Add "display-all-component" in any LCD's custom data you wish to show all of your components
-Add "display-all-ore" in any LCD's custom data you wish to show all of your ores
-Add "display-all-ingot" in any LCD's custom data you wish to show all of your ingots
-Add "display-all-tool" in any LCD's custom data you wish to show all of your tools
-Add "display-all-ammunition" in any LCD's custom data you wish to show all of your ammunition
-Add "hide-{item_name}" in any LCD's custom data you wish to hide a specific item
-Add "hide-when-meets-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met
-Add "in-production-statistics" in any LCD's custom data you wish to show all items currently in production
+Add "stats-storage-capacity" in any LCD's custom data you wish to show storage capacity related statistics
+Add "stats-power-usage" in any LCD's custom data you wish to show power usage statistics
+Add "stats-hydrogen-usage" in any LCD's custom data you wish to show hydrogen usage statistics
+Add "stats-inventory" in any LCD's custom data you wish to show all of your inventory
+Add "stats-inventory-components" in any LCD's custom data you wish to show all of your components
+Add "stats-inventory-ores" in any LCD's custom data you wish to show all of your ores
+Add "stats-inventory-ingots" in any LCD's custom data you wish to show all of your ingots
+Add "stats-inventory-tools" in any LCD's custom data you wish to show all of your tools
+Add "stats-inventory-ammunition" in any LCD's custom data you wish to show all of your ammunition
+Add "hide-item-{item_name}" in any LCD's custom data you wish to hide a specific item
+Add "exclude-when-over-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met
+Add "stats-in-production" in any LCD's custom data you wish to show all items currently in production
 
 
 -- Menu Navigation --
-Add "grid-manager-menu" in any LCD's custom data you wish to show the menu
+Add "grid-manager-menu-access" in any LCD's custom data you wish to show the menu
     - By default, le lcd panel used will be the first one. However, if a block contains more than one, you can
-      add an zero base index value to the key ex.: grid-manager-menu=1
-Add "grid-manager-menu-controller-active" to Ship Controllers you wish to gain access to Menu Navigation ('W', 'S', 'Space')
+      add an zero base index value to the key ex.: grid-manager-menu-access=1
+Add "grid-manager-menu-ship-controllable" to Ship Controllers you wish to gain access to Menu Navigation ('W', 'S', 'Space')

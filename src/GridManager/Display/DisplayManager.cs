@@ -70,7 +70,7 @@ namespace IngameScript
                         : $"{ToFriendlyQuantity(inProd.Amount)} {inProd.Name}");
                 });
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, "in-production-statistics");
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_IN_PRODUCTION);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
@@ -127,7 +127,7 @@ namespace IngameScript
             MonitoringData monitoringData,
             CustomDataManager customData)
         {
-            var hideWhenMetThreshold = customData.GetPropertyValue("hide-when-meets-threshold") != null;
+            var hideWhenMetThreshold = customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) != null;
 
             var itemMetThreshold = IsItemMetThreshold(
                 item,
@@ -141,7 +141,7 @@ namespace IngameScript
 
         private static bool ShouldHideItem(CustomDataManager customData, Item item)
         {
-            var show = customData.GetPropertyValue($"hide-{item.ItemSubType}") == null;
+            var show = customData.GetPropertyValue($"{CustomDataSettings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") == null;
 
             return show == false;
         }
@@ -176,12 +176,12 @@ namespace IngameScript
         {
             var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
 
-            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-inventory");
-            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-component");
-            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ore");
-            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ingot");
-            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-tool");
-            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(blocks, "display-all-ammunition");
+            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY);
+            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_COMPONENTS);
+            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_ORES);
+            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_INGOTS);
+            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_TOOLS);
+            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_AMMUNITION);
 
             var combinations = Combine(
                 displayAllSurfaceBlocks,
@@ -371,7 +371,7 @@ namespace IngameScript
                 .AppendLine()
                 .AppendLine($"Current Mass: {monitoringData.CurrentMass} Kg");
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, "storage-capacity-statistics");
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_STORAGE_CAPACITY);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
@@ -400,7 +400,7 @@ namespace IngameScript
                     ? $"Power shortage of: {shortage} MW"
                     : $"Power exceeding of: {shortage} MW");
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, "power-usage-statistics");
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_POWER_USAGE);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
@@ -418,7 +418,7 @@ namespace IngameScript
                 .AppendLine($"Current Hydrogen Capacity: {monitoringData.HydrogenCapacity:0.##}")
                 .AppendLine($"Current Hydrogen Filled Ratio: {monitoringData.HydrogenFilledRatio * 100:0.##} %");
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, "hydrogen-usage-statistics");
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }

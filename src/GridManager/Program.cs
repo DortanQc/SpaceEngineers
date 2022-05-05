@@ -88,7 +88,7 @@ namespace IngameScript
         private static bool HasDisplayMenuBlocks(IMyTerminalBlock block)
         {
             var customDataManager = new CustomDataManager(block.CustomData);
-            var customData = customDataManager.GetPropertyValue("grid-manager-menu");
+            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_ACCESS);
 
             if (customData == null) return false;
 
@@ -104,7 +104,7 @@ namespace IngameScript
         private static bool IsAllowedToControlMenu(IMyTerminalBlock block)
         {
             var customDataManager = new CustomDataManager(block.CustomData);
-            var customData = customDataManager.GetPropertyValue("grid-manager-menu-controller-active");
+            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_SHIP_CONTROLLABLE);
 
             return customData != null;
         }

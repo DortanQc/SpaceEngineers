@@ -48,7 +48,7 @@ namespace IngameScript
                 {
                     var customData = new CustomDataManager(block.CustomData);
 
-                    var isIgnored = customData.GetPropertyValue("ignore-auto-production");
+                    var isIgnored = customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
                     if (isIgnored == null) return true;
 

@@ -189,7 +189,7 @@ namespace IngameScript
 
         public void RenderMenu(IEnumerable<IMyTerminalBlock> blocks, MonitoringData monitoringMonitoringData)
         {
-            var displayBlocks = GetDisplayBlocks(blocks, "grid-manager-menu");
+            var displayBlocks = GetDisplayBlocks(blocks, CustomDataSettings.GRID_MANAGER_MENU_ACCESS);
 
             displayBlocks.ForEach(block =>
             {
