@@ -36,6 +36,10 @@ namespace IngameScript
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private List<IMyTerminalBlock> _blocks;
+        private List<IMyShipController> _controllers;
+        private bool _lastControllerMoveDownAction;
+        private bool _lastControllerMoveUpAction;
+        private bool _lastControllerSelectAction;
         private DateTime _lastScanTime = DateTime.MinValue;
 
         public Program()
@@ -57,10 +61,12 @@ namespace IngameScript
                 {
                     _lastScanTime = DateTime.Now;
                     _blocks = ExtractAllTerminalBlocks();
+
                     var blocksProducingPower = ExtractPowerBlocks(_blocks);
                     var blocksWithStorage = ExtractStorageBlocks(_blocks);
                     var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
                     var blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
+                    _controllers = ExtractControllersInUse(_blocks);
 
                     GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
 
@@ -68,6 +74,8 @@ namespace IngameScript
 
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks);
                 }
+
+                ReactOnControllersAction();
             }
             else
             {
@@ -75,6 +83,79 @@ namespace IngameScript
             }
 
             _menuNavigationSystem.RenderMenu(_blocks, _monitoring.MonitoringData);
+        }
+
+        private static bool HasDisplayMenuBlocks(IMyTerminalBlock block)
+        {
+            var customDataManager = new CustomDataManager(block.CustomData);
+            var customData = customDataManager.GetPropertyValue("grid-manager-menu");
+
+            if (customData == null) return false;
+
+            var index = 0;
+            if (customData.Length > 0)
+                int.TryParse(customData, out index);
+
+            var textSurface = block as IMyTextSurfaceProvider;
+
+            return textSurface != null && textSurface.SurfaceCount > index;
+        }
+
+        private static bool IsAllowedToControlMenu(IMyTerminalBlock block)
+        {
+            var customDataManager = new CustomDataManager(block.CustomData);
+            var customData = customDataManager.GetPropertyValue("grid-manager-menu-controller-active");
+
+            return customData != null;
+        }
+
+        private void ReactOnControllersAction()
+        {
+            _controllers.ForEach(controller =>
+            {
+                var currentMoveUp = Convert.ToInt32(controller.MoveIndicator.Z) == -1;
+                var currentMoveDown = Convert.ToInt32(controller.MoveIndicator.Z) == 1;
+                var currentSelect = Convert.ToInt32(controller.MoveIndicator.Y) == 1;
+
+                var moveUpAction = false;
+                var moveDownAction = false;
+                var selectAction = false;
+
+                if (currentMoveUp)
+                    if (_lastControllerMoveUpAction == false)
+                        moveUpAction = true;
+
+                if (currentMoveDown)
+                    if (_lastControllerMoveDownAction == false)
+                        moveDownAction = true;
+
+                if (currentSelect)
+                    if (_lastControllerSelectAction == false)
+                        selectAction = true;
+
+                _lastControllerMoveUpAction = currentMoveUp;
+                _lastControllerMoveDownAction = currentMoveDown;
+                _lastControllerSelectAction = currentSelect;
+
+                if (moveUpAction)
+                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationUp);
+                else if (moveDownAction)
+                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationDown);
+                else if (selectAction)
+                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationSelect);
+            });
+        }
+
+        private static List<IMyShipController> ExtractControllersInUse(IEnumerable<IMyTerminalBlock> blocks)
+        {
+            var controllersBlocks = blocks
+                .OfType<IMyShipController>()
+                .Where(c => c.IsUnderControl);
+
+            return controllersBlocks
+                .Where(HasDisplayMenuBlocks)
+                .Where(IsAllowedToControlMenu)
+                .ToList();
         }
 
         private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(
