@@ -1,15 +1,19 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using VRage.Game;
 using VRage.Game.ModAPI.Ingame;
 
-namespace IngameScript.Scripts.InventoryDisplay
+namespace IngameScript
 {
-    public class Program : MyGridProgram
+    partial class Program : MyGridProgram
     {
+        private const string SKIP_CLEANUP_CUSTOM_DATA_KEY = "SkipCleanup";
+        private const string IS_COMPONENT_CUSTOM_DATA_KEY = "IsComponentStorage";
+        private const string IS_ORE_CUSTOM_DATA_KEY = "IsOreStorage";
         private const string LCD_GROUP_NAME = "Station - LCD Panels - Components";
         private readonly string[] _excludedAssemblersForAutoProduction = { };
 
@@ -246,7 +250,7 @@ namespace IngameScript.Scripts.InventoryDisplay
 
             _grid.CleanupProductionInputInventory(assemblyBlocks);
             _grid.CleanupProductionOutputInventory(assemblyBlocks);
-            Grid.CleanupStorageInventory(storageBlocks);
+            _grid.CleanupStorageInventory(storageBlocks);
         }
 
         private void ResetQuantities()
@@ -420,14 +424,14 @@ namespace IngameScript.Scripts.InventoryDisplay
                     assembler.InputInventory.GetItems(items);
 
                     for (var i = 0; i < items.Count; i++)
-                    for (var j = 0; j < _storageBlocks.Count; j++)
-                        if (assembler.IsQueueEmpty)
-                            if (assembler.InputInventory.TransferItemTo(
-                                    _storageBlocks[j].GetInventory(),
-                                    i,
-                                    null,
-                                    true))
-                                break;
+                        for (var j = 0; j < _storageBlocks.Count; j++)
+                            if (assembler.IsQueueEmpty)
+                                if (assembler.InputInventory.TransferItemTo(
+                                        _storageBlocks[j].GetInventory(),
+                                        i,
+                                        null,
+                                        true))
+                                    break;
                 }
             }
 
@@ -440,37 +444,77 @@ namespace IngameScript.Scripts.InventoryDisplay
                     assembler.OutputInventory.GetItems(items);
 
                     for (var i = 0; i < items.Count; i++)
-                    for (var j = 0; j < _storageBlocks.Count; j++)
-                        if (assembler.OutputInventory.TransferItemTo(
-                                _storageBlocks[j].GetInventory(),
-                                i,
-                                null,
-                                true))
-                            break;
+                        for (var j = 0; j < _storageBlocks.Count; j++)
+                            if (assembler.OutputInventory.TransferItemTo(
+                                    _storageBlocks[j].GetInventory(),
+                                    i,
+                                    null,
+                                    true))
+                                break;
                 }
             }
 
-            public static void CleanupStorageInventory(IEnumerable<IMyTerminalBlock> storages)
+            public void CleanupStorageInventory(IEnumerable<IMyTerminalBlock> storages)
             {
                 var storageSettings = ScanStorageForSettings(storages);
 
-                foreach (var cargo in storageSettings.Where(s => !s.SkipCleanup == false))
+                foreach (var cargo in storageSettings.Where(s => s.SkipCleanup == false))
                 {
                     var items = new List<MyInventoryItem>();
 
                     cargo.Block.GetInventory().GetItems(items);
 
                     for (var i = 0; i < items.Count; i++)
-                        cargo.Block.GetInventory()
-                            .TransferItemTo(
-                                cargo.Block.GetInventory(),
-                                i,
-                                null,
-                                true);
+                    {
+                        var destInventories = GetDestinationInventory(items[i], storageSettings);
+
+                        if (destInventories.Any())
+                        {
+                            for (var j = 0; j < destInventories.Count; j++)
+                                if (cargo.Block.GetInventory()
+                                    .TransferItemTo(
+                                        destInventories[j],
+                                        i,
+                                        null,
+                                        true))
+                                {
+                                    cargo.Block.GetInventory().GetItems(items);
+                                    break;
+                                }
+                        }
+                        else
+                        {
+                            cargo.Block.GetInventory()
+                                .TransferItemTo(
+                                    cargo.Block.GetInventory(),
+                                    i,
+                                    null,
+                                    true);
+                        }
+                    }
                 }
             }
 
-            private static IEnumerable<CustomDataManager.CustomDataSettings> ScanStorageForSettings(
+            private static List<IMyInventory> GetDestinationInventory(
+                MyInventoryItem item,
+                IEnumerable<CustomDataManager.CustomDataSettings> storageSettings)
+            {
+                if (item.Type.GetItemInfo().IsComponent)
+                    return storageSettings
+                        .Where(s => s.IsComponentStorage)
+                        .Select(s => s.Block.GetInventory())
+                        .ToList();
+
+                if (item.Type.GetItemInfo().IsOre || item.Type.GetItemInfo().IsIngot)
+                    return storageSettings
+                        .Where(s => s.IsOreStorage)
+                        .Select(s => s.Block.GetInventory())
+                        .ToList();
+
+                return new List<IMyInventory>();
+            }
+
+            private static List<CustomDataManager.CustomDataSettings> ScanStorageForSettings(
                 IEnumerable<IMyTerminalBlock> storages)
             {
                 return storages.OfType<IMyCargoContainer>()
@@ -513,10 +557,12 @@ namespace IngameScript.Scripts.InventoryDisplay
                                 : null;
                         });
 
-                var customSettings = new CustomDataSettings()
+                var customSettings = new CustomDataSettings
                 {
                     Block = _block,
-                    SkipCleanup = settings.ContainsKey("SkipCleanup")
+                    SkipCleanup = settings.ContainsKey(SKIP_CLEANUP_CUSTOM_DATA_KEY),
+                    IsComponentStorage = settings.ContainsKey(IS_COMPONENT_CUSTOM_DATA_KEY),
+                    IsOreStorage = settings.ContainsKey(IS_ORE_CUSTOM_DATA_KEY)
                 };
 
                 return customSettings;
@@ -527,6 +573,10 @@ namespace IngameScript.Scripts.InventoryDisplay
                 public IMyTerminalBlock Block { get; set; }
 
                 public bool SkipCleanup { get; set; }
+
+                public bool IsComponentStorage { get; set; }
+
+                public bool IsOreStorage { get; set; }
             }
         }
 

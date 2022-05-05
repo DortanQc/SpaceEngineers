@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceEngineers", "src\Space
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorControl", "src\DoorControl\DoorControl.csproj", "{66FF9846-C6A7-4B2F-978E-470F263751B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryManager", "src\InventoryManager\InventoryManager.csproj", "{74179F56-1229-4F77-A0ED-22D2B051942A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -16,6 +18,8 @@ Global
 		{977B6B25-B3AD-4870-A223-82B9D788D38C}.Debug|x64.Build.0 = Debug|x64
 		{66FF9846-C6A7-4B2F-978E-470F263751B4}.Debug|x64.ActiveCfg = Debug|x64
 		{66FF9846-C6A7-4B2F-978E-470F263751B4}.Debug|x64.Build.0 = Debug|x64
+		{74179F56-1229-4F77-A0ED-22D2B051942A}.Debug|x64.ActiveCfg = Debug|x64
+		{74179F56-1229-4F77-A0ED-22D2B051942A}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
