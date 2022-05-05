@@ -4,6 +4,45 @@ namespace IngameScript
 {
     public class Item
     {
+        public enum ItemSubTypes
+        {
+            BulletproofGlass,
+            Canvas,
+            Computer,
+            Construction,
+            Detector,
+            Display,
+            Explosives,
+            Girder,
+            GravityGenerator,
+            InteriorPlate,
+            LargeTube,
+            Medical,
+            MetalGrid,
+            Motor,
+            PowerCell,
+            RadioCommunication,
+            Reactor,
+            SmallTube,
+            SolarCell,
+            SteelPlate,
+            Superconductor,
+            Thrust,
+            Cobalt,
+            Gold,
+            Stone,
+            Iron,
+            Magnesium,
+            Nickel,
+            Platinum,
+            Silicon,
+            Silver,
+            Uranium,
+            Ice,
+            Scrap,
+            Unknown
+        }
+
         public enum ItemTypes
         {
             Unknown,
@@ -30,6 +69,8 @@ namespace IngameScript
 
         public ItemTypes ItemType { get; private set; }
 
+        public ItemSubTypes ItemSubType { get; private set; }
+
         private void Build(string itemType)
         {
             switch (itemType)
@@ -37,6 +78,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/BulletproofGlass":
                 case "MyObjectBuilder_Component/BulletproofGlass":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.BulletproofGlass;
                     Name = "Bulletproof Glass";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/BulletproofGlass");
                     Volume = 8;
@@ -45,6 +87,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/Canvas":
                 case "MyObjectBuilder_Component/Canvas":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Canvas;
                     Name = "Canvas";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Canvas");
                     Volume = 8;
@@ -54,6 +97,7 @@ namespace IngameScript
                 case "MyObjectBuilder_Component/Computer":
                     Name = "Computer";
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Computer;
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ComputerComponent");
                     Volume = 1;
 
@@ -61,6 +105,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/ConstructionComponent":
                 case "MyObjectBuilder_Component/Construction":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Construction;
                     Name = "Construction Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ConstructionComponent");
                     Volume = 2;
@@ -69,6 +114,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/DetectorComponent":
                 case "MyObjectBuilder_Component/Detector":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Detector;
                     Name = "Detector Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/DetectorComponent");
                     Volume = 6;
@@ -77,6 +123,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/Display":
                 case "MyObjectBuilder_Component/Display":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Display;
                     Name = "Display";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Display");
                     Volume = 6;
@@ -85,6 +132,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/ExplosivesComponent":
                 case "MyObjectBuilder_Component/Explosives":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Explosives;
                     Name = "Explosives";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent");
                     Volume = 2;
@@ -93,6 +141,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/GirderComponent":
                 case "MyObjectBuilder_Component/Girder":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Girder;
                     Name = "Girder";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GirderComponent");
                     Volume = 2;
@@ -101,6 +150,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent":
                 case "MyObjectBuilder_Component/GravityGenerator":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.GravityGenerator;
                     Name = "Gravity Gen. Comp";
                     ItemDefinition =
                         MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent");
@@ -111,6 +161,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/InteriorPlate":
                 case "MyObjectBuilder_Component/InteriorPlate":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.InteriorPlate;
                     Name = "Interior Plate";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/InteriorPlate");
                     Volume = 5;
@@ -119,6 +170,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/LargeTube":
                 case "MyObjectBuilder_Component/LargeTube":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.LargeTube;
                     Name = "Large Steel Tube";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/LargeTube");
                     Volume = 38;
@@ -127,6 +179,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/MedicalComponent":
                 case "MyObjectBuilder_Component/Medical":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Medical;
                     Name = "Medical Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MedicalComponent");
                     Volume = 160;
@@ -135,6 +188,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/MetalGrid":
                 case "MyObjectBuilder_Component/MetalGrid":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.MetalGrid;
                     Name = "Metal Grid";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MetalGrid");
                     Volume = 15;
@@ -143,6 +197,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/MotorComponent":
                 case "MyObjectBuilder_Component/Motor":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Motor;
                     Name = "Motor";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MotorComponent");
                     Volume = 8;
@@ -151,6 +206,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/PowerCell":
                 case "MyObjectBuilder_Component/PowerCell":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.PowerCell;
                     Name = "Power Cell";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PowerCell");
                     Volume = 45;
@@ -159,6 +215,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent":
                 case "MyObjectBuilder_Component/RadioCommunication":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.RadioCommunication;
                     Name = "Radio Comm. Comp";
                     ItemDefinition =
                         MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent");
@@ -169,6 +226,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/ReactorComponent":
                 case "MyObjectBuilder_Component/Reactor":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Reactor;
                     Name = "Reactor Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ReactorComponent");
                     Volume = 8;
@@ -177,6 +235,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/SmallTube":
                 case "MyObjectBuilder_Component/SmallTube":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.SmallTube;
                     Name = "Small Steel Tube";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SmallTube");
                     Volume = 2;
@@ -185,6 +244,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/SolarCell":
                 case "MyObjectBuilder_Component/SolarCell":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.SolarCell;
                     Name = "Solar Cell";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SolarCell");
                     Volume = 20;
@@ -193,6 +253,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/SteelPlate":
                 case "MyObjectBuilder_Component/SteelPlate":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.SteelPlate;
                     Name = "Steel Plate";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SteelPlate");
                     Volume = 3;
@@ -201,6 +262,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/Superconductor":
                 case "MyObjectBuilder_Component/Superconductor":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Superconductor;
                     Name = "Superconductor";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Superconductor");
                     Volume = 8;
@@ -209,6 +271,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/ThrustComponent":
                 case "MyObjectBuilder_Component/Thrust":
                     ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.Thrust;
                     Name = "Thruster Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ThrustComponent");
                     Volume = 10;
@@ -218,6 +281,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/CobaltOreToIngot":
                 case "MyObjectBuilder_Ingot/Cobalt":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.112f;
@@ -226,6 +290,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/GoldOreToIngot":
                 case "MyObjectBuilder_Ingot/Gold":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.052f;
@@ -234,6 +299,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/StoneOreToIngot":
                 case "MyObjectBuilder_Ingot/Stone":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Stone;
                     Name = "Gravel";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -242,6 +308,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/IronOreToIngot":
                 case "MyObjectBuilder_Ingot/Iron":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.127f;
@@ -250,6 +317,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/MagnesiumOreToIngot":
                 case "MyObjectBuilder_Ingot/Magnesium":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Powder";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.575f;
@@ -258,6 +326,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/NickelOreToIngot":
                 case "MyObjectBuilder_Ingot/Nickel":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.112f;
@@ -266,6 +335,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/PlatinumOreToIngot":
                 case "MyObjectBuilder_Ingot/Platinum":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.047f;
@@ -274,6 +344,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/SiliconOreToIngot":
                 case "MyObjectBuilder_Ingot/Silicon":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Wafer";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.429f;
@@ -282,6 +353,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/SilverOreToIngot":
                 case "MyObjectBuilder_Ingot/Silver":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.095f;
@@ -290,6 +362,7 @@ namespace IngameScript
                 case "MyObjectBuilder_BlueprintDefinition/UraniumOreToIngot":
                 case "MyObjectBuilder_Ingot/Uranium":
                     ItemType = ItemTypes.Ingot;
+                    ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ingot";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.052f;
@@ -298,6 +371,7 @@ namespace IngameScript
 
                 case "MyObjectBuilder_Ore/Cobalt":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -305,6 +379,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Gold":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -312,6 +387,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Ice":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Ice;
                     Name = "Ice";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -319,6 +395,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Iron":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -326,6 +403,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Magnesium":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -333,6 +411,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Nickel":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -340,6 +419,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Platinum":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -347,6 +427,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Scrap":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Scrap;
                     Name = "Scrap Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -354,6 +435,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Silicon":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -361,6 +443,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Silver":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -368,6 +451,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Stone":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Stone;
                     Name = "Stone";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -375,6 +459,7 @@ namespace IngameScript
                     break;
                 case "MyObjectBuilder_Ore/Uranium":
                     ItemType = ItemTypes.Ore;
+                    ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ore";
                     ItemDefinition = new MyDefinitionId();
                     Volume = 0.37f;
@@ -383,6 +468,7 @@ namespace IngameScript
 
                 default:
                     ItemType = ItemTypes.Unknown;
+                    ItemSubType = ItemSubTypes.Unknown;
                     Name = itemType;
                     Volume = 0;
 

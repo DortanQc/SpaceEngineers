@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
@@ -39,11 +40,29 @@ namespace IngameScript
                 MonitoringData.MaxPowerOutput += block.MaxOutput;
             });
 
+            MonitoringData.TotalBatteries = _powerBlocks
+                .OfType<IMyBatteryBlock>()
+                .Count();
+
+            MonitoringData.ChargingBatteries = _powerBlocks
+                .OfType<IMyBatteryBlock>()
+                .Count(block => block.CurrentInput > block.CurrentOutput);
+
+            MonitoringData.DischargingBatteries = _powerBlocks
+                .OfType<IMyBatteryBlock>()
+                .Count(block => block.CurrentInput < block.CurrentOutput);
+
             _logger("");
             _logger("** Power **");
             _logger($"Current Power Output: {MonitoringData.CurrentPowerOutput} MW");
             _logger($"Max Power Output: {MonitoringData.MaxPowerOutput} MW");
-
+            _logger("");
+            _logger($"Total Batteries: {MonitoringData.TotalBatteries}");
+            if (MonitoringData.ChargingBatteries > 0)
+                _logger($"Total Charging Batteries: {MonitoringData.ChargingBatteries}");
+            if (MonitoringData.DischargingBatteries > 0)
+                _logger($"Total Discharging Batteries: {MonitoringData.DischargingBatteries}");
+            _logger("");
             var shortage = MonitoringData.MaxPowerOutput - MonitoringData.CurrentPowerOutput;
             _logger(shortage < 0
                 ? $"Power Shortage of: {shortage} MW"

@@ -54,7 +54,7 @@ namespace IngameScript
 
             Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
             AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
-            DisplayManager.Display(_monitoring.MonitoringData, lcdBlocks);
+            DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, lcdBlocks);
         }
 
         private void Monitor(

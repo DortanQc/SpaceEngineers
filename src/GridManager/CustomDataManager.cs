@@ -19,13 +19,13 @@ namespace IngameScript
                     new[] { "\r\n", "\r", "\n" },
                     StringSplitOptions.None)
                 .ToDictionary(
-                    s => s.Split('=')[0].Trim(),
+                    s => s.Split('=')[0].ToLower().Trim(),
                     s =>
                     {
                         var setting = s.Split('=');
 
                         return setting.Length > 1
-                            ? setting[1].Trim()
+                            ? setting[1].ToLower().Trim()
                             : "";
                     });
         }
@@ -34,7 +34,7 @@ namespace IngameScript
         {
             string value;
 
-            return _settings.TryGetValue(key, out value)
+            return _settings.TryGetValue(key.ToLower().Trim(), out value)
                 ? value
                 : null;
         }

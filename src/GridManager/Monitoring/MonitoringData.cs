@@ -32,6 +32,12 @@ namespace IngameScript
 
         public float MaxPowerOutput { get; set; }
 
+        public int ChargingBatteries { get; set; }
+
+        public int DischargingBatteries { get; set; }
+
+        public int TotalBatteries { get; set; }
+
         public List<Item> GetItemsInProduction()
         {
             return _itemsInProduction
