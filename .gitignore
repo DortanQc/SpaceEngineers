@@ -1,8 +1,16 @@
-
 .idea/
-
 .vs/
 
 src/**/obj/
-
 src/**/bin/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+*.zip
+
+src/**/MDK.paths.props
