@@ -53,8 +53,6 @@ namespace IngameScript
 
             if (action == MenuNavigationSystem.ScriptActions.Normal)
             {
-                Echo(Runtime.TimeSinceLastRun.TotalSeconds.ToString());
-
                 if (DateTime.Now.Subtract(_lastScanTime).TotalSeconds >= 2)
                 {
                     _lastScanTime = DateTime.Now;

@@ -1,5 +1,4 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System;
 using System.Linq;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
@@ -12,25 +11,19 @@ namespace IngameScript
 
         public MenuItem[] MenuItems { get; set; }
 
-        private int TotalItemInMenu => MenuItems.Length;
+        public MenuItem SelectedMenuItem => MenuItems[_selectedMenuIndex];
 
         public void MoveSelection(int direction)
         {
+            MenuItems.ToList().ForEach(i => i.ResetRendering());
+
+            var totalNavigatableItem = MenuItems.Count(i => i.Type == MenuItem.MenuItemTypes.Navigatable);
             var newPosition = _selectedMenuIndex + direction;
 
-            if (newPosition > TotalItemInMenu - 1 || newPosition < 0)
+            if (newPosition > totalNavigatableItem - 1 || newPosition < 0)
                 return;
 
             _selectedMenuIndex = newPosition;
-        }
-
-        public void Select()
-        {
-            // var newIsActiveValue = !MenuItems[_selectedMenuIndex].IsActive;
-            // for (var i = 0; i <= MenuItems.Length - 1; i++)
-            //     MenuItems[i].IsActive = false;
-            //
-            // MenuItems[_selectedMenuIndex].IsActive = newIsActiveValue;
         }
 
         public void Render(IMyTextSurface block)
@@ -38,22 +31,53 @@ namespace IngameScript
             if (MenuItems.Any(m => m.Type == MenuItem.MenuItemTypes.Splash))
             {
                 DisplaySplash(block);
+
                 return;
             }
 
-            for (var i = 0; i <= TotalItemInMenu - 1; i++)
-            {
-                // if (i == _selectedMenuIndex)
-                //     textBuilder.Append(MenuItems[i].IsActive
-                //         ? "> [X] "
-                //         : ">   ");
-                // else
-                //     textBuilder.Append(MenuItems[i].IsActive
-                //         ? " [X] "
-                //         : "   ");
-                //
-                // textBuilder.AppendLine(MenuItems[i].Text());
-            }
+            var textBuilder = new StringBuilder();
+            block.Alignment = TextAlignment.LEFT;
+            block.ContentType = ContentType.TEXT_AND_IMAGE;
+            block.FontSize = 1;
+            block.TextPadding = 4;
+
+            var index = -1;
+
+            MenuItems
+                .ToList()
+                .ForEach(menuItem =>
+                {
+                    switch (menuItem.Type)
+                    {
+                        case MenuItem.MenuItemTypes.Text:
+                            RenderText(menuItem, textBuilder);
+
+                            break;
+                        case MenuItem.MenuItemTypes.Navigatable:
+                            index++;
+                            RenderNavigatableText(index, menuItem, textBuilder);
+
+                            break;
+                    }
+                });
+
+            block.WriteText(textBuilder);
+        }
+
+        public void Reset()
+        {
+            MenuItems.ToList().ForEach(i => i.ResetRendering());
+            _selectedMenuIndex = 0;
+        }
+
+        private static void RenderText(MenuItem menuItem, StringBuilder sb)
+        {
+            sb.AppendLine(menuItem.GetNextTextFrame(false));
+        }
+
+        private void RenderNavigatableText(int itemIndex, MenuItem menuItem, StringBuilder sb)
+        {
+            sb.AppendLine(menuItem.GetNextTextFrame(itemIndex == _selectedMenuIndex));
         }
 
         private void DisplaySplash(IMyTextSurface block)
@@ -65,7 +89,7 @@ namespace IngameScript
             block.FontSize = 1;
             block.TextPadding = 50;
 
-            block.WriteText(splash.GetNextAnimationFrame());
+            block.WriteText(splash.GetNextTextFrame(false));
         }
     }
 }

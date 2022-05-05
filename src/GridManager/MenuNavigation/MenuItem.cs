@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace IngameScript
 {
@@ -6,36 +7,63 @@ namespace IngameScript
     {
         public enum MenuItemTypes
         {
-            Splash
+            Splash,
+            Text,
+            Navigatable
         }
 
+        public enum SelectActions
+        {
+            SubMenu,
+            None
+        }
+
+        private int _lastRenderedIndex;
         private DateTime _lastRenderTimer = DateTime.MinValue;
-        private int _lastRenderedIndex = 0;
 
         public MenuItemTypes Type { get; set; }
 
-        public MenuItem[] SubMenu { get; set; }
-
-        public int Id { get; set; }
-
         public string[] Text { get; set; }
 
-        public string GetNextAnimationFrame()
-        {
-            var text = Text[_lastRenderedIndex];
+        public SelectActions SelectAction { get; set; }
 
-            if (DateTime.Now.Subtract(_lastRenderTimer).TotalMilliseconds > 500)
+        public int SubMenuId { get; set; }
+
+        public Action AutoActionEndAnimation { get; set; }
+
+        public string[] WhenSelectedText { get; set; }
+
+        public string GetNextTextFrame(bool isSelected)
+        {
+            string[] textToRender;
+
+            if ((WhenSelectedText?.Length ?? 0) > 0 && isSelected)
+                textToRender = WhenSelectedText;
+            else
+                textToRender = Text;
+
+            var text = textToRender[_lastRenderedIndex];
+
+            if (DateTime.Now.Subtract(_lastRenderTimer).TotalMilliseconds >= 500)
             {
                 var newIndex = _lastRenderedIndex + 1;
 
-                _lastRenderedIndex = newIndex > Text.Length - 1
+                _lastRenderedIndex = newIndex > textToRender.Length - 1
                     ? 0
                     : newIndex;
 
                 _lastRenderTimer = DateTime.Now;
+
+                if (_lastRenderedIndex == 0 && AutoActionEndAnimation != null)
+                    AutoActionEndAnimation();
             }
 
             return text;
+        }
+
+        public void ResetRendering()
+        {
+            _lastRenderedIndex = 0;
         }
     }
 }
