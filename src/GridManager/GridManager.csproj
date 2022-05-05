@@ -39,8 +39,13 @@
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
     <Compile Include="Display\DisplayManager.cs" />
+    <Compile Include="Display\Surface.cs" />
+    <Compile Include="Display\SurfaceByType.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="CustomDataManager.cs" />
+    <Compile Include="MenuNavigation\Menu.cs" />
+    <Compile Include="MenuNavigation\MenuCore.cs" />
+    <Compile Include="MenuNavigation\MenuItem.cs" />
     <Compile Include="MenuNavigation\MenuNavigationSystem.cs" />
     <Compile Include="Monitoring\GridMonitoring.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />

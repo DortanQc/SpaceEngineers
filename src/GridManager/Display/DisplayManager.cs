@@ -422,21 +422,5 @@ namespace IngameScript
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
-
-        private class Surface
-        {
-            public IMyTextSurface TextSurface { get; set; }
-
-            public CustomDataManager BlockCustomData { get; set; }
-
-            public long BlockId { get; set; }
-        }
-
-        private class SurfaceByType
-        {
-            public IEnumerable<Item.ItemTypes> ItemTypes { get; set; }
-
-            public Surface Block { get; set; }
-        }
     }
 }

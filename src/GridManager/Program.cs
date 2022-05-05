@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,38 +34,49 @@ namespace IngameScript
         };
 
         private readonly MenuNavigationSystem _menuNavigationSystem;
-        private GridMonitoring _monitoring;
+        private readonly GridMonitoring _monitoring;
+        private List<IMyTerminalBlock> _blocks;
+        private DateTime _lastScanTime = DateTime.MinValue;
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
-            _menuNavigationSystem = new MenuNavigationSystem();
+            _blocks = new List<IMyTerminalBlock>();
+            _monitoring = new GridMonitoring(Echo);
+            _menuNavigationSystem = new MenuNavigationSystem(Echo);
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
             var action = GetScriptActionRequest(updateSource, argument);
-            var blocks = ExtractAllTerminalBlocks();
 
             if (action == MenuNavigationSystem.ScriptActions.Normal)
             {
-                var blocksProducingPower = ExtractPowerBlocks(blocks);
-                var blocksWithStorage = ExtractStorageBlocks(blocks);
-                var blocksProducingItems = ExtractItemProductionBlocks(blocks);
-                var blocksHoldingGas = ExtractGasTanksBlocks(blocks);
+                Echo(Runtime.TimeSinceLastRun.TotalSeconds.ToString());
 
-                GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
+                if (DateTime.Now.Subtract(_lastScanTime).TotalSeconds >= 2)
+                {
+                    _lastScanTime = DateTime.Now;
+                    _blocks = ExtractAllTerminalBlocks();
+                    var blocksProducingPower = ExtractPowerBlocks(_blocks);
+                    var blocksWithStorage = ExtractStorageBlocks(_blocks);
+                    var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
+                    var blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
 
-                AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
-                DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, blocks);
+                    GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
+
+                    AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
+
+                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks);
+                }
             }
             else
             {
                 _menuNavigationSystem.RunAction(action);
             }
 
-            _menuNavigationSystem.RenderMenu(blocks);
+            _menuNavigationSystem.RenderMenu(_blocks, _monitoring.MonitoringData);
         }
 
         private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(
@@ -88,7 +100,7 @@ namespace IngameScript
             List<IMyProductionBlock> blocksProducingItems,
             List<IMyGasTank> blocksHoldingGas)
         {
-            _monitoring = new GridMonitoring(Echo,
+            _monitoring.UpdateData(
                 blocksProducingPower,
                 blocksWithStorage,
                 blocksProducingItems,

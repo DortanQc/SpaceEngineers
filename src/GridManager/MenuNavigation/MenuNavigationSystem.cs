@@ -1,11 +1,14 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace IngameScript
 {
     public class MenuNavigationSystem
     {
+        private readonly Action<string> _logAction;
+
         public enum ScriptActions
         {
             NavigationUp,
@@ -14,81 +17,53 @@ namespace IngameScript
             Normal
         }
 
-        private readonly MenuItem[] _menuItems;
-        private int _selectedMenuIndex;
+        private readonly List<Menu> _menus = new List<Menu>();
+        private readonly Menu _selectedMenu;
 
-        public MenuNavigationSystem()
+        public MenuNavigationSystem(Action<string> logAction)
         {
-            _menuItems = new[]
+            _logAction = logAction;
+            _menus.Add(new Menu(1)
             {
-                new MenuItem("Menu Item 1"),
-                new MenuItem("Menu Item 2"),
-                new MenuItem("Menu Item 3")
-            };
-        }
+                MenuItems = new[]
+                {
+                    new MenuItem
+                    {
+                        Id = 1,
+                        Text = new [] {"Please Login    ", "Please Login .  ", "Please Login .. ", "Please Login ..."},
+                        Type = MenuItem.MenuItemTypes.Splash
+                    }
+                }
+            });
 
-        private int TotalItemInMenu => _menuItems.Length;
+            _selectedMenu = _menus.First(m => m.Id == 1);
+        }
 
         public void RunAction(ScriptActions action)
         {
             switch (action)
             {
                 case ScriptActions.NavigationUp:
-                    MoveSelectedIndex(-1);
+                    _selectedMenu.MoveSelection(-1);
 
                     break;
                 case ScriptActions.NavigationDown:
-                    MoveSelectedIndex(1);
+                    _selectedMenu.MoveSelection(-1);
 
                     break;
                 case ScriptActions.NavigationSelect:
-                    SetSelectedItem();
+                    _selectedMenu.Select();
 
                     break;
                 case ScriptActions.Normal: break;
             }
         }
 
-        private void SetSelectedItem()
-        {
-            var newIsActiveValue = !_menuItems[_selectedMenuIndex].IsActive;
-            for (var i = 0; i <= _menuItems.Length - 1; i++)
-                _menuItems[i].IsActive = false;
-
-            _menuItems[_selectedMenuIndex].IsActive = newIsActiveValue;
-        }
-
-        private void MoveSelectedIndex(int direction)
-        {
-            var newPosition = _selectedMenuIndex + direction;
-
-            if (newPosition > TotalItemInMenu - 1 || newPosition < 0)
-                return;
-
-            _selectedMenuIndex = newPosition;
-        }
-
-        public void RenderMenu(IEnumerable<IMyTerminalBlock> blocks)
+        public void RenderMenu(IEnumerable<IMyTerminalBlock> blocks, MonitoringData monitoringMonitoringData)
         {
             var displayBlocks = GetDisplayBlocks(blocks, "grid-manager-menu");
 
-            var textBuilder = new StringBuilder();
-
-            for (var i = 0; i <= _menuItems.Length - 1; i++)
-            {
-                if (i == _selectedMenuIndex)
-                    textBuilder.Append(_menuItems[i].IsActive
-                        ? "> [X] "
-                        : ">   ");
-                else
-                    textBuilder.Append(_menuItems[i].IsActive
-                        ? " [X] "
-                        : "   ");
-
-                textBuilder.AppendLine(_menuItems[i].Text());
-            }
-
-            displayBlocks.ForEach(block => block.WriteText(textBuilder));
+            displayBlocks.ForEach(block => _selectedMenu.Render(block));
         }
 
         private static List<IMyTextSurface> GetDisplayBlocks(
@@ -117,20 +92,5 @@ namespace IngameScript
 
             return result;
         }
-    }
-
-    internal class MenuItem
-    {
-        private readonly string _text;
-
-        public MenuItem(string text)
-        {
-            _text = text;
-        }
-
-        public bool IsActive { get; set; }
-
-        public string Text() =>
-            _text;
     }
 }
