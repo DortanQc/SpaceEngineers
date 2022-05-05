@@ -16,5 +16,5 @@ Add "display-all-ore" in any LCD's custom data you wish to show all of your ores
 Add "display-all-ingot" in any LCD's custom data you wish to show all of your ingots
 Add "display-all-tool" in any LCD's custom data you wish to show all of your tools
 Add "display-all-ammunition" in any LCD's custom data you wish to show all of your ammunition
-Add hide-{item_name} in any LCD's custom data you wish to hide a specific item
-Add hide-when-meets-threshold in any LCD's custom data you wish to hide a specific item when threshold is defined and met
+Add "hide-{item_name}"" in any LCD's custom data you wish to hide a specific item
+Add "hide-when-meets-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met

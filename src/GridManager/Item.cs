@@ -40,7 +40,26 @@ namespace IngameScript
             Uranium,
             Ice,
             Scrap,
-            Unknown
+            Unknown,
+            AutomaticRifle,
+            PreciseAutomaticRifle,
+            RapidFireAutomaticRifle,
+            UltimateAutomaticRifle,
+            NATO_5p56x45mmMagazine,
+            NATO_25x184mmMagazine,
+            Missile200mm,
+            RapidFireAutomaticRifleGun_Mag_50rd,
+            AutomaticRifleGun_Mag_20rd,
+            SpaceCredit,
+            aFullAutoPistolMagazine,
+            HydrogenBottle,
+            OxygenBottle,
+            Welder,
+            AngleGrinder,
+            HandDrill,
+            Welder2,
+            AngleGrinder2,
+            HandDrill2
         }
 
         public enum ItemTypes
@@ -50,7 +69,8 @@ namespace IngameScript
             Ore,
             Ingot,
             Tools,
-            Ammunition
+            Ammunition,
+            Consumable
         }
 
         public Item(string itemType, int amount)
@@ -466,6 +486,194 @@ namespace IngameScript
 
                     break;
 
+                case "MyObjectBuilder_PhysicalGunObject/AutomaticRifleItem":
+                case "MyObjectBuilder_BlueprintDefinition/AutomaticRifle":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.AutomaticRifle;
+                    Name = "Automatic Rifle";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifle");
+                    Volume = 14f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem":
+                case "MyObjectBuilder_BlueprintDefinition/PreciseAutomaticRifle":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.PreciseAutomaticRifle;
+                    Name = "Precise Rifle";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PreciseAutomaticRifle");
+                    Volume = 14f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/RapidFireAutomaticRifleItem":
+                case "MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifle":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.RapidFireAutomaticRifle;
+                    Name = "Rapid Fire Rifle";
+                    ItemDefinition =
+                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifle");
+
+                    Volume = 14f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/UltimateAutomaticRifleItem":
+                case "MyObjectBuilder_BlueprintDefinition/UltimateAutomaticRifle":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.UltimateAutomaticRifle;
+                    Name = "Ultimate Rifle";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/UltimateAutomaticRifle");
+                    Volume = 14f;
+
+                    break;
+
+
+
+
+
+                case "MyObjectBuilder_PhysicalGunObject/WelderItem":
+                case "MyObjectBuilder_BlueprintDefinition/Welder":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.Welder;
+                    Name = "Welder 1";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder");
+                    Volume = 8f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/Welder2Item":
+                case "MyObjectBuilder_BlueprintDefinition/Welder2":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.Welder2;
+                    Name = "Welder 2";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder2");
+                    Volume = 8f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/AngleGrinderItem":
+                case "MyObjectBuilder_BlueprintDefinition/AngleGrinder":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.AngleGrinder;
+                    Name = "Grinder 1";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder");
+                    Volume = 20f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/AngleGrinder2Item":
+                case "MyObjectBuilder_BlueprintDefinition/Angle2Grinder":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.AngleGrinder2;
+                    Name = "Grinder 2";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder2");
+                    Volume = 20f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/HandDrillItem":
+                case "MyObjectBuilder_BlueprintDefinition/HandDrill":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.HandDrill;
+                    Name = "Drill 1";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill");
+                    Volume = 25f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/HandDrill2Item":
+                case "MyObjectBuilder_BlueprintDefinition/HandDrill2":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.HandDrill2;
+                    Name = "Drill 2";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill2");
+                    Volume = 25f;
+
+                    break;
+
+
+
+
+
+                case "MyObjectBuilder_AmmoMagazine/NATO_5p56x45mm":
+                case "MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.NATO_5p56x45mmMagazine;
+                    Name = "NATO 5.56x45mm";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
+                    Volume = 0.2f;
+
+                    break;
+                case "MyObjectBuilder_AmmoMagazine/NATO_25x184mm":
+                case "MyObjectBuilder_BlueprintDefinition/NATO_25x184mmMagazine":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.NATO_25x184mmMagazine;
+                    Name = "NATO 25x184mm";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
+                    Volume = 16f;
+
+                    break;
+                case "MyObjectBuilder_AmmoMagazine/Missile200mm":
+                case "MyObjectBuilder_BlueprintDefinition/Missile200mm":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.Missile200mm;
+                    Name = "Missile 200mm";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Missile200mm");
+                    Volume = 60f;
+
+                    break;
+                case "MyObjectBuilder_AmmoMagazine/RapidFireAutomaticRifleGun_Mag_50rd":
+                case "MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.RapidFireAutomaticRifleGun_Mag_50rd;
+                    Name = "MR-50A Magazine";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd");
+                    Volume = 2.7f;
+
+                    break;
+                case "MyObjectBuilder_AmmoMagazine/AutomaticRifleGun_Mag_20rd":
+                case "MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.AutomaticRifleGun_Mag_20rd;
+                    Name = "MR-50A Magazine";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd");
+                    Volume = 1.8f;
+
+                    break;
+                case "MyObjectBuilder_AmmoMagazine/FullAutoPistolMagazine":
+                case "MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.aFullAutoPistolMagazine;
+                    Name = "S-20A Magazine";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine");
+                    Volume = 3.45f;
+
+                    break;
+
+
+
+                case "MyObjectBuilder_PhysicalObject/SpaceCredit":
+                case "MyObjectBuilder_BlueprintDefinition/SpaceCredit":
+                    ItemType = ItemTypes.Consumable;
+                    ItemSubType = ItemSubTypes.SpaceCredit;
+                    Name = "Space Credit";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SpaceCredit");
+                    Volume = 8.26f;
+
+                    break;
+                case "MyObjectBuilder_GasContainerObject/HydrogenBottle":
+                case "MyObjectBuilder_BlueprintDefinition/HydrogenBottle":
+                    ItemType = ItemTypes.Consumable;
+                    ItemSubType = ItemSubTypes.HydrogenBottle;
+                    Name = "Hydrogen Bottle";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HydrogenBottle");
+                    Volume = 120f;
+
+                    break;
+                case "MyObjectBuilder_OxygenContainerObject/OxygenBottle":
+                case "MyObjectBuilder_BlueprintDefinition/OxygenBottle":
+                    ItemType = ItemTypes.Consumable;
+                    ItemSubType = ItemSubTypes.OxygenBottle;
+                    Name = "Oxygen Bottle";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/OxygenBottle");
+                    Volume = 120f;
+
+                    break;
+
+
                 default:
                     ItemType = ItemTypes.Unknown;
                     ItemSubType = ItemSubTypes.Unknown;
@@ -475,28 +683,12 @@ namespace IngameScript
                     break;
             }
 
-            // "Automatic Rifle", "AutomaticRifleItem", "MyObjectBuilder_PhysicalGunObject", "AutomaticRifle", 14
-            // "Precise Rifle", "PreciseAutomaticRifleItem", "MyObjectBuilder_PhysicalGunObject", "PreciseAutomaticRifle", 14
-            // "Rapid Fire Rifle", "RapidFireAutomaticRifleItem", "MyObjectBuilder_PhysicalGunObject", "RapidFireAutomaticRifle", 14
-            // "Ultimate Rifle", "UltimateAutomaticRifleItem", "MyObjectBuilder_PhysicalGunObject", "UltimateAutomaticRifle", 14
-            // "Welder 1", "WelderItem", "MyObjectBuilder_PhysicalGunObject", "Welder", 8
-            // "Welder 2", "Welder2Item", "MyObjectBuilder_PhysicalGunObject", "Welder2", 8
             // "Welder 3", "Welder3Item", "MyObjectBuilder_PhysicalGunObject", "Welder3", 8
             // "Welder 4", "Welder4Item", "MyObjectBuilder_PhysicalGunObject", "Welder4", 8
-            // "Grinder 1", "AngleGrinderItem", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder", 20
-            // "Grinder 2", "AngleGrinder2Item", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder2", 20
             // "Grinder 3", "AngleGrinder3Item", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder3", 20
             // "Grinder 4", "AngleGrinder4Item", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder4", 20
-            // "Drill 1", "HandDrillItem", "MyObjectBuilder_PhysicalGunObject", "HandDrill", 25
-            // "Drill 2", "HandDrill2Item", "MyObjectBuilder_PhysicalGunObject", "HandDrill2", 25
             // "Drill 3", "HandDrill3Item", "MyObjectBuilder_PhysicalGunObject", "HandDrill3", 25
             // "Drill 4", "HandDrill4Item", "MyObjectBuilder_PhysicalGunObject", "HandDrill4", 25
-            // "Oxygen Bottle", "OxygenBottle", "MyObjectBuilder_OxygenContainerObject", "OxygenBottle", 120
-            // "Hydrogen Bottle", "HydrogenBottle", "MyObjectBuilder_GasContainerObject", "HydrogenBottle", 120
-
-            // "NATO 5.56x45mm", "NATO_5p56x45mm", "MyObjectBuilder_AmmoMagazine", "NATO_5p56x45mmMagazine", 0.2
-            // "NATO 25x184mm", "NATO_25x184mm", "MyObjectBuilder_AmmoMagazine", "NATO_25x184mmMagazine", 16
-            // "Missile 200mm", "Missile200mm", "MyObjectBuilder_AmmoMagazine", "Missile200mm", 60
         }
     }
 }

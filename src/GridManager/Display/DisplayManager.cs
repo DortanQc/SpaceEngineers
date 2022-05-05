@@ -22,10 +22,9 @@ namespace IngameScript
             IReadOnlyCollection<Item> itemsWithThreshold,
             List<IMyTextPanel> lcdBlocks)
         {
-            var textBuilder = new StringBuilder();
-
             lcdBlocks.ForEach(block =>
             {
+                var textBuilder = new StringBuilder();
                 var customData = new CustomDataManager(block.CustomData);
                 var displayAll = customData.GetPropertyValue("display-all-inventory") != null;
                 var displayComponents = customData.GetPropertyValue("display-all-component") != null;
@@ -43,134 +42,150 @@ namespace IngameScript
                 var hasAmmunition = false;
                 var hasSomethingToDisplay = false;
 
-                monitoringData.GetItems()
-                    .OrderBy(item => item.ItemType)
-                    .ThenBy(item => item.Name)
-                    .ToList()
-                    .ForEach(item =>
-                    {
-                        if (item.ItemType == Item.ItemTypes.Unknown)
-                            if (displayAll ||
-                                displayComponents ||
-                                displayOres ||
-                                displayIngots ||
-                                displayTools ||
-                                displayAmmunition)
+                var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
+
+                itemsToDisplay.ForEach(item =>
+                {
+                    if (item.ItemType == Item.ItemTypes.Unknown)
+                        if (displayAll ||
+                            displayComponents ||
+                            displayOres ||
+                            displayIngots ||
+                            displayTools ||
+                            displayAmmunition)
+                        {
+                            if (!hasUnknowns)
                             {
-                                if (!hasUnknowns)
+                                if (hasSomethingToDisplay) textBuilder.AppendLine();
+
+                                textBuilder.AppendLine("** Unknown Items **");
+                                hasUnknowns = true;
+                            }
+
+                            hasSomethingToDisplay = true;
+                            textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                        }
+
+                    var show = customData.GetPropertyValue($"hide-{item.ItemSubType}") == null;
+
+                    if (show == false)
+                        return;
+
+                    var itemMetThreshold = IsItemMetThreshold(
+                        item,
+                        itemsWithThreshold,
+                        monitoringData);
+
+                    var itemHasThresholdDefined = HasItemThresholdDefined(item, itemsWithThreshold);
+
+                    if (hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold)
+                        return;
+
+                    switch (item.ItemType)
+                    {
+                        case Item.ItemTypes.Component:
+                            if (displayAll || displayComponents)
+                            {
+                                if (!hasComponents)
                                 {
                                     if (hasSomethingToDisplay) textBuilder.AppendLine();
 
-                                    textBuilder.AppendLine("** Unknown Items **");
-                                    hasUnknowns = true;
+                                    textBuilder.AppendLine("** Owned Components **");
+                                    hasComponents = true;
                                 }
 
                                 hasSomethingToDisplay = true;
                                 textBuilder.AppendLine($"{item.Amount} {item.Name}");
                             }
 
-                        var show = customData.GetPropertyValue($"hide-{item.ItemSubType}") == null;
-
-                        if (show == false)
-                            return;
-
-                        var itemMetThreshold = IsItemMetThreshold(
-                            item,
-                            itemsWithThreshold,
-                            monitoringData);
-
-                        var itemHasThresholdDefined = HasItemThresholdDefined(item, itemsWithThreshold);
-
-                        if (hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold)
-                            return;
-
-                        switch (item.ItemType)
-                        {
-                            case Item.ItemTypes.Component:
-                                if (displayAll || displayComponents)
+                            break;
+                        case Item.ItemTypes.Ore:
+                            if (displayAll || displayOres)
+                            {
+                                if (!hasOres)
                                 {
-                                    if (!hasComponents)
-                                    {
-                                        if (hasSomethingToDisplay) textBuilder.AppendLine();
+                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
 
-                                        textBuilder.AppendLine("** Owned Components **");
-                                        hasComponents = true;
-                                    }
-
-                                    hasSomethingToDisplay = true;
-                                    textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                                    textBuilder.AppendLine("** Owned Ores **");
+                                    hasOres = true;
                                 }
 
-                                break;
-                            case Item.ItemTypes.Ore:
-                                if (displayAll || displayOres)
+                                hasSomethingToDisplay = true;
+                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                            }
+
+                            break;
+                        case Item.ItemTypes.Ingot:
+                            if (displayAll || displayIngots)
+                            {
+                                if (!hasIngots)
                                 {
-                                    if (!hasOres)
-                                    {
-                                        if (hasSomethingToDisplay) textBuilder.AppendLine();
+                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
 
-                                        textBuilder.AppendLine("** Owned Ores **");
-                                        hasOres = true;
-                                    }
-
-                                    hasSomethingToDisplay = true;
-                                    textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                                    textBuilder.AppendLine("** Owned Ingots **");
+                                    hasIngots = true;
                                 }
 
-                                break;
-                            case Item.ItemTypes.Ingot:
-                                if (displayAll || displayIngots)
+                                hasSomethingToDisplay = true;
+                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                            }
+
+                            break;
+                        case Item.ItemTypes.Tools:
+                            if (displayAll || displayTools)
+                            {
+                                if (!hasTools)
                                 {
-                                    if (!hasIngots)
-                                    {
-                                        if (hasSomethingToDisplay) textBuilder.AppendLine();
+                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
 
-                                        textBuilder.AppendLine("** Owned Ingots **");
-                                        hasIngots = true;
-                                    }
-
-                                    hasSomethingToDisplay = true;
-                                    textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                                    textBuilder.AppendLine("** Owned Tools **");
+                                    hasTools = true;
                                 }
 
-                                break;
-                            case Item.ItemTypes.Tools:
-                                if (displayAll || displayTools)
+                                hasSomethingToDisplay = true;
+                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                            }
+
+                            break;
+                        case Item.ItemTypes.Ammunition:
+                            if (displayAll || displayAmmunition)
+                            {
+                                if (!hasAmmunition)
                                 {
-                                    if (!hasTools)
-                                    {
-                                        if (hasSomethingToDisplay) textBuilder.AppendLine();
+                                    if (hasSomethingToDisplay) textBuilder.AppendLine();
 
-                                        textBuilder.AppendLine("** Owned Tools **");
-                                        hasTools = true;
-                                    }
-
-                                    hasSomethingToDisplay = true;
-                                    textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                                    textBuilder.AppendLine("** Owned Ammunition **");
+                                    hasAmmunition = true;
                                 }
 
-                                break;
-                            case Item.ItemTypes.Ammunition:
-                                if (displayAll || displayAmmunition)
-                                {
-                                    if (!hasAmmunition)
-                                    {
-                                        if (hasSomethingToDisplay) textBuilder.AppendLine();
+                                hasSomethingToDisplay = true;
+                                textBuilder.AppendLine($"{item.Amount} {item.Name}");
+                            }
 
-                                        textBuilder.AppendLine("** Owned Ammunition **");
-                                        hasAmmunition = true;
-                                    }
-
-                                    hasSomethingToDisplay = true;
-                                    textBuilder.AppendLine($"{item.Amount} {item.Name}");
-                                }
-
-                                break;
-                        }
-                    });
+                            break;
+                    }
+                });
 
                 block.WriteText(textBuilder);
             });
+        }
+
+        private static List<Item> BuildItemsToDisplay(
+            IEnumerable<Item> itemsInInventory,
+            IEnumerable<Item> itemsWithThreshold)
+        {
+            var itemsToDisplay = itemsInInventory.ToList();
+
+            foreach (var itemWithThreshold in itemsWithThreshold)
+                if (!itemsToDisplay.Any(itemToDisplay =>
+                        itemToDisplay.ItemType == itemWithThreshold.ItemType &&
+                        itemToDisplay.ItemSubType == itemWithThreshold.ItemSubType))
+                    itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinition.ToString(), 0));
+
+            return itemsToDisplay
+                .OrderBy(item => item.ItemType)
+                .ThenBy(item => item.Name)
+                .ToList();
         }
 
         private static bool HasItemThresholdDefined(Item item, IEnumerable<Item> itemsWithThreshold)
@@ -209,7 +224,7 @@ namespace IngameScript
             textBuilder
                 .AppendLine("** Item's Storage Capacity **")
                 .AppendLine()
-                .AppendLine($"Max Volume Capacity: {monitoringData.MaxVolume} m^3")
+                .AppendLine($"Max Storage Capacity: {monitoringData.MaxVolume} m^3")
                 .AppendLine($"Current Volume: {monitoringData.CurrentVolume} m^3")
                 .AppendLine($"Remaining Capacity: {remainingCapacity} m^3")
                 .AppendLine()

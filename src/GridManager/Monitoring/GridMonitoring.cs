@@ -25,6 +25,7 @@ namespace IngameScript
             _productionBlocks = productionBlocks;
             MonitoringData = new MonitoringData();
 
+            ScanStorageCapacity();
             ScanAllInventory();
             ScanPower();
             ScanProduction();
@@ -60,8 +61,10 @@ namespace IngameScript
             _logger($"Total Batteries: {MonitoringData.TotalBatteries}");
             if (MonitoringData.ChargingBatteries > 0)
                 _logger($"Total Charging Batteries: {MonitoringData.ChargingBatteries}");
+
             if (MonitoringData.DischargingBatteries > 0)
                 _logger($"Total Discharging Batteries: {MonitoringData.DischargingBatteries}");
+
             _logger("");
             var shortage = MonitoringData.MaxPowerOutput - MonitoringData.CurrentPowerOutput;
             _logger(shortage < 0
@@ -69,20 +72,21 @@ namespace IngameScript
                 : $"Power exceeding of: {shortage} MW");
         }
 
-        private void ScanInventory(IMyInventory inventory)
+        private void ScanStorageCapacity()
         {
-            var items = new List<MyInventoryItem>();
+            _storageBlocks
+                .OfType<IMyCargoContainer>()
+                .ToList()
+                .ForEach(block =>
+                {
+                    ScanStorageCapacity(block.GetInventory());
+                });
 
-            MonitoringData.MaxVolume += inventory.MaxVolume;
-            MonitoringData.CurrentVolume += inventory.CurrentVolume;
-            MonitoringData.CurrentMass += inventory.CurrentMass;
-
-            inventory.GetItems(items);
-
-            items.ForEach(item =>
-            {
-                MonitoringData.AddToInventory(item);
-            });
+            _logger("");
+            _logger("** Items **");
+            _logger($"Max Storage Capacity: {MonitoringData.MaxVolume} m^3");
+            _logger($"Current Storage Volume: {MonitoringData.CurrentVolume} m^3");
+            _logger($"Current Storage Mass: {MonitoringData.CurrentMass} Kg");
         }
 
         private void ScanAllInventory()
@@ -97,15 +101,10 @@ namespace IngameScript
                 ScanInventory(block.OutputInventory);
             });
 
-            _logger("");
-            _logger("** Items **");
-            _logger($"Max Item Volume Capacity: {MonitoringData.MaxVolume} m^3");
-            _logger($"Current Item Volume: {MonitoringData.CurrentVolume} m^3");
-            _logger($"Current Item Mass: {MonitoringData.CurrentMass} Kg");
-
             var components = MonitoringData.GetItems(Item.ItemTypes.Component);
             var ingots = MonitoringData.GetItems(Item.ItemTypes.Ingot);
             var ores = MonitoringData.GetItems(Item.ItemTypes.Ore);
+            var tools = MonitoringData.GetItems(Item.ItemTypes.Tools);
             var unknowns = MonitoringData.GetItems(Item.ItemTypes.Unknown);
 
             if (components.Count > 0)
@@ -135,6 +134,16 @@ namespace IngameScript
                 ores.ForEach(ore =>
                 {
                     _logger($"{ore.Name} {ore.Amount}");
+                });
+            }
+
+            if (tools.Count > 0)
+            {
+                _logger("");
+                _logger("** Tools **");
+                tools.ForEach(tool =>
+                {
+                    _logger($"{tool.Name} {tool.Amount}");
                 });
             }
 
@@ -196,6 +205,25 @@ namespace IngameScript
                     _logger($"{unknown.Name} {unknown.Amount}");
                 });
             }
+        }
+
+        private void ScanInventory(IMyInventory inventory)
+        {
+            var items = new List<MyInventoryItem>();
+
+            inventory.GetItems(items);
+
+            items.ForEach(item =>
+            {
+                MonitoringData.AddToInventory(item);
+            });
+        }
+
+        private void ScanStorageCapacity(IMyInventory inventory)
+        {
+            MonitoringData.MaxVolume += inventory.MaxVolume;
+            MonitoringData.CurrentVolume += inventory.CurrentVolume;
+            MonitoringData.CurrentMass += inventory.CurrentMass;
         }
     }
 }
