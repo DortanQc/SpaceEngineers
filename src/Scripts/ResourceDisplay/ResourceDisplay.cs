@@ -108,7 +108,7 @@ namespace IngameScript.Scripts.ResourceDisplay
 
         private void BuildText()
         {
-            var stringBuilder = new StringBuilder();
+            var contentStringBuilder = new StringBuilder();
             var hasItemToDisplay = false;
 
             foreach (var itemToScan in _itemsToScan)
@@ -120,10 +120,21 @@ namespace IngameScript.Scripts.ResourceDisplay
 
                 hasItemToDisplay = true;
 
-                stringBuilder.AppendLine($"{item.FriendlyName}: {storageCount}");
+                contentStringBuilder.AppendLine($"   {item.FriendlyName}: {storageCount}");
             }
 
-            if (hasItemToDisplay == false) stringBuilder.AppendLine("All good...");
+            var stringBuilder = new StringBuilder();
+
+            if (hasItemToDisplay == false)
+            {
+                stringBuilder.AppendLine("All good...");
+            }
+            else
+            {
+                stringBuilder.AppendLine("** Ore Under Threshold **");
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine(contentStringBuilder.ToString());
+            }
 
             WriteText(stringBuilder.ToString());
         }

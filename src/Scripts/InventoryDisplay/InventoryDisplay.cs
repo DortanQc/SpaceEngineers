@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript.Scripts.InventoryDisplay
@@ -252,7 +253,7 @@ namespace IngameScript.Scripts.InventoryDisplay
 
         private void BuildText()
         {
-            var stringBuilder = new StringBuilder();
+            var contentStringBuilder = new StringBuilder();
             var hasItemToDisplay = false;
 
             foreach (var itemToScan in _itemsToScan)
@@ -265,12 +266,24 @@ namespace IngameScript.Scripts.InventoryDisplay
 
                 hasItemToDisplay = true;
 
-                stringBuilder.AppendLine(productionCount > 0
-                    ? $"{item.FriendlyName}: {storageCount} / {productionCount}"
-                    : $"{item.FriendlyName}: {storageCount}");
+                contentStringBuilder.AppendLine(productionCount > 0
+                    ? $"   {item.FriendlyName}: {storageCount} (owned) / {productionCount} (prod.)"
+                    : $"   {item.FriendlyName}: {storageCount} (owned)");
             }
 
-            if (hasItemToDisplay == false) stringBuilder.AppendLine("All good...");
+            var stringBuilder = new StringBuilder();
+
+            if (hasItemToDisplay == false)
+            {
+                stringBuilder.AppendLine("All good...");
+            }
+            else
+            {
+                stringBuilder.AppendLine("** Components Under Threshold **");
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine(contentStringBuilder.ToString());
+            }
+
             WriteText(stringBuilder.ToString());
         }
 
