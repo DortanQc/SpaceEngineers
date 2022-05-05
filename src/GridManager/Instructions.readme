@@ -4,4 +4,9 @@
 ** Grid Monitoring **
 
 -- Auto Item Production --
-Add "ignore-auto-production" in any production building's custom data you wish to skip for auto productions
+Add "ignore-auto-production" in any production block's custom data you wish to skip for auto productions
+
+
+-- Display Manager --
+Add "storage-capacity-statistics" in any LCD's custom data you wish to show storage capacity related statistics
+Add "power-usage-statistics" in any LCD's custom data you wish to show power usage statistics

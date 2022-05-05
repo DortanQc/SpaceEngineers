@@ -82,7 +82,7 @@ namespace IngameScript
             _logger("** Items **");
             _logger($"Max Item Volume Capacity: {MonitoringData.MaxVolume} m^3");
             _logger($"Current Item Volume: {MonitoringData.CurrentVolume} m^3");
-            _logger($"Current Item Mass: {MonitoringData.CurrentVolume} Kg");
+            _logger($"Current Item Mass: {MonitoringData.CurrentMass} Kg");
 
             var components = MonitoringData.GetItems(Item.ItemTypes.Component);
             var ingots = MonitoringData.GetItems(Item.ItemTypes.Ingot);
@@ -164,7 +164,7 @@ namespace IngameScript
                 _logger("** Ingots Production **");
                 ingots.ForEach(ingot =>
                 {
-                    _logger($"{ingot.Name} {ingot.Amount}");
+                    _logger($"{ingot.Name} {ingot.Amount * ingot.Volume}");
                 });
             }
 

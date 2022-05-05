@@ -43,15 +43,18 @@ namespace IngameScript
             Echo("** ************ **");
             Echo("** Grid Manager **");
             Echo("** ************ **");
-            Echo($"Script Update Source: {updateSource.ToString()}");
+            Echo($"Script Update Source: {updateSource}");
             Echo($"Script Argument: {argument}");
             Echo("");
 
             var blocksProducingPower = ExtractPowerBlocks();
             var blocksWithStorage = ExtractStorageBlocks();
             var blocksProducingItems = ExtractItemProductionBlocks();
+            var lcdBlocks = ExtractLCDBlocks();
 
             Monitor(blocksProducingPower, blocksWithStorage, blocksProducingItems);
+            AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
+            DisplayManager.Display(_monitoring.MonitoringData, lcdBlocks);
         }
 
         private void Monitor(
@@ -60,7 +63,6 @@ namespace IngameScript
             List<IMyProductionBlock> blocksProducingItems)
         {
             _monitoring = new GridMonitoring(Echo, blocksProducingPower, blocksWithStorage, blocksProducingItems);
-            AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
         }
 
         private List<IMyProductionBlock> ExtractItemProductionBlocks()
@@ -90,6 +92,17 @@ namespace IngameScript
         private List<IMyPowerProducer> ExtractPowerBlocks()
         {
             var blocks = new List<IMyPowerProducer>();
+
+            GridTerminalSystem.GetBlocksOfType(
+                blocks,
+                block => block.IsSameConstructAs(Me));
+
+            return blocks;
+        }
+
+        private List<IMyTextPanel> ExtractLCDBlocks()
+        {
+            var blocks = new List<IMyTextPanel>();
 
             GridTerminalSystem.GetBlocksOfType(
                 blocks,
