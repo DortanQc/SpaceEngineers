@@ -18,7 +18,7 @@ namespace IngameScript
 
         public MonitoringData MonitoringData { get; }
 
-        private void ScanHydrogen(List<IMyGasTank> gasTanks)
+        private void ScanHydrogen(IReadOnlyCollection<IMyGasTank> gasTanks)
         {
             gasTanks
                 .Where(tank => tank.BlockDefinition.SubtypeName.ToUpper().Contains("HYDROGEN"))
@@ -26,7 +26,7 @@ namespace IngameScript
                 .ForEach(tank =>
                 {
                     MonitoringData.HydrogenCapacity += tank.Capacity;
-                    MonitoringData.HydrogenFilledRatio += (tank.FilledRatio * 100) / gasTanks.Count;
+                    MonitoringData.HydrogenFilledRatio += tank.FilledRatio * 100 / gasTanks.Count;
                 });
 
             _logger("");

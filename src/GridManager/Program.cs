@@ -1,4 +1,4 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,9 @@ namespace IngameScript
 {
     public class Program : MyGridProgram
     {
+        private const int RUN_MONITORING = 0;
+        private const int CLEANUP_STORAGES = 1;
+
         private readonly Item[] _itemsToProduce =
         {
             new Item("MyObjectBuilder_BlueprintDefinition/BulletproofGlass", 100),
@@ -32,14 +35,15 @@ namespace IngameScript
             new Item("MyObjectBuilder_BlueprintDefinition/Superconductor", 50),
             new Item("MyObjectBuilder_BlueprintDefinition/ThrustComponent", 20)
         };
+
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
+        private readonly Dictionary<int, DateTime> _timerDictionary = new Dictionary<int, DateTime>();
         private List<IMyTerminalBlock> _blocks;
         private List<IMyShipController> _controllers;
         private bool _lastControllerMoveDownAction;
         private bool _lastControllerMoveUpAction;
         private bool _lastControllerSelectAction;
-        private DateTime _lastScanTime = DateTime.MinValue;
 
         public Program()
         {
@@ -56,9 +60,8 @@ namespace IngameScript
 
             if (action == MenuNavigationSystem.ScriptActions.Normal)
             {
-                if (DateTime.Now.Subtract(_lastScanTime).TotalSeconds >= 2)
+                WhenItsTimeTo(RUN_MONITORING, 2, () =>
                 {
-                    _lastScanTime = DateTime.Now;
                     _blocks = ExtractAllTerminalBlocks();
 
                     var blocksProducingPower = ExtractPowerBlocks(_blocks);
@@ -72,7 +75,15 @@ namespace IngameScript
                     AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
 
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks);
-                }
+                });
+
+                WhenItsTimeTo(CLEANUP_STORAGES, 5, () =>
+                {
+                    var blocksWithStorage = ExtractStorageBlocks(_blocks);
+                    var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
+                    
+                    AutoCleanup.Cleanup(Echo, blocksWithStorage, blocksProducingItems);
+                });
 
                 ReactOnControllersAction();
             }
@@ -161,13 +172,15 @@ namespace IngameScript
             UpdateType updateSource,
             string argument)
         {
-            if (updateSource == UpdateType.Trigger)
-                switch (argument.ToUpper())
-                {
-                    case "UP": return MenuNavigationSystem.ScriptActions.NavigationUp;
-                    case "DOWN": return MenuNavigationSystem.ScriptActions.NavigationDown;
-                    case "SELECT": return MenuNavigationSystem.ScriptActions.NavigationSelect;
-                }
+            if (updateSource != UpdateType.Trigger)
+                return MenuNavigationSystem.ScriptActions.Normal;
+
+            switch (argument.ToUpper())
+            {
+                case "UP": return MenuNavigationSystem.ScriptActions.NavigationUp;
+                case "DOWN": return MenuNavigationSystem.ScriptActions.NavigationDown;
+                case "SELECT": return MenuNavigationSystem.ScriptActions.NavigationSelect;
+            }
 
             return MenuNavigationSystem.ScriptActions.Normal;
         }
@@ -205,5 +218,19 @@ namespace IngameScript
 
         private static List<IMyPowerProducer> ExtractPowerBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
             blocks.OfType<IMyPowerProducer>().ToList();
+
+        private void WhenItsTimeTo(int timerKey, int totalSecond, Action action)
+        {
+            if (_timerDictionary.ContainsKey(timerKey) == false)
+                _timerDictionary.Add(timerKey, DateTime.MinValue);
+
+            if (DateTime.Now.Subtract(_timerDictionary[timerKey]).TotalSeconds < totalSecond)
+                return;
+
+            action();
+
+            _timerDictionary[timerKey] = DateTime.Now;
+        }
+    }
     }
 }
