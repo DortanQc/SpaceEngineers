@@ -8,11 +8,7 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
         private const int ALLOWED_OPEN_SECOND = 5;
-        private readonly string[,] _doorGroups =
-        {
-            { "Station - Door 1 - Airlock 1", "Station - Door 2 - Airlock 1" },
-            { "Station - Door 1 - Airlock 2", "Station - Door 2 - Airlock 2" }
-        };
+        private readonly string[,] _doorGroups = new string[0, 0];
         private readonly Dictionary<long, DateTime> _doorOpenedCount = new Dictionary<long, DateTime>();
         private readonly List<AirLockDoors> _doors = new List<AirLockDoors>();
 

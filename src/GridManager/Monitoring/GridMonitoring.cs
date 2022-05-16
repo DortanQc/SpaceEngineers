@@ -26,13 +26,13 @@ namespace IngameScript
                 .ForEach(tank =>
                 {
                     MonitoringData.HydrogenCapacity += tank.Capacity;
-                    MonitoringData.HydrogenFilledRatio += tank.FilledRatio / gasTanks.Count;
+                    MonitoringData.HydrogenFilledRatio += (tank.FilledRatio * 100) / gasTanks.Count;
                 });
 
             _logger("");
             _logger("** Hydrogen **");
             _logger($"Current Hydrogen Capacity: {MonitoringData.HydrogenCapacity:0.##}");
-            _logger($"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenFilledRatio * 100:0.##} %");
+            _logger($"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenFilledRatio:0.##} %");
         }
 
         private void ScanPower(List<IMyPowerProducer> powerBlocks)
@@ -234,6 +234,7 @@ namespace IngameScript
             List<IMyProductionBlock> productionBlocks,
             List<IMyGasTank> gasTanks)
         {
+            MonitoringData.Reset();
             ScanStorageCapacity(storageBlocks);
             ScanAllInventory(storageBlocks, productionBlocks);
             ScanPower(powerBlocks);

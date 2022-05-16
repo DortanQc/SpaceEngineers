@@ -9,30 +9,29 @@ namespace IngameScript
     {
         private readonly Item[] _itemsToProduce =
         {
-            new Item("MyObjectBuilder_BlueprintDefinition/BulletproofGlass", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/BulletproofGlass", 100),
             new Item("MyObjectBuilder_BlueprintDefinition/Canvas", 1),
-            new Item("MyObjectBuilder_BlueprintDefinition/ComputerComponent", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/ConstructionComponent", 1000),
-            new Item("MyObjectBuilder_BlueprintDefinition/DetectorComponent", 20),
-            new Item("MyObjectBuilder_BlueprintDefinition/Display", 50),
-            new Item("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent", 10),
-            new Item("MyObjectBuilder_BlueprintDefinition/GirderComponent", 300),
+            new Item("MyObjectBuilder_BlueprintDefinition/ComputerComponent", 1000),
+            new Item("MyObjectBuilder_BlueprintDefinition/ConstructionComponent", 2000),
+            new Item("MyObjectBuilder_BlueprintDefinition/DetectorComponent", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/Display", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/GirderComponent", 500),
             new Item("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent", 10),
-            new Item("MyObjectBuilder_BlueprintDefinition/InteriorPlate", 300),
-            new Item("MyObjectBuilder_BlueprintDefinition/LargeTube", 200),
-            new Item("MyObjectBuilder_BlueprintDefinition/MedicalComponent", 20),
-            new Item("MyObjectBuilder_BlueprintDefinition/MetalGrid", 300),
-            new Item("MyObjectBuilder_BlueprintDefinition/MotorComponent", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/PowerCell", 100),
+            new Item("MyObjectBuilder_BlueprintDefinition/InteriorPlate", 500),
+            new Item("MyObjectBuilder_BlueprintDefinition/LargeTube", 500),
+            new Item("MyObjectBuilder_BlueprintDefinition/MedicalComponent", 50),
+            new Item("MyObjectBuilder_BlueprintDefinition/MetalGrid", 500),
+            new Item("MyObjectBuilder_BlueprintDefinition/MotorComponent", 1000),
+            new Item("MyObjectBuilder_BlueprintDefinition/PowerCell", 200),
             new Item("MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent", 50),
             new Item("MyObjectBuilder_BlueprintDefinition/ReactorComponent", 10),
-            new Item("MyObjectBuilder_BlueprintDefinition/SmallTube", 300),
-            new Item("MyObjectBuilder_BlueprintDefinition/SolarCell", 100),
-            new Item("MyObjectBuilder_BlueprintDefinition/SteelPlate", 2000),
+            new Item("MyObjectBuilder_BlueprintDefinition/SmallTube", 1000),
+            new Item("MyObjectBuilder_BlueprintDefinition/SolarCell", 200),
+            new Item("MyObjectBuilder_BlueprintDefinition/SteelPlate", 5000),
             new Item("MyObjectBuilder_BlueprintDefinition/Superconductor", 50),
             new Item("MyObjectBuilder_BlueprintDefinition/ThrustComponent", 20)
         };
-
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private List<IMyTerminalBlock> _blocks;

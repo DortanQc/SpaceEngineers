@@ -91,7 +91,7 @@ namespace IngameScript
             var alreadyHasType = new Dictionary<Item.ItemTypes, bool>();
             var hasSomethingToDisplay = false;
 
-            itemsToDisplay.ForEach(item =>
+            itemsToDisplay.OrderByDescending(i=> i.Amount).ToList().ForEach(item =>
             {
                 if (ShouldHideItem(block.BlockCustomData, item))
                     return;
@@ -410,13 +410,12 @@ namespace IngameScript
             IEnumerable<IMyTerminalBlock> blocks)
         {
             var textBuilder = new StringBuilder();
-            var shortage = monitoringData.MaxPowerOutput - monitoringData.CurrentPowerOutput;
 
             textBuilder
                 .AppendLine("** Hydrogen **")
                 .AppendLine()
                 .AppendLine($"Current Hydrogen Capacity: {monitoringData.HydrogenCapacity:0.##}")
-                .AppendLine($"Current Hydrogen Filled Ratio: {monitoringData.HydrogenFilledRatio * 100:0.##} %");
+                .AppendLine($"Current Hydrogen Filled Ratio: {monitoringData.HydrogenFilledRatio:0.##} %");
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
 

@@ -59,7 +59,9 @@ namespace IngameScript
             HandDrill,
             Welder2,
             AngleGrinder2,
-            HandDrill2
+            HandDrill2,
+            Powerkit,
+            EngineerPlushie
         }
 
         public enum ItemTypes
@@ -295,6 +297,15 @@ namespace IngameScript
                     Name = "Thruster Comp";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ThrustComponent");
                     Volume = 10;
+
+                    break;
+                case "MyObjectBuilder_BlueprintDefinition/EngineerPlushie":
+                case "MyObjectBuilder_Component/EngineerPlushie":
+                    ItemType = ItemTypes.Component;
+                    ItemSubType = ItemSubTypes.EngineerPlushie;
+                    Name = "Engineer Plushie";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/EngineerPlushie");
+                    Volume = 3;
 
                     break;
 
@@ -664,6 +675,15 @@ namespace IngameScript
                     Name = "Oxygen Bottle";
                     ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/OxygenBottle");
                     Volume = 120f;
+
+                    break;
+                case "MyObjectBuilder_ConsumableItem/Powerkit":
+                case "MyObjectBuilder_BlueprintDefinition/Powerkit":
+                    ItemType = ItemTypes.Consumable;
+                    ItemSubType = ItemSubTypes.Powerkit;
+                    Name = "Powerkit";
+                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Powerkit");
+                    Volume = 18f;
 
                     break;
 

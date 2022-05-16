@@ -8,18 +8,12 @@ namespace IngameScript
 {
     public class MonitoringData
     {
-        private readonly Dictionary<string, int> _items;
-        private readonly Dictionary<string, int> _itemsInProduction;
+        private Dictionary<string, int> _items;
+        private Dictionary<string, int> _itemsInProduction;
 
         public MonitoringData()
         {
-            MaxVolume = MyFixedPoint.Zero;
-            CurrentVolume = MyFixedPoint.Zero;
-            CurrentMass = MyFixedPoint.Zero;
-            CurrentPowerOutput = 0f;
-            MaxPowerOutput = 0f;
-            _items = new Dictionary<string, int>();
-            _itemsInProduction = new Dictionary<string, int>();
+            Reset();
         }
 
         public MyFixedPoint MaxVolume { get; set; }
@@ -41,6 +35,22 @@ namespace IngameScript
         public float HydrogenCapacity { get; set; }
 
         public double HydrogenFilledRatio { get; set; }
+
+        public void Reset()
+        {
+            MaxVolume = MyFixedPoint.Zero;
+            CurrentVolume = MyFixedPoint.Zero;
+            CurrentMass = MyFixedPoint.Zero;
+            CurrentPowerOutput = 0f;
+            MaxPowerOutput = 0f;
+            HydrogenCapacity = 0f;
+            ChargingBatteries = 0;
+            DischargingBatteries = 0;
+            TotalBatteries = 0;
+            HydrogenFilledRatio = 0d;
+            _items = new Dictionary<string, int>();
+            _itemsInProduction = new Dictionary<string, int>();
+        }
 
         public List<Item> GetItemsInProduction()
         {
