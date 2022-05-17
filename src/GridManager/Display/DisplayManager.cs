@@ -82,7 +82,7 @@ namespace IngameScript
 
         private static void DisplayInventoryForTypes(
             Surface block,
-            List<Item> itemsToDisplay,
+            IEnumerable<Item> itemsToDisplay,
             IReadOnlyCollection<Item> itemsWithThreshold,
             MonitoringData monitoringData,
             IEnumerable<Item.ItemTypes> itemTypes)
@@ -91,32 +91,34 @@ namespace IngameScript
             var alreadyHasType = new Dictionary<Item.ItemTypes, bool>();
             var hasSomethingToDisplay = false;
 
-            itemsToDisplay.OrderByDescending(i=> i.Amount).ToList().ForEach(item =>
-            {
-                if (ShouldHideItem(block.BlockCustomData, item))
-                    return;
+            itemsToDisplay.OrderByDescending(i => i.Amount)
+                .ToList()
+                .ForEach(item =>
+                {
+                    if (ShouldHideItem(block.BlockCustomData, item))
+                        return;
 
-                if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.BlockCustomData))
-                    return;
+                    if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.BlockCustomData))
+                        return;
 
-                itemTypes
-                    .ToList()
-                    .ForEach(type =>
-                    {
-                        if (item.ItemType != type)
-                            return;
+                    itemTypes
+                        .ToList()
+                        .ForEach(type =>
+                        {
+                            if (item.ItemType != type)
+                                return;
 
-                        if (!alreadyHasType.ContainsKey(type))
-                            alreadyHasType.Add(type, false);
+                            if (!alreadyHasType.ContainsKey(type))
+                                alreadyHasType.Add(type, false);
 
-                        alreadyHasType[type] = DisplayItems(
-                            type,
-                            item,
-                            alreadyHasType[type],
-                            textBuilder,
-                            ref hasSomethingToDisplay);
-                    });
-            });
+                            alreadyHasType[type] = DisplayItems(
+                                type,
+                                item,
+                                alreadyHasType[type],
+                                textBuilder,
+                                ref hasSomethingToDisplay);
+                        });
+                });
 
             block.TextSurface.WriteText(textBuilder);
         }
@@ -127,7 +129,9 @@ namespace IngameScript
             MonitoringData monitoringData,
             CustomDataManager customData)
         {
-            var hideWhenMetThreshold = customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) != null;
+            var hideWhenMetThreshold =
+                customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) !=
+                null;
 
             var itemMetThreshold = IsItemMetThreshold(
                 item,
@@ -141,7 +145,9 @@ namespace IngameScript
 
         private static bool ShouldHideItem(CustomDataManager customData, Item item)
         {
-            var show = customData.GetPropertyValue($"{CustomDataSettings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") == null;
+            var show = customData.GetPropertyValue(
+                           $"{CustomDataSettings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") ==
+                       null;
 
             return show == false;
         }
@@ -181,7 +187,9 @@ namespace IngameScript
             var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_ORES);
             var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_INGOTS);
             var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_TOOLS);
-            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_AMMUNITION);
+            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(
+                blocks,
+                CustomDataSettings.STATS_INVENTORY_AMMUNITION);
 
             var combinations = Combine(
                 displayAllSurfaceBlocks,
@@ -384,21 +392,31 @@ namespace IngameScript
             textBuilder
                 .AppendLine("** Power Usage **")
                 .AppendLine()
-                .AppendLine($"Current Power Output: {monitoringData.CurrentPowerOutput} MW")
-                .AppendLine($"Max Power Output: {monitoringData.MaxPowerOutput} MW")
-                .AppendLine()
-                .AppendLine($"Total Batteries: {monitoringData.TotalBatteries}");
-
-            if (monitoringData.ChargingBatteries > 0)
-                textBuilder.AppendLine($"Total Charging Batteries: {monitoringData.ChargingBatteries}");
-
-            if (monitoringData.DischargingBatteries > 0)
-                textBuilder.AppendLine($"Total Discharging Batteries: {monitoringData.DischargingBatteries}");
-
-            textBuilder.AppendLine()
+                .AppendLine($"Max Power Output: {monitoringData.MaxPowerOutput:0.##} MW")
+                .AppendLine($"Current Power Output: {monitoringData.CurrentPowerOutput:0.##} MW")
                 .AppendLine(shortage < 0
-                    ? $"Power shortage of: {shortage} MW"
-                    : $"Power exceeding of: {shortage} MW");
+                    ? $"Shortage of: {shortage:0.##} MW"
+                    : $"Exceeding of: {shortage:0.##} MW")
+                .AppendLine(
+                    $"Threshold: {monitoringData.CurrentPowerOutput * 100 / monitoringData.MaxPowerOutput:0.##} %")
+                .AppendLine()
+                .AppendLine("** Batteries** ")
+                .AppendLine();
+
+            monitoringData.Batteries.OrderBy(b => b.IsCharging)
+                .ToList()
+                .ForEach(battery =>
+                {
+                    textBuilder
+                        .Append(battery.Name)
+                        .Append(" - ")
+                        .Append(battery.IsCharging
+                            ? "C"
+                            : "D")
+                        .Append(" - ")
+                        .AppendLine(
+                            $"{battery.CurrentStoredPower * 100 / battery.MaxStoredPower:0.##} %");
+                });
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_POWER_USAGE);
 

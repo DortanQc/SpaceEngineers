@@ -43,30 +43,26 @@ namespace IngameScript
                 MonitoringData.MaxPowerOutput += block.MaxOutput;
             });
 
-            MonitoringData.TotalBatteries = powerBlocks
+            powerBlocks
                 .OfType<IMyBatteryBlock>()
-                .Count();
-
-            MonitoringData.ChargingBatteries = powerBlocks
-                .OfType<IMyBatteryBlock>()
-                .Count(block => block.CurrentInput > block.CurrentOutput);
-
-            MonitoringData.DischargingBatteries = powerBlocks
-                .OfType<IMyBatteryBlock>()
-                .Count(block => block.CurrentInput < block.CurrentOutput);
+                .ToList()
+                .ForEach(block =>
+                {
+                    MonitoringData.Batteries.Add(new BatteryInfo
+                    {
+                        Name = block.CustomName,
+                        IsCharging = block.IsCharging,
+                        CurrentStoredPower = block.CurrentStoredPower,
+                        MaxStoredPower = block.MaxStoredPower
+                    });
+                });
 
             _logger("");
             _logger("** Power **");
             _logger($"Current Power Output: {MonitoringData.CurrentPowerOutput} MW");
             _logger($"Max Power Output: {MonitoringData.MaxPowerOutput} MW");
             _logger("");
-            _logger($"Total Batteries: {MonitoringData.TotalBatteries}");
-            if (MonitoringData.ChargingBatteries > 0)
-                _logger($"Total Charging Batteries: {MonitoringData.ChargingBatteries}");
-
-            if (MonitoringData.DischargingBatteries > 0)
-                _logger($"Total Discharging Batteries: {MonitoringData.DischargingBatteries}");
-
+            _logger($"Total Batteries: {MonitoringData.Batteries.Count}");
             _logger("");
             var shortage = MonitoringData.MaxPowerOutput - MonitoringData.CurrentPowerOutput;
             _logger(shortage < 0

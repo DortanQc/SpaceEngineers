@@ -26,15 +26,11 @@ namespace IngameScript
 
         public float MaxPowerOutput { get; set; }
 
-        public int ChargingBatteries { get; set; }
-
-        public int DischargingBatteries { get; set; }
-
-        public int TotalBatteries { get; set; }
-
         public float HydrogenCapacity { get; set; }
 
         public double HydrogenFilledRatio { get; set; }
+
+        public List<BatteryInfo> Batteries { get; private set; }
 
         public void Reset()
         {
@@ -44,12 +40,10 @@ namespace IngameScript
             CurrentPowerOutput = 0f;
             MaxPowerOutput = 0f;
             HydrogenCapacity = 0f;
-            ChargingBatteries = 0;
-            DischargingBatteries = 0;
-            TotalBatteries = 0;
             HydrogenFilledRatio = 0d;
             _items = new Dictionary<string, int>();
             _itemsInProduction = new Dictionary<string, int>();
+            Batteries = new List<BatteryInfo>();
         }
 
         public List<Item> GetItemsInProduction()
