@@ -81,7 +81,7 @@ namespace IngameScript
                 {
                     var blocksWithStorage = ExtractStorageBlocks(_blocks);
                     var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
-                    
+
                     AutoCleanup.Cleanup(Echo, blocksWithStorage, blocksProducingItems);
                 });
 
@@ -231,6 +231,5 @@ namespace IngameScript
 
             _timerDictionary[timerKey] = DateTime.Now;
         }
-    }
     }
 }

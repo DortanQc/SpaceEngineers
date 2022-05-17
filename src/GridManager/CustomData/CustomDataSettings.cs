@@ -17,5 +17,9 @@
         public const string STATS_INVENTORY_AMMUNITION = "stats-inventory-ammunition";
         public const string GRID_MANAGER_MENU_ACCESS = "grid-manager-menu-access";
         public const string GRID_MANAGER_MENU_SHIP_CONTROLLABLE = "grid-manager-menu-ship-controllable";
+        public const string DEFAULT_STORAGE_FOR_COMPONENTS = "component-default-storage";
+        public const string DEFAULT_STORAGE_FOR_INGOTS = "ingot-default-storage";
+        public const string DEFAULT_STORAGE_FOR_TOOLS = "tool-default-storage";
+        public const string DEFAULT_STORAGE_FOR_AMMO = "ammo-default-storage";
     }
 }
