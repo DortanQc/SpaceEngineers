@@ -42,6 +42,7 @@ namespace IngameScript
 
             var storageBlockInventories = storageBlocks
                 .Where(x => !IsAmmoStorage(x))
+                .Where(block => !(block is IMyLargeTurretBase))
                 .Select(b => b.GetInventory());
 
             var inventories = productionBlockInventories
@@ -177,7 +178,7 @@ namespace IngameScript
                     });
             });
         }
-        
+
         private static void MoveOresToCargo(
             IReadOnlyCollection<IMyTerminalBlock> storageBlocks,
             IEnumerable<IMyProductionBlock> producingItemBlocks)
@@ -244,7 +245,7 @@ namespace IngameScript
 
             return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_INGOTS) != null;
         }
-        
+
         private static bool IsOreStorage(IMyTerminalBlock block)
         {
             var customDataManager = new CustomDataManager(block.CustomData);
