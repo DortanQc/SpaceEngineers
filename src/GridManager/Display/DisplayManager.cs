@@ -368,16 +368,35 @@ namespace IngameScript
         {
             var textBuilder = new StringBuilder();
 
-            var remainingCapacity = monitoringData.MaxVolume - monitoringData.CurrentVolume;
+            var remainingCapacity =
+                monitoringData.Cargos.Sum(c => (float)c.MaxVolume) -
+                monitoringData.Cargos.Sum(c => (float)c.CurrentVolume);
 
             textBuilder
-                .AppendLine("** Item's Storage Capacity **")
+                .AppendLine("** Storage Capacity **")
                 .AppendLine()
-                .AppendLine($"Max Storage Capacity: {monitoringData.MaxVolume} m^3")
-                .AppendLine($"Current Volume: {monitoringData.CurrentVolume} m^3")
-                .AppendLine($"Remaining Capacity: {remainingCapacity} m^3")
-                .AppendLine()
-                .AppendLine($"Current Mass: {monitoringData.CurrentMass} Kg");
+                .AppendLine($"Max Storage Capacity: {monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} m^3")
+                .AppendLine($"Current Volume: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume):0.##} m^3")
+                .AppendLine($"Remaining Capacity: {remainingCapacity:0.##} m^3")
+                .AppendLine(
+                    $"Filled Ratio: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume) * 100 / monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} %");
+
+            if (monitoringData.Cargos.Any())
+                textBuilder
+                    .AppendLine()
+                    .AppendLine("** Containers ** ")
+                    .AppendLine();
+
+            monitoringData.Cargos.OrderByDescending(b => b.CurrentVolume.ToIntSafe())
+                .ToList()
+                .ForEach(cargo =>
+                {
+                    textBuilder
+                        .Append(cargo.Name)
+                        .Append(" - ")
+                        .AppendLine(
+                            $"{cargo.CurrentVolume.ToIntSafe() * 100 / cargo.MaxVolume.ToIntSafe():0.##} %");
+                });
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_STORAGE_CAPACITY);
 
@@ -398,10 +417,13 @@ namespace IngameScript
                     ? $"Shortage of: {shortage:0.##} MW"
                     : $"Exceeding of: {shortage:0.##} MW")
                 .AppendLine(
-                    $"Threshold: {monitoringData.CurrentPowerOutput * 100 / monitoringData.MaxPowerOutput:0.##} %")
-                .AppendLine()
-                .AppendLine("** Batteries** ")
-                .AppendLine();
+                    $"Usage Ratio: {monitoringData.CurrentPowerOutput * 100 / monitoringData.MaxPowerOutput:0.##} %");
+
+            if (monitoringData.Batteries.Any())
+                textBuilder
+                    .AppendLine()
+                    .AppendLine("** Batteries ** ")
+                    .AppendLine();
 
             monitoringData.Batteries.OrderBy(b => b.IsCharging)
                 .ToList()

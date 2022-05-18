@@ -1,7 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Linq;
-using VRage;
 using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
@@ -16,12 +15,6 @@ namespace IngameScript
             Reset();
         }
 
-        public MyFixedPoint MaxVolume { get; set; }
-
-        public MyFixedPoint CurrentVolume { get; set; }
-
-        public MyFixedPoint CurrentMass { get; set; }
-
         public float CurrentPowerOutput { get; set; }
 
         public float MaxPowerOutput { get; set; }
@@ -32,11 +25,10 @@ namespace IngameScript
 
         public List<BatteryInfo> Batteries { get; private set; }
 
+        public List<CargoInfo> Cargos { get; private set; }
+
         public void Reset()
         {
-            MaxVolume = MyFixedPoint.Zero;
-            CurrentVolume = MyFixedPoint.Zero;
-            CurrentMass = MyFixedPoint.Zero;
             CurrentPowerOutput = 0f;
             MaxPowerOutput = 0f;
             HydrogenCapacity = 0f;
@@ -44,6 +36,7 @@ namespace IngameScript
             _items = new Dictionary<string, int>();
             _itemsInProduction = new Dictionary<string, int>();
             Batteries = new List<BatteryInfo>();
+            Cargos = new List<CargoInfo>();
         }
 
         public List<Item> GetItemsInProduction()

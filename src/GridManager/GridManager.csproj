@@ -51,6 +51,7 @@
     <Compile Include="MenuNavigation\MenuItem.cs" />
     <Compile Include="MenuNavigation\MenuNavigationSystem.cs" />
     <Compile Include="Monitoring\BatteryInfo.cs" />
+    <Compile Include="Monitoring\CargoInfo.cs" />
     <Compile Include="Monitoring\GridMonitoring.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">

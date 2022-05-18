@@ -77,14 +77,20 @@ namespace IngameScript
                 .ToList()
                 .ForEach(block =>
                 {
-                    ScanStorageCapacity(block.GetInventory());
+                    var inventory = block.GetInventory();
+
+                    MonitoringData.Cargos.Add(new CargoInfo
+                    {
+                        Name = block.CustomName,
+                        MaxVolume = inventory.MaxVolume,
+                        CurrentVolume = inventory.CurrentVolume
+                    });
                 });
 
             _logger("");
             _logger("** Items **");
-            _logger($"Max Storage Capacity: {MonitoringData.MaxVolume} m^3");
-            _logger($"Current Storage Volume: {MonitoringData.CurrentVolume} m^3");
-            _logger($"Current Storage Mass: {MonitoringData.CurrentMass} Kg");
+            _logger($"Max Storage Capacity: {MonitoringData.Cargos.Sum(x => (float)x.MaxVolume)} m^3");
+            _logger($"Current Storage Volume: {MonitoringData.Cargos.Sum(x => (float)x.CurrentVolume)} m^3");
         }
 
         private void ScanAllInventory(List<IMyTerminalBlock> storageBlocks, List<IMyProductionBlock> productionBlocks)
@@ -215,13 +221,6 @@ namespace IngameScript
             {
                 MonitoringData.AddToInventory(item);
             });
-        }
-
-        private void ScanStorageCapacity(IMyInventory inventory)
-        {
-            MonitoringData.MaxVolume += inventory.MaxVolume;
-            MonitoringData.CurrentVolume += inventory.CurrentVolume;
-            MonitoringData.CurrentMass += inventory.CurrentMass;
         }
 
         public void UpdateData(
