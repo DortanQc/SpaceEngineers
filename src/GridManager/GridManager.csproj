@@ -44,6 +44,7 @@
     <Compile Include="Display\DisplayManager.cs" />
     <Compile Include="Display\Surface.cs" />
     <Compile Include="Display\SurfaceByType.cs" />
+    <Compile Include="DoorManager\DoorManager.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="MenuNavigation\Menu.cs" />
     <Compile Include="MenuNavigation\MenuCore.cs" />

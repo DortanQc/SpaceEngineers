@@ -1,7 +1,7 @@
 ﻿R e a d m e
 -----------
 
-** Grid Monitoring **
+** Grid Manager **
 
 -- Auto Item Production --
 Add "exclude-from-auto-production" in any production block's custom data you wish to skip for auto productions
@@ -33,3 +33,7 @@ Add "component-default-storage" on any cargo container to have all component ite
 Add "ingot-default-storage" on any cargo container to have all ingot items transfer to it automatically
 Add "tool-default-storage" on any cargo container to have all tool items transfer to it automatically
 Add "ammo-default-storage" on any cargo container to have all ammo items transfer to it automatically       
+
+
+-- Air Locks --
+Add "air-lock-group={group_name}" to any door you wish to be handle as an airlock. Note that there needs to be exactly 2 doors within a group

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32228.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorControl", "DoorControl\DoorControl.csproj", "{66FF9846-C6A7-4B2F-978E-470F263751B4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridManager", "GridManager\GridManager.csproj", "{27CFEB01-7ADD-4E3B-9FF7-16F056991286}"
 EndProject
 Global
@@ -12,8 +10,6 @@ Global
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{66FF9846-C6A7-4B2F-978E-470F263751B4}.Debug|x64.ActiveCfg = Debug|x64
-		{66FF9846-C6A7-4B2F-978E-470F263751B4}.Debug|x64.Build.0 = Debug|x64
 		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.ActiveCfg = Debug|x64
 		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection

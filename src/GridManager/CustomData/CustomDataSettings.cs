@@ -21,5 +21,6 @@
         public const string DEFAULT_STORAGE_FOR_INGOTS = "ingot-default-storage";
         public const string DEFAULT_STORAGE_FOR_TOOLS = "tool-default-storage";
         public const string DEFAULT_STORAGE_FOR_AMMO = "ammo-default-storage";
+        public const string IS_AIR_LOCK = "air-lock-group";
     }
 }

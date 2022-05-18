@@ -9,6 +9,7 @@ namespace IngameScript
     {
         private const int RUN_MONITORING = 0;
         private const int CLEANUP_STORAGES = 1;
+        private const int MANAGE_AIRLOCKS = 2;
 
         private readonly Item[] _itemsToProduce =
         {
@@ -68,6 +69,7 @@ namespace IngameScript
                     var blocksWithStorage = ExtractStorageBlocks(_blocks);
                     var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
                     var blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
+                    var doors = ExtractDoorBlocks(_blocks);
                     _controllers = ExtractControllersInUse(_blocks);
 
                     GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
@@ -75,6 +77,14 @@ namespace IngameScript
                     AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
 
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks);
+
+                    DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(doors);
+                });
+
+                WhenItsTimeTo(MANAGE_AIRLOCKS, 1, () =>
+                {
+                    var doors = ExtractDoorBlocks(_blocks);
+                    DoorManager.ManageAirLocks(Echo, doors);
                 });
 
                 WhenItsTimeTo(CLEANUP_STORAGES, 5, () =>
@@ -209,6 +219,16 @@ namespace IngameScript
 
         private static List<IMyGasTank> ExtractGasTanksBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
             blocks.OfType<IMyGasTank>().ToList();
+
+        private static List<IMyDoor> ExtractDoorBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks.OfType<IMyDoor>()
+                .Where(block =>
+                    block
+                        .BlockDefinition
+                        .TypeIdString
+                        .IndexOf("hangar", StringComparison.InvariantCultureIgnoreCase) <
+                    0)
+                .ToList();
 
         private static List<IMyProductionBlock> ExtractItemProductionBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
             blocks.OfType<IMyProductionBlock>().Where(block => block.HasInventory).ToList();
