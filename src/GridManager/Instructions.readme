@@ -31,6 +31,7 @@ Add "grid-manager-menu-ship-controllable" to Ship Controllers you wish to gain a
 -- Auto Cleanup --
 Add "component-default-storage" on any cargo container to have all component items transfer to it automatically
 Add "ingot-default-storage" on any cargo container to have all ingot items transfer to it automatically
+Add "ore-default-storage" on any cargo container to have all ore items transfer to it automatically
 Add "tool-default-storage" on any cargo container to have all tool items transfer to it automatically
 Add "ammo-default-storage" on any cargo container to have all ammo items transfer to it automatically       
 

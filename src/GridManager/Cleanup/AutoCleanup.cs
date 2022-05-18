@@ -25,6 +25,7 @@ namespace IngameScript
             MoveIngotsToCargo(storageBlocks, producingItemBlocks);
             MoveToolsToCargo(storageBlocks, producingItemBlocks);
             MoveAmmoToCargo(storageBlocks, producingItemBlocks);
+            MoveOresToCargo(storageBlocks, producingItemBlocks);
         }
 
         private static void MoveAmmoToCargo(
@@ -152,6 +153,7 @@ namespace IngameScript
 
             var storageBlockInventories = storageBlocks
                 .Where(block => !(block is IMyProductionBlock))
+                .Where(block => !(block is IMyPowerProducer))
                 .Where(x => !IsIngotStorage(x))
                 .Select(b => b.GetInventory());
 
@@ -166,6 +168,45 @@ namespace IngameScript
                 inventory.GetItems(items);
 
                 items.Where(item => item.Type.GetItemInfo().IsIngot)
+                    .ToList()
+                    .ForEach(item =>
+                    {
+                        foreach (var cargo in cargos)
+                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                                break;
+                    });
+            });
+        }
+        
+        private static void MoveOresToCargo(
+            IReadOnlyCollection<IMyTerminalBlock> storageBlocks,
+            IEnumerable<IMyProductionBlock> producingItemBlocks)
+        {
+            var cargos = storageBlocks.Where(IsOreStorage).ToList();
+
+            if (!cargos.Any()) return;
+
+            var productionBlockInventories = producingItemBlocks
+                .Where(x => !IsOreStorage(x))
+                .Select(b => b.OutputInventory);
+
+            var storageBlockInventories = storageBlocks
+                .Where(block => !(block is IMyProductionBlock))
+                .Where(block => !(block is IMyGasGenerator))
+                .Where(x => !IsOreStorage(x))
+                .Select(b => b.GetInventory());
+
+            var inventories = productionBlockInventories
+                .Concat(storageBlockInventories)
+                .ToList();
+
+            inventories.ForEach(inventory =>
+            {
+                var items = new List<MyInventoryItem>();
+
+                inventory.GetItems(items);
+
+                items.Where(item => item.Type.GetItemInfo().IsOre)
                     .ToList()
                     .ForEach(item =>
                     {
@@ -202,6 +243,13 @@ namespace IngameScript
             var customDataManager = new CustomDataManager(block.CustomData);
 
             return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_INGOTS) != null;
+        }
+        
+        private static bool IsOreStorage(IMyTerminalBlock block)
+        {
+            var customDataManager = new CustomDataManager(block.CustomData);
+
+            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_ORES) != null;
         }
 
         private static void StackItems(
