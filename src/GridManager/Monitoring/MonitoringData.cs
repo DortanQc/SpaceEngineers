@@ -19,24 +19,21 @@ namespace IngameScript
 
         public float MaxPowerOutput { get; set; }
 
-        public float HydrogenCapacity { get; set; }
-
-        public double HydrogenFilledRatio { get; set; }
-
         public List<BatteryInfo> Batteries { get; private set; }
 
         public List<CargoInfo> Cargos { get; private set; }
+
+        public List<HydrogenTankInfo> HydrogenTanks { get; private set; }
 
         public void Reset()
         {
             CurrentPowerOutput = 0f;
             MaxPowerOutput = 0f;
-            HydrogenCapacity = 0f;
-            HydrogenFilledRatio = 0d;
             _items = new Dictionary<string, int>();
             _itemsInProduction = new Dictionary<string, int>();
             Batteries = new List<BatteryInfo>();
             Cargos = new List<CargoInfo>();
+            HydrogenTanks = new List<HydrogenTankInfo>();
         }
 
         public List<Item> GetItemsInProduction()

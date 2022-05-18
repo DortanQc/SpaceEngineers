@@ -1,7 +1,10 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage.Game.GUI.TextPanel;
+using VRageMath;
 
 namespace IngameScript
 {
@@ -387,7 +390,7 @@ namespace IngameScript
                     .AppendLine("** Containers ** ")
                     .AppendLine();
 
-            monitoringData.Cargos.OrderByDescending(b => b.CurrentVolume.ToIntSafe())
+            monitoringData.Cargos.OrderBy(b => b.Name)
                 .ToList()
                 .ForEach(cargo =>
                 {
@@ -425,7 +428,7 @@ namespace IngameScript
                     .AppendLine("** Batteries ** ")
                     .AppendLine();
 
-            monitoringData.Batteries.OrderBy(b => b.IsCharging)
+            monitoringData.Batteries.OrderBy(b => b.Name)
                 .ToList()
                 .ForEach(battery =>
                 {
@@ -449,17 +452,163 @@ namespace IngameScript
             MonitoringData monitoringData,
             IEnumerable<IMyTerminalBlock> blocks)
         {
-            var textBuilder = new StringBuilder();
-
-            textBuilder
-                .AppendLine("** Hydrogen **")
-                .AppendLine()
-                .AppendLine($"Current Hydrogen Capacity: {monitoringData.HydrogenCapacity:0.##}")
-                .AppendLine($"Current Hydrogen Filled Ratio: {monitoringData.HydrogenFilledRatio:0.##} %");
+            const float LEFT_OFFSET = 60f;
+            const float TOP_OFFSET = 20f;
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
 
-            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+            textSurfaceBlock.ForEach(surface =>
+            {
+                var textSurface = surface.TextSurface;
+
+                var barSize = textSurface.SurfaceSize.X - 90f;
+                var smallScreenOffset = 0f;
+
+                if (textSurface.SurfaceSize.Y == 320.00)
+                    smallScreenOffset = 90f;
+
+                using (var frame = textSurface.DrawFrame())
+                {
+                    //BACKGROUND
+                    var sprite = new MySprite(
+                        SpriteType.TEXTURE,
+                        "SquareSimple",
+                        size: new Vector2(512.0f, 512.0f),
+                        color: new Color(0, 0, 0, 255))
+                    {
+                        Position = new Vector2(256.0f, 256.0f)
+                    };
+
+                    frame.Add(sprite);
+
+                    var i = 0f;
+
+                    foreach (var tank in monitoringData.HydrogenTanks.OrderBy(x => x.Name))
+                    {
+                        //DISPLAY NAME            
+                        sprite = MySprite.CreateText(
+                            tank.Name,
+                            "debug",
+                            textSurface.ScriptForegroundColor,
+                            1f,
+                            TextAlignment.LEFT);
+
+                        sprite.Position = new Vector2(
+                            LEFT_OFFSET + 50f,
+                            TOP_OFFSET + smallScreenOffset + i * 85f);
+
+                        frame.Add(sprite);
+
+                        //ICON                  
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "IconHydrogen",
+                            size: new Vector2(30f, 30f),
+                            color: textSurface.ScriptBackgroundColor)
+                        {
+                            Position = new Vector2(30f, TOP_OFFSET + 50f + smallScreenOffset + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        //BAR BACKGROUND
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "SquareSimple",
+                            size: new Vector2(barSize, 30f),
+                            color: new Color(10, 10, 10, 200),
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(LEFT_OFFSET, TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        //BAR FOREGROUND
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "SquareSimple",
+                            size: new Vector2(Convert.ToSingle(tank.FilledRatio) * barSize, 30f),
+                            color: textSurface.ScriptBackgroundColor,
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(LEFT_OFFSET, TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        //BAR SEPARATORS
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "SquareSimple",
+                            size: new Vector2(3f, 30f),
+                            color: new Color(0, 0, 0, 255),
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(
+                                LEFT_OFFSET + barSize / 4,
+                                TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "SquareSimple",
+                            size: new Vector2(3f, 30f),
+                            color: new Color(0, 0, 0, 255),
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(LEFT_OFFSET + barSize / 4 * 2, TOP_OFFSET + 50f + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "SquareSimple",
+                            size: new Vector2(3f, 30f),
+                            color: new Color(0, 0, 0, 255),
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(LEFT_OFFSET + barSize / 4 * 3,
+                                TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
+                        };
+
+                        frame.Add(sprite);
+
+                        //BAR END
+                        sprite = new MySprite(
+                            SpriteType.TEXTURE,
+                            "Triangle",
+                            size: new Vector2(38f, 80f),
+                            color: new Color(0, 0, 0, 255),
+                            alignment: TextAlignment.LEFT)
+                        {
+                            Position = new Vector2(LEFT_OFFSET + 6, TOP_OFFSET + smallScreenOffset + 41f + i * 85f),
+                            RotationOrScale = 1.3f
+                        };
+
+                        frame.Add(sprite);
+
+                        //FILL RATIO
+                        sprite = MySprite.CreateText(
+                            (tank.FilledRatio * 100).ToString("F2") + "%",
+                            "debug",
+                            textSurface.ScriptForegroundColor,
+                            .75f,
+                            TextAlignment.RIGHT);
+
+                        sprite.Position = new Vector2(
+                            LEFT_OFFSET + barSize,
+                            TOP_OFFSET + smallScreenOffset + 7f + i * 85f);
+
+                        frame.Add(sprite);
+
+                        i++;
+                    }
+                }
+            });
         }
     }
 }

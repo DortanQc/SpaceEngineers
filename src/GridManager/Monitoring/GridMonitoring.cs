@@ -18,21 +18,26 @@ namespace IngameScript
 
         public MonitoringData MonitoringData { get; }
 
-        private void ScanHydrogen(IReadOnlyCollection<IMyGasTank> gasTanks)
+        private void ScanHydrogen(IEnumerable<IMyGasTank> gasTanks)
         {
             gasTanks
                 .Where(tank => tank.BlockDefinition.SubtypeName.ToUpper().Contains("HYDROGEN"))
                 .ToList()
                 .ForEach(tank =>
                 {
-                    MonitoringData.HydrogenCapacity += tank.Capacity;
-                    MonitoringData.HydrogenFilledRatio += tank.FilledRatio * 100 / gasTanks.Count;
+                    MonitoringData.HydrogenTanks.Add(new HydrogenTankInfo
+                    {
+                        Name = tank.CustomName,
+                        Capacity = tank.Capacity,
+                        FilledRatio = tank.FilledRatio
+                    });
                 });
 
             _logger("");
             _logger("** Hydrogen **");
-            _logger($"Current Hydrogen Capacity: {MonitoringData.HydrogenCapacity:0.##}");
-            _logger($"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenFilledRatio:0.##} %");
+            _logger($"Current Hydrogen Capacity: {MonitoringData.HydrogenTanks.Sum(h => h.Capacity):0.##}");
+            _logger(
+                $"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenTanks.Sum(h => h.FilledRatio) / MonitoringData.HydrogenTanks.Count:0.##} %");
         }
 
         private void ScanPower(List<IMyPowerProducer> powerBlocks)
@@ -227,7 +232,7 @@ namespace IngameScript
             List<IMyPowerProducer> powerBlocks,
             List<IMyTerminalBlock> storageBlocks,
             List<IMyProductionBlock> productionBlocks,
-            List<IMyGasTank> gasTanks)
+            IEnumerable<IMyGasTank> gasTanks)
         {
             MonitoringData.Reset();
             ScanStorageCapacity(storageBlocks);

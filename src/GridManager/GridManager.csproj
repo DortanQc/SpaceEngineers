@@ -57,6 +57,7 @@
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
+    <Compile Include="Monitoring\HydrogenTankInfo.cs" />
     <Compile Include="Monitoring\MonitoringData.cs" />
     <Compile Include="Production\AutoProducer.cs" />
     <Compile Include="Program.cs" />
