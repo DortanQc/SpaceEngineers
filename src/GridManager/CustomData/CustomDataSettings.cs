@@ -27,5 +27,6 @@
         public const string AUTO_PRODUCE_ITEMS_ACTIVE = "auto-produce-items";
         public const string AUTO_SHUTDOWN_DOORS_ACTIVE = "auto-shutdown-doors";
         public const string AUTO_CLEANUP_STORAGES_ACTIVE = "auto-cleanup-storages";
+        public const string COMPONENT_THRESHOLD = "component-threshold";
     }
 }

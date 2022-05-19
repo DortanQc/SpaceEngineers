@@ -8,6 +8,7 @@ Within the Programmable block's custom data that runs the script:
 Set "auto-produce-items" to True if you wish to have auto production of items
 Set "auto-shutdown-doors" to True if you wish to have doors shut down automatically after 5 seconds
 Set "auto-cleanup-storages" to True if you wish to have all of you storage cleaned up
+When "auto-produce-items" is set to true, tou can adjust to threshold of each of your components auto production amount 
 
 -- Auto Item Production --
 Add "exclude-from-auto-production" in any production block's custom data you wish to skip for auto productions

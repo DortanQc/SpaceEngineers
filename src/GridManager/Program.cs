@@ -13,33 +13,6 @@ namespace IngameScript
         private const int SHUT_DOWN_DOORS = 3;
         private const int AUTO_PRODUCE = 4;
         private const int CHECK_FOR_UPDATED_CONFIG = 5;
-
-        private readonly Item[] _itemsToProduce =
-        {
-            new Item("MyObjectBuilder_BlueprintDefinition/BulletproofGlass", 100),
-            new Item("MyObjectBuilder_BlueprintDefinition/Canvas", 1),
-            new Item("MyObjectBuilder_BlueprintDefinition/ComputerComponent", 1000),
-            new Item("MyObjectBuilder_BlueprintDefinition/ConstructionComponent", 2000),
-            new Item("MyObjectBuilder_BlueprintDefinition/DetectorComponent", 50),
-            new Item("MyObjectBuilder_BlueprintDefinition/Display", 100),
-            new Item("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent", 100),
-            new Item("MyObjectBuilder_BlueprintDefinition/GirderComponent", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent", 10),
-            new Item("MyObjectBuilder_BlueprintDefinition/InteriorPlate", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/LargeTube", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/MedicalComponent", 50),
-            new Item("MyObjectBuilder_BlueprintDefinition/MetalGrid", 500),
-            new Item("MyObjectBuilder_BlueprintDefinition/MotorComponent", 1000),
-            new Item("MyObjectBuilder_BlueprintDefinition/PowerCell", 200),
-            new Item("MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent", 50),
-            new Item("MyObjectBuilder_BlueprintDefinition/ReactorComponent", 10),
-            new Item("MyObjectBuilder_BlueprintDefinition/SmallTube", 1000),
-            new Item("MyObjectBuilder_BlueprintDefinition/SolarCell", 200),
-            new Item("MyObjectBuilder_BlueprintDefinition/SteelPlate", 5000),
-            new Item("MyObjectBuilder_BlueprintDefinition/Superconductor", 50),
-            new Item("MyObjectBuilder_BlueprintDefinition/ThrustComponent", 20)
-        };
-
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private readonly Dictionary<int, DateTime> _timerDictionary = new Dictionary<int, DateTime>();
@@ -53,6 +26,7 @@ namespace IngameScript
         private List<IMyTerminalBlock> _blocksWithStorage;
         private List<IMyShipController> _controllers;
         private List<IMyDoor> _doors;
+        private Item[] _itemsToProduce;
         private bool _lastControllerMoveDownAction;
         private bool _lastControllerMoveUpAction;
         private bool _lastControllerSelectAction;
@@ -73,24 +47,105 @@ namespace IngameScript
 
         private void Init()
         {
-            var customData = new CustomDataManager(Me.CustomData);
-
-            var autoProduceActive = customData.GetPropertyValue(CustomDataSettings.AUTO_PRODUCE_ITEMS_ACTIVE);
-            var autoShutDownDoors = customData.GetPropertyValue(CustomDataSettings.AUTO_SHUTDOWN_DOORS_ACTIVE);
-            var autoCleanupStorages = customData.GetPropertyValue(CustomDataSettings.AUTO_CLEANUP_STORAGES_ACTIVE);
-
-            if (autoProduceActive == null)
-                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_PRODUCE_ITEMS_ACTIVE, "false");
-
-            if (autoShutDownDoors == null)
-                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_SHUTDOWN_DOORS_ACTIVE, "false");
-
-            if (autoCleanupStorages == null)
-                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_CLEANUP_STORAGES_ACTIVE, "false");
+            var autoProduceActive = SetupCustomData(Me, CustomDataSettings.AUTO_PRODUCE_ITEMS_ACTIVE, "false");
+            var autoShutDownDoors = SetupCustomData(Me, CustomDataSettings.AUTO_SHUTDOWN_DOORS_ACTIVE, "false");
+            var autoCleanupStorages = SetupCustomData(Me, CustomDataSettings.AUTO_CLEANUP_STORAGES_ACTIVE, "false");
 
             _autoProduceActive = InitConfig(autoProduceActive);
             _autoShutDownDoors = InitConfig(autoShutDownDoors);
             _autoCleanupStorages = InitConfig(autoCleanupStorages);
+
+            var bulletproofGlassKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-BulletproofGlass";
+            var canvasKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-Canvas";
+            var computerKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-ComputerComponent";
+            var constructionKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-ConstructionComponent";
+            var detectorKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-DetectorComponent";
+            var displayKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-Display";
+            var explosivesKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-ExplosivesComponent";
+            var girderKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-GirderComponent";
+            var gravityGeneratorKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-GeneratorComponent";
+            var interiorPlateKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-InteriorPlate";
+            var largeTubeKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-LargeTube";
+            var medicalKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-MedicalComponent";
+            var metalGridKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-MetalGrid";
+            var motorKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-MotorComponent";
+            var powerCellKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-PowerCell";
+            var radioCommunicationKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-RadioCommunicationComponent";
+            var reactorKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-ReactorComponent";
+            var smallTubeKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-SmallTube";
+            var solarCellKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-SolarCell";
+            var steelPlateKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-SteelPlate";
+            var superconductorKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-Superconductor";
+            var thrustKeyName = $"{CustomDataSettings.COMPONENT_THRESHOLD}-ThrustComponent";
+
+            var bulletproofGlassValue = SetupCustomData(Me, bulletproofGlassKeyName, "0");
+            var canvasValue = SetupCustomData(Me, canvasKeyName, "0");
+            var computerComponentValue = SetupCustomData(Me, computerKeyName, "0");
+            var constructionComponentValue = SetupCustomData(Me, constructionKeyName, "0");
+            var detectorComponentValue = SetupCustomData(Me, detectorKeyName, "0");
+            var displayValue = SetupCustomData(Me, displayKeyName, "0");
+            var explosivesComponentValue = SetupCustomData(Me, explosivesKeyName, "0");
+            var girderComponentValue = SetupCustomData(Me, girderKeyName, "0");
+            var gravityGeneratorComponentValue = SetupCustomData(Me, gravityGeneratorKeyName, "0");
+            var interiorPlateValue = SetupCustomData(Me, interiorPlateKeyName, "0");
+            var largeTubeValue = SetupCustomData(Me, largeTubeKeyName, "0");
+            var medicalComponentValue = SetupCustomData(Me, medicalKeyName, "0");
+            var metalGridValue = SetupCustomData(Me, metalGridKeyName, "0");
+            var motorComponentValue = SetupCustomData(Me, motorKeyName, "0");
+            var powerCellValue = SetupCustomData(Me, powerCellKeyName, "0");
+            var radioCommunicationComponentValue = SetupCustomData(Me, radioCommunicationKeyName, "0");
+            var reactorComponentValue = SetupCustomData(Me, reactorKeyName, "0");
+            var smallTubeValue = SetupCustomData(Me, smallTubeKeyName, "0");
+            var solarCellValue = SetupCustomData(Me, solarCellKeyName, "0");
+            var steelPlateValue = SetupCustomData(Me, steelPlateKeyName, "0");
+            var superconductorValue = SetupCustomData(Me, superconductorKeyName, "0");
+            var thrustComponentValue = SetupCustomData(Me, thrustKeyName, "0");
+
+            _itemsToProduce = new[]
+            {
+                InitAutoProductionValue(bulletproofGlassValue, "BulletproofGlass"),
+                InitAutoProductionValue(canvasValue, "Canvas"),
+                InitAutoProductionValue(computerComponentValue, "ComputerComponent"),
+                InitAutoProductionValue(constructionComponentValue, "ConstructionComponent"),
+                InitAutoProductionValue(detectorComponentValue, "DetectorComponent"),
+                InitAutoProductionValue(displayValue, "Display"),
+                InitAutoProductionValue(explosivesComponentValue, "ExplosivesComponent"),
+                InitAutoProductionValue(girderComponentValue, "GirderComponent"),
+                InitAutoProductionValue(gravityGeneratorComponentValue, "GravityGeneratorComponent"),
+                InitAutoProductionValue(interiorPlateValue, "InteriorPlate"),
+                InitAutoProductionValue(largeTubeValue, "LargeTube"),
+                InitAutoProductionValue(medicalComponentValue, "MedicalComponent"),
+                InitAutoProductionValue(metalGridValue, "MetalGrid"),
+                InitAutoProductionValue(motorComponentValue, "MotorComponent"),
+                InitAutoProductionValue(powerCellValue, "PowerCell"),
+                InitAutoProductionValue(radioCommunicationComponentValue, "RadioCommunicationComponent"),
+                InitAutoProductionValue(reactorComponentValue, "ReactorComponent"),
+                InitAutoProductionValue(smallTubeValue, "SmallTube"),
+                InitAutoProductionValue(solarCellValue, "SolarCell"),
+                InitAutoProductionValue(steelPlateValue, "SteelPlate"),
+                InitAutoProductionValue(superconductorValue, "Superconductor"),
+                InitAutoProductionValue(thrustComponentValue, "ThrustComponent")
+            };
+        }
+
+        private static Item InitAutoProductionValue(string customDataValue, string objectName)
+        {
+            int amount;
+            int.TryParse(customDataValue, out amount);
+
+            return new Item($"MyObjectBuilder_BlueprintDefinition/{objectName}", amount);
+        }
+
+        private static string SetupCustomData(IMyTerminalBlock block, string key, string defaultValue)
+        {
+            var customData = new CustomDataManager(block.CustomData);
+
+            var actualValue = customData.GetPropertyValue(key);
+
+            if (actualValue == null)
+                CustomDataManager.AddValue(block, key, defaultValue);
+
+            return actualValue;
         }
 
         private static bool InitConfig(string customDataValue) =>
@@ -104,7 +159,7 @@ namespace IngameScript
             {
                 WhenItsTimeTo(CHECK_FOR_UPDATED_CONFIG, 5, Init);
 
-                WhenItsTimeTo(SCAN_GRID, 2, () =>
+                WhenItsTimeTo(SCAN_GRID, 3, () =>
                 {
                     _blocks = ExtractAllTerminalBlocks();
 
@@ -115,16 +170,16 @@ namespace IngameScript
                     _doors = ExtractDoorBlocks(_blocks);
                     _controllers = ExtractControllersInUse(_blocks);
 
-                    GetMonitoringData(
+                    _monitoring.UpdateData(
                         _blocksProducingPower,
                         _blocksWithStorage,
                         _blocksProducingItems,
                         _blocksHoldingGas);
-
+                    
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
                 });
 
-                WhenItsTimeTo(AUTO_PRODUCE, 2, () =>
+                WhenItsTimeTo(AUTO_PRODUCE, 5, () =>
                 {
                     if (_autoProduceActive)
                         AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
@@ -136,7 +191,7 @@ namespace IngameScript
                         DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
                 });
 
-                WhenItsTimeTo(CLEANUP_STORAGES, 5, () =>
+                WhenItsTimeTo(CLEANUP_STORAGES, 10, () =>
                 {
                     if (_autoCleanupStorages)
                         AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
@@ -245,19 +300,6 @@ namespace IngameScript
             }
 
             return MenuNavigationSystem.ScriptActions.Normal;
-        }
-
-        private void GetMonitoringData(
-            List<IMyPowerProducer> blocksProducingPower,
-            List<IMyTerminalBlock> blocksWithStorage,
-            List<IMyProductionBlock> blocksProducingItems,
-            IEnumerable<IMyGasTank> blocksHoldingGas)
-        {
-            _monitoring.UpdateData(
-                blocksProducingPower,
-                blocksWithStorage,
-                blocksProducingItems,
-                blocksHoldingGas);
         }
 
         private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
