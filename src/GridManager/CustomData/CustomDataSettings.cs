@@ -24,5 +24,8 @@
         public const string DEFAULT_STORAGE_FOR_ORES = "ore-default-storage";
         public const string IS_AIR_LOCK = "air-lock-group";
         public const string LCD_WIDTH_RATIO = "lcd-width-ratio";
+        public const string AUTO_PRODUCE_ITEMS_ACTIVE = "auto-produce-items";
+        public const string AUTO_SHUTDOWN_DOORS_ACTIVE = "auto-shutdown-doors";
+        public const string AUTO_CLEANUP_STORAGES_ACTIVE = "auto-cleanup-storages";
     }
 }

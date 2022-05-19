@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace IngameScript
 {
@@ -8,16 +10,11 @@ namespace IngameScript
     {
         private readonly Dictionary<string, string> _settings;
 
-        public CustomDataManager()
-        {
-            _settings = new Dictionary<string, string>();
-        }
-
         public CustomDataManager(string customData)
         {
-            _settings = customData.Split(
-                    new[] { "\r\n", "\r", "\n" },
-                    StringSplitOptions.None)
+            _settings = customData
+                .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                .Where(row => row.Trim() != string.Empty)
                 .ToDictionary(
                     s => s.Split('=')[0].ToLower().Trim(),
                     s =>
@@ -39,12 +36,15 @@ namespace IngameScript
                 : null;
         }
 
-        public void AddValue(string key, string value)
+        public static void AddValue(IMyTerminalBlock block, string key, string value)
         {
-            if (_settings.ContainsKey(key))
-                _settings[key] = value;
-            else
-                _settings.Add(key, value);
+            var sb = new StringBuilder(block.CustomData);
+
+            sb.AppendLine(string.IsNullOrEmpty(value)
+                ? $"{key}"
+                : $"{key}={value}");
+
+            block.CustomData = sb.ToString();
         }
     }
 }

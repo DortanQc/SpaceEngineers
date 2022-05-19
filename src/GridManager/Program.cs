@@ -7,9 +7,12 @@ namespace IngameScript
 {
     public class Program : MyGridProgram
     {
-        private const int RUN_MONITORING = 0;
+        private const int SCAN_GRID = 0;
         private const int CLEANUP_STORAGES = 1;
         private const int MANAGE_AIRLOCKS = 2;
+        private const int SHUT_DOWN_DOORS = 3;
+        private const int AUTO_PRODUCE = 4;
+        private const int CHECK_FOR_UPDATED_CONFIG = 5;
 
         private readonly Item[] _itemsToProduce =
         {
@@ -40,8 +43,16 @@ namespace IngameScript
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private readonly Dictionary<int, DateTime> _timerDictionary = new Dictionary<int, DateTime>();
+        private bool _autoCleanupStorages;
+        private bool _autoProduceActive;
+        private bool _autoShutDownDoors;
         private List<IMyTerminalBlock> _blocks;
+        private List<IMyGasTank> _blocksHoldingGas;
+        private List<IMyProductionBlock> _blocksProducingItems;
+        private List<IMyPowerProducer> _blocksProducingPower;
+        private List<IMyTerminalBlock> _blocksWithStorage;
         private List<IMyShipController> _controllers;
+        private List<IMyDoor> _doors;
         private bool _lastControllerMoveDownAction;
         private bool _lastControllerMoveUpAction;
         private bool _lastControllerSelectAction;
@@ -51,9 +62,39 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
             _blocks = new List<IMyTerminalBlock>();
+            _blocksProducingPower = new List<IMyPowerProducer>();
+            _blocksWithStorage = new List<IMyTerminalBlock>();
+            _blocksProducingItems = new List<IMyProductionBlock>();
+            _blocksHoldingGas = new List<IMyGasTank>();
+            _doors = new List<IMyDoor>();
             _monitoring = new GridMonitoring(Echo);
             _menuNavigationSystem = new MenuNavigationSystem(Echo);
         }
+
+        private void Init()
+        {
+            var customData = new CustomDataManager(Me.CustomData);
+
+            var autoProduceActive = customData.GetPropertyValue(CustomDataSettings.AUTO_PRODUCE_ITEMS_ACTIVE);
+            var autoShutDownDoors = customData.GetPropertyValue(CustomDataSettings.AUTO_SHUTDOWN_DOORS_ACTIVE);
+            var autoCleanupStorages = customData.GetPropertyValue(CustomDataSettings.AUTO_CLEANUP_STORAGES_ACTIVE);
+
+            if (autoProduceActive == null)
+                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_PRODUCE_ITEMS_ACTIVE, "false");
+
+            if (autoShutDownDoors == null)
+                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_SHUTDOWN_DOORS_ACTIVE, "false");
+
+            if (autoCleanupStorages == null)
+                CustomDataManager.AddValue(Me, CustomDataSettings.AUTO_CLEANUP_STORAGES_ACTIVE, "false");
+
+            _autoProduceActive = InitConfig(autoProduceActive);
+            _autoShutDownDoors = InitConfig(autoShutDownDoors);
+            _autoCleanupStorages = InitConfig(autoCleanupStorages);
+        }
+
+        private static bool InitConfig(string customDataValue) =>
+            (customDataValue ?? string.Empty).Equals("true", StringComparison.InvariantCultureIgnoreCase);
 
         public void Main(string argument, UpdateType updateSource)
         {
@@ -61,38 +102,49 @@ namespace IngameScript
 
             if (action == MenuNavigationSystem.ScriptActions.Normal)
             {
-                WhenItsTimeTo(RUN_MONITORING, 2, () =>
+                WhenItsTimeTo(CHECK_FOR_UPDATED_CONFIG, 5, Init);
+
+                WhenItsTimeTo(SCAN_GRID, 2, () =>
                 {
                     _blocks = ExtractAllTerminalBlocks();
 
-                    var blocksProducingPower = ExtractPowerBlocks(_blocks);
-                    var blocksWithStorage = ExtractStorageBlocks(_blocks);
-                    var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
-                    var blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
-                    var doors = ExtractDoorBlocks(_blocks);
+                    _blocksProducingPower = ExtractPowerBlocks(_blocks);
+                    _blocksWithStorage = ExtractStorageBlocks(_blocks);
+                    _blocksProducingItems = ExtractItemProductionBlocks(_blocks);
+                    _blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
+                    _doors = ExtractDoorBlocks(_blocks);
                     _controllers = ExtractControllersInUse(_blocks);
 
-                    GetMonitoringData(blocksProducingPower, blocksWithStorage, blocksProducingItems, blocksHoldingGas);
-
-                    AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
+                    GetMonitoringData(
+                        _blocksProducingPower,
+                        _blocksWithStorage,
+                        _blocksProducingItems,
+                        _blocksHoldingGas);
 
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
-
-                    DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(doors);
                 });
 
-                WhenItsTimeTo(MANAGE_AIRLOCKS, 1, () =>
+                WhenItsTimeTo(AUTO_PRODUCE, 2, () =>
                 {
-                    var doors = ExtractDoorBlocks(_blocks);
-                    DoorManager.ManageAirLocks(Echo, doors);
+                    if (_autoProduceActive)
+                        AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
+                });
+
+                WhenItsTimeTo(SHUT_DOWN_DOORS, 1, () =>
+                {
+                    if (_autoShutDownDoors)
+                        DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
                 });
 
                 WhenItsTimeTo(CLEANUP_STORAGES, 5, () =>
                 {
-                    var blocksWithStorage = ExtractStorageBlocks(_blocks);
-                    var blocksProducingItems = ExtractItemProductionBlocks(_blocks);
+                    if (_autoCleanupStorages)
+                        AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
+                });
 
-                    AutoCleanup.Cleanup(Echo, blocksWithStorage, blocksProducingItems);
+                WhenItsTimeTo(MANAGE_AIRLOCKS, 1, () =>
+                {
+                    DoorManager.ManageAirLocks(Echo, _doors);
                 });
 
                 ReactOnControllersAction();
@@ -103,30 +155,6 @@ namespace IngameScript
             }
 
             _menuNavigationSystem.RenderMenu(_blocks, _monitoring.MonitoringData);
-        }
-
-        private static bool HasDisplayMenuBlocks(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
-            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_ACCESS);
-
-            if (customData == null) return false;
-
-            var index = 0;
-            if (customData.Length > 0)
-                int.TryParse(customData, out index);
-
-            var textSurface = block as IMyTextSurfaceProvider;
-
-            return textSurface != null && textSurface.SurfaceCount > index;
-        }
-
-        private static bool IsAllowedToControlMenu(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
-            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_SHIP_CONTROLLABLE);
-
-            return customData != null;
         }
 
         private void ReactOnControllersAction()
@@ -178,6 +206,30 @@ namespace IngameScript
                 .ToList();
         }
 
+        private static bool HasDisplayMenuBlocks(IMyTerminalBlock block)
+        {
+            var customDataManager = new CustomDataManager(block.CustomData);
+            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_ACCESS);
+
+            if (customData == null) return false;
+
+            var index = 0;
+            if (customData.Length > 0)
+                int.TryParse(customData, out index);
+
+            var textSurface = block as IMyTextSurfaceProvider;
+
+            return textSurface != null && textSurface.SurfaceCount > index;
+        }
+
+        private static bool IsAllowedToControlMenu(IMyTerminalBlock block)
+        {
+            var customDataManager = new CustomDataManager(block.CustomData);
+            var customData = customDataManager.GetPropertyValue(CustomDataSettings.GRID_MANAGER_MENU_SHIP_CONTROLLABLE);
+
+            return customData != null;
+        }
+
         private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(
             UpdateType updateSource,
             string argument)
@@ -199,7 +251,7 @@ namespace IngameScript
             List<IMyPowerProducer> blocksProducingPower,
             List<IMyTerminalBlock> blocksWithStorage,
             List<IMyProductionBlock> blocksProducingItems,
-            List<IMyGasTank> blocksHoldingGas)
+            IEnumerable<IMyGasTank> blocksHoldingGas)
         {
             _monitoring.UpdateData(
                 blocksProducingPower,
