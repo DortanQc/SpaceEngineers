@@ -42,6 +42,7 @@
     <Compile Include="CustomData\CustomDataManager.cs" />
     <Compile Include="CustomData\CustomDataSettings.cs" />
     <Compile Include="Display\DisplayManager.cs" />
+    <Compile Include="Display\GraphicEngine.cs" />
     <Compile Include="Display\Surface.cs" />
     <Compile Include="Display\SurfaceByType.cs" />
     <Compile Include="DoorManager\DoorManager.cs" />

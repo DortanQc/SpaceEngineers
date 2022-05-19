@@ -20,7 +20,7 @@ Add "stats-inventory-ammunition" in any LCD's custom data you wish to show all o
 Add "hide-item-{item_name}" in any LCD's custom data you wish to hide a specific item
 Add "exclude-when-over-threshold" in any LCD's custom data you wish to hide a specific item when threshold is defined and met
 Add "stats-in-production" in any LCD's custom data you wish to show all items currently in production
-
+Add "lcd-width-ratio" in any wide LCD's custom data you wish to preserve height ratio
 
 -- Menu Navigation --
 Add "grid-manager-menu-access" in any LCD's custom data you wish to show the menu

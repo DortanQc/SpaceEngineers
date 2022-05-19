@@ -76,7 +76,7 @@ namespace IngameScript
 
                     AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, blocksProducingItems);
 
-                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks);
+                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
 
                     DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(doors);
                 });

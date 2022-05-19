@@ -23,5 +23,6 @@
         public const string DEFAULT_STORAGE_FOR_AMMO = "ammo-default-storage";
         public const string DEFAULT_STORAGE_FOR_ORES = "ore-default-storage";
         public const string IS_AIR_LOCK = "air-lock-group";
+        public const string LCD_WIDTH_RATIO = "lcd-width-ratio";
     }
 }

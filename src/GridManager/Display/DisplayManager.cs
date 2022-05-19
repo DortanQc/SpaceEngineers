@@ -10,11 +10,15 @@ namespace IngameScript
 {
     public class DisplayManager
     {
+        private static Action<string> _logger;
+
         public static void Display(
             MonitoringData monitoringData,
             IEnumerable<Item> itemsWithThreshold,
-            List<IMyTerminalBlock> allBlocks)
+            List<IMyTerminalBlock> allBlocks,
+            Action<string> logger)
         {
+            _logger = logger;
             DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
             DisplayStorageCapacity(monitoringData, allBlocks);
             DisplayPowerUsage(monitoringData, allBlocks);
@@ -452,162 +456,138 @@ namespace IngameScript
             MonitoringData monitoringData,
             IEnumerable<IMyTerminalBlock> blocks)
         {
-            const float LEFT_OFFSET = 60f;
-            const float TOP_OFFSET = 20f;
-
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
 
             textSurfaceBlock.ForEach(surface =>
             {
+                const float LEFT_MARGIN = 30f;
+                const float TOP_MARGIN = 20f;
+                const float ICON_SIZE = 30f;
+                const float TEXT_LEFT_BEGIN = LEFT_MARGIN + 80f;
+                const float BAR_LEFT_BEGIN = LEFT_MARGIN + ICON_SIZE;
+                const float ROW_TOP_BEGIN = 85f;
+                const float BAR_TOP_BEGIN = 50f;
+                const float BAR_HEIGHT = 30f;
+
+                var ratio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+
                 var textSurface = surface.TextSurface;
-
+                var engin = new GraphicEngine(textSurface, ratio);
                 var barSize = textSurface.SurfaceSize.X - 90f;
-                var smallScreenOffset = 0f;
 
-                if (textSurface.SurfaceSize.Y == 320.00)
-                    smallScreenOffset = 90f;
+                engin.BackgroundColor = new Color(0, 0, 0, 255);
 
-                using (var frame = textSurface.DrawFrame())
+                var i = 0;
+
+                foreach (var tank in monitoringData.HydrogenTanks.OrderBy(x => x.Name))
                 {
-                    //BACKGROUND
-                    var sprite = new MySprite(
-                        SpriteType.TEXTURE,
+                    var rowYPos = i * ROW_TOP_BEGIN + TOP_MARGIN;
+
+                    engin.AddText(
+                        tank.Name,
+                        1f,
+                        TEXT_LEFT_BEGIN,
+                        rowYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    engin.AddSprite(
+                        "IconHydrogen",
+                        ICON_SIZE,
+                        ICON_SIZE,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.CENTER,
+                        0f,
+                        false
+                    );
+
+                    engin.AddSprite(
                         "SquareSimple",
-                        size: new Vector2(512.0f, 512.0f),
-                        color: new Color(0, 0, 0, 255))
-                    {
-                        Position = new Vector2(256.0f, 256.0f)
-                    };
+                        barSize,
+                        BAR_HEIGHT,
+                        new Color(10, 10, 10, 200),
+                        BAR_LEFT_BEGIN,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
 
-                    frame.Add(sprite);
+                    engin.AddSprite(
+                        "SquareSimple",
+                        Convert.ToSingle(tank.FilledRatio) * barSize,
+                        BAR_HEIGHT,
+                        textSurface.ScriptBackgroundColor,
+                        BAR_LEFT_BEGIN,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
 
-                    var i = 0f;
+                    engin.AddSprite(
+                        "SquareSimple",
+                        3f,
+                        BAR_HEIGHT,
+                        new Color(0, 0, 0, 255),
+                        BAR_LEFT_BEGIN + barSize / 4,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
 
-                    foreach (var tank in monitoringData.HydrogenTanks.OrderBy(x => x.Name))
-                    {
-                        //DISPLAY NAME            
-                        sprite = MySprite.CreateText(
-                            tank.Name,
-                            "debug",
-                            textSurface.ScriptForegroundColor,
-                            1f,
-                            TextAlignment.LEFT);
+                    engin.AddSprite(
+                        "SquareSimple",
+                        3f,
+                        BAR_HEIGHT,
+                        new Color(0, 0, 0, 255),
+                        BAR_LEFT_BEGIN + barSize / 4 * 2,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
 
-                        sprite.Position = new Vector2(
-                            LEFT_OFFSET + 50f,
-                            TOP_OFFSET + smallScreenOffset + i * 85f);
+                    engin.AddSprite(
+                        "SquareSimple",
+                        3f,
+                        BAR_HEIGHT,
+                        new Color(0, 0, 0, 255),
+                        BAR_LEFT_BEGIN + barSize / 4 * 3,
+                        rowYPos + BAR_TOP_BEGIN,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
 
-                        frame.Add(sprite);
+                    engin.AddSprite(
+                        "Triangle",
+                        38f,
+                        80f,
+                        new Color(0, 0, 0, 255),
+                        BAR_LEFT_BEGIN + 6,
+                        rowYPos + 41f,
+                        TextAlignment.LEFT,
+                        1.3f,
+                        true
+                    );
 
-                        //ICON                  
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "IconHydrogen",
-                            size: new Vector2(30f, 30f),
-                            color: textSurface.ScriptBackgroundColor)
-                        {
-                            Position = new Vector2(30f, TOP_OFFSET + 50f + smallScreenOffset + i * 85f)
-                        };
+                    engin.AddText(
+                        (tank.FilledRatio * 100).ToString("F2") + "%",
+                        .75f,
+                        barSize + BAR_LEFT_BEGIN,
+                        7f + rowYPos,
+                        TextAlignment.RIGHT,
+                        textSurface.ScriptForegroundColor);
 
-                        frame.Add(sprite);
-
-                        //BAR BACKGROUND
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "SquareSimple",
-                            size: new Vector2(barSize, 30f),
-                            color: new Color(10, 10, 10, 200),
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(LEFT_OFFSET, TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
-                        };
-
-                        frame.Add(sprite);
-
-                        //BAR FOREGROUND
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "SquareSimple",
-                            size: new Vector2(Convert.ToSingle(tank.FilledRatio) * barSize, 30f),
-                            color: textSurface.ScriptBackgroundColor,
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(LEFT_OFFSET, TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
-                        };
-
-                        frame.Add(sprite);
-
-                        //BAR SEPARATORS
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "SquareSimple",
-                            size: new Vector2(3f, 30f),
-                            color: new Color(0, 0, 0, 255),
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(
-                                LEFT_OFFSET + barSize / 4,
-                                TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
-                        };
-
-                        frame.Add(sprite);
-
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "SquareSimple",
-                            size: new Vector2(3f, 30f),
-                            color: new Color(0, 0, 0, 255),
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(LEFT_OFFSET + barSize / 4 * 2, TOP_OFFSET + 50f + i * 85f)
-                        };
-
-                        frame.Add(sprite);
-
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "SquareSimple",
-                            size: new Vector2(3f, 30f),
-                            color: new Color(0, 0, 0, 255),
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(LEFT_OFFSET + barSize / 4 * 3,
-                                TOP_OFFSET + smallScreenOffset + 50f + i * 85f)
-                        };
-
-                        frame.Add(sprite);
-
-                        //BAR END
-                        sprite = new MySprite(
-                            SpriteType.TEXTURE,
-                            "Triangle",
-                            size: new Vector2(38f, 80f),
-                            color: new Color(0, 0, 0, 255),
-                            alignment: TextAlignment.LEFT)
-                        {
-                            Position = new Vector2(LEFT_OFFSET + 6, TOP_OFFSET + smallScreenOffset + 41f + i * 85f),
-                            RotationOrScale = 1.3f
-                        };
-
-                        frame.Add(sprite);
-
-                        //FILL RATIO
-                        sprite = MySprite.CreateText(
-                            (tank.FilledRatio * 100).ToString("F2") + "%",
-                            "debug",
-                            textSurface.ScriptForegroundColor,
-                            .75f,
-                            TextAlignment.RIGHT);
-
-                        sprite.Position = new Vector2(
-                            LEFT_OFFSET + barSize,
-                            TOP_OFFSET + smallScreenOffset + 7f + i * 85f);
-
-                        frame.Add(sprite);
-
-                        i++;
-                    }
+                    i++;
                 }
+
+                engin.Draw();
             });
         }
     }
