@@ -51,7 +51,6 @@
     <Compile Include="MenuNavigation\MenuCore.cs" />
     <Compile Include="MenuNavigation\MenuItem.cs" />
     <Compile Include="MenuNavigation\MenuNavigationSystem.cs" />
-    <Compile Include="Monitoring\BatteryInfo.cs" />
     <Compile Include="Monitoring\CargoInfo.cs" />
     <Compile Include="Monitoring\GridMonitoring.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
@@ -60,6 +59,7 @@
     </AdditionalFiles>
     <Compile Include="Monitoring\HydrogenTankInfo.cs" />
     <Compile Include="Monitoring\MonitoringData.cs" />
+    <Compile Include="Monitoring\PowerInfo.cs" />
     <Compile Include="Production\AutoProducer.cs" />
     <Compile Include="Program.cs" />
     <AdditionalFiles Include="Instructions.readme" />

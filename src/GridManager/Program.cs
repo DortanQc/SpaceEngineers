@@ -13,6 +13,7 @@ namespace IngameScript
         private const int SHUT_DOWN_DOORS = 3;
         private const int AUTO_PRODUCE = 4;
         private const int CHECK_FOR_UPDATED_CONFIG = 5;
+        private const int DISPLAY_STATS = 6;
         private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private readonly Dictionary<int, DateTime> _timerDictionary = new Dictionary<int, DateTime>();
@@ -157,9 +158,9 @@ namespace IngameScript
 
             if (action == MenuNavigationSystem.ScriptActions.Normal)
             {
-                WhenItsTimeTo(CHECK_FOR_UPDATED_CONFIG, 5, Init);
+                WhenItsTimeTo(CHECK_FOR_UPDATED_CONFIG, 5000, Init);
 
-                WhenItsTimeTo(SCAN_GRID, 3, () =>
+                WhenItsTimeTo(SCAN_GRID, 3000, () =>
                 {
                     _blocks = ExtractAllTerminalBlocks();
 
@@ -171,36 +172,38 @@ namespace IngameScript
                     _controllers = ExtractControllersInUse(_blocks);
 
                     _monitoring.UpdateData(
+                        _blocks,
                         _blocksProducingPower,
                         _blocksWithStorage,
                         _blocksProducingItems,
                         _blocksHoldingGas);
-                    
-                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
                 });
 
-                WhenItsTimeTo(AUTO_PRODUCE, 5, () =>
+                WhenItsTimeTo(AUTO_PRODUCE, 5000, () =>
                 {
                     if (_autoProduceActive)
                         AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
                 });
 
-                WhenItsTimeTo(SHUT_DOWN_DOORS, 1, () =>
+                WhenItsTimeTo(SHUT_DOWN_DOORS, 1000, () =>
                 {
                     if (_autoShutDownDoors)
                         DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
                 });
 
-                WhenItsTimeTo(CLEANUP_STORAGES, 10, () =>
+                WhenItsTimeTo(CLEANUP_STORAGES, 10000, () =>
                 {
                     if (_autoCleanupStorages)
                         AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
                 });
 
-                WhenItsTimeTo(MANAGE_AIRLOCKS, 1, () =>
+                WhenItsTimeTo(MANAGE_AIRLOCKS, 1000, () =>
                 {
                     DoorManager.ManageAirLocks(Echo, _doors);
                 });
+
+                WhenItsTimeTo(DISPLAY_STATS, 250, () =>
+                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo));
 
                 ReactOnControllersAction();
             }
@@ -308,7 +311,7 @@ namespace IngameScript
 
             GridTerminalSystem.GetBlocks(blocks);
 
-            return blocks.Where(block => block.IsSameConstructAs(Me)).ToList();
+            return blocks.Where(block => block.IsSameConstructAs(Me) && block.IsWorking).ToList();
         }
 
         private static List<IMyGasTank> ExtractGasTanksBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
@@ -333,12 +336,12 @@ namespace IngameScript
         private static List<IMyPowerProducer> ExtractPowerBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
             blocks.OfType<IMyPowerProducer>().ToList();
 
-        private void WhenItsTimeTo(int timerKey, int totalSecond, Action action)
+        private void WhenItsTimeTo(int timerKey, int totalMilliSecond, Action action)
         {
             if (_timerDictionary.ContainsKey(timerKey) == false)
                 _timerDictionary.Add(timerKey, DateTime.MinValue);
 
-            if (DateTime.Now.Subtract(_timerDictionary[timerKey]).TotalSeconds < totalSecond)
+            if (DateTime.Now.Subtract(_timerDictionary[timerKey]).TotalMilliseconds < totalMilliSecond)
                 return;
 
             action();

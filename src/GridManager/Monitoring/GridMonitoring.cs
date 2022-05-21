@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,37 +43,81 @@ namespace IngameScript
 
         private void ScanPower(List<IMyPowerProducer> powerBlocks)
         {
+            var uraniumCount = MonitoringData.GetItems(Item.ItemTypes.Ingot)
+                .Where(i => i.ItemSubType == Item.ItemSubTypes.Uranium)
+                .Sum(i => i.Amount);
+
+            var iceCount = MonitoringData.GetItems(Item.ItemTypes.Ore)
+                .Where(i => i.ItemSubType == Item.ItemSubTypes.Ice)
+                .Sum(i => i.Amount);
+
             powerBlocks.ForEach(block =>
             {
-                MonitoringData.CurrentPowerOutput += block.CurrentOutput;
-                MonitoringData.MaxPowerOutput += block.MaxOutput;
-            });
+                var battery = block as IMyBatteryBlock;
+                var solarPanel = block as IMySolarPanel;
+                var reactor = block as IMyReactor;
 
-            powerBlocks
-                .OfType<IMyBatteryBlock>()
-                .ToList()
-                .ForEach(block =>
-                {
-                    MonitoringData.Batteries.Add(new BatteryInfo
+                if (battery != null)
+                    MonitoringData.PowerConsumption.Batteries.Add(new BatteryInfo
+                    {
+                        Name = battery.CustomName,
+                        IsCharging = battery.IsCharging,
+                        CurrentStoredPower = battery.CurrentStoredPower,
+                        MaxStoredPower = battery.MaxStoredPower,
+                        CurrentOutput = battery.CurrentOutput,
+                        MaxOutput = battery.MaxOutput
+                    });
+
+                if (solarPanel != null)
+                    MonitoringData.PowerConsumption.SolarPanels.Add(new SolarPanelInfo
+                    {
+                        Name = solarPanel.CustomName,
+                        CurrentOutput = solarPanel.CurrentOutput,
+                        MaxOutput = solarPanel.MaxOutput
+                    });
+
+                if (reactor != null)
+                    MonitoringData.PowerConsumption.Reactors.Add(new ReactorInfo
+                    {
+                        Name = reactor.CustomName,
+                        CurrentOutput = reactor.CurrentOutput,
+                        MaxOutput = reactor.MaxOutput
+                    });
+
+                if (block.GetType().Name.IndexOf("MyHydrogenEngine", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    MonitoringData.PowerConsumption.HydrogenEngines.Add(new HydrogenEngineInfo
                     {
                         Name = block.CustomName,
-                        IsCharging = block.IsCharging,
-                        CurrentStoredPower = block.CurrentStoredPower,
-                        MaxStoredPower = block.MaxStoredPower
+                        CurrentOutput = block.CurrentOutput,
+                        MaxOutput = block.MaxOutput,
+                        FilledRatio = (block as IMyGasTank)?.FilledRatio ?? 0
                     });
-                });
+
+                if (block.GetType().Name.IndexOf("MyWindTurbine", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    MonitoringData.PowerConsumption.WindTurbines.Add(new WindTurbineInfo
+                    {
+                        Name = block.CustomName,
+                        CurrentOutput = block.CurrentOutput,
+                        MaxOutput = block.MaxOutput
+                    });
+
+                MonitoringData.PowerConsumption.AvailableUranium = uraniumCount;
+                MonitoringData.PowerConsumption.AvailableIce = iceCount;
+            });
 
             _logger("");
             _logger("** Power **");
-            _logger($"Current Power Output: {MonitoringData.CurrentPowerOutput} MW");
-            _logger($"Max Power Output: {MonitoringData.MaxPowerOutput} MW");
+            _logger($"Battery Count: {MonitoringData.PowerConsumption.Batteries.Count}");
+            _logger($"Solar Panel Count: {MonitoringData.PowerConsumption.SolarPanels.Count}");
+            _logger($"Reactor Count: {MonitoringData.PowerConsumption.Reactors.Count}");
+            _logger($"Hydrogen Engine Count: {MonitoringData.PowerConsumption.HydrogenEngines.Count}");
+            _logger($"Wind Turret Count: {MonitoringData.PowerConsumption.WindTurbines.Count}");
             _logger("");
-            _logger($"Total Batteries: {MonitoringData.Batteries.Count}");
+            _logger($"Current Power Output: {MonitoringData.PowerConsumption.CurrentPowerOutput} MW");
+            _logger($"Max Power Output: {MonitoringData.PowerConsumption.MaxPowerOutput} MW");
             _logger("");
-            var shortage = MonitoringData.MaxPowerOutput - MonitoringData.CurrentPowerOutput;
-            _logger(shortage < 0
-                ? $"Power Shortage of: {shortage} MW"
-                : $"Power exceeding of: {shortage} MW");
+            _logger($"Available Uranium: {MonitoringData.PowerConsumption.AvailableUranium}");
+            _logger($"Available Ice: {MonitoringData.PowerConsumption.AvailableIce}");
         }
 
         private void ScanStorageCapacity(IEnumerable<IMyTerminalBlock> storageBlocks)
@@ -98,16 +143,18 @@ namespace IngameScript
             _logger($"Current Storage Volume: {MonitoringData.Cargos.Sum(x => (float)x.CurrentVolume)} m^3");
         }
 
-        private void ScanAllInventory(List<IMyTerminalBlock> storageBlocks, List<IMyProductionBlock> productionBlocks)
+        private void ScanAllInventory(List<IMyTerminalBlock> allBlocks)
         {
-            storageBlocks.ForEach(block =>
+            allBlocks.ForEach(block =>
             {
-                ScanInventory(block.GetInventory());
-            });
+                if (block.InventoryCount == 0) return;
 
-            productionBlocks.ForEach(block =>
-            {
-                ScanInventory(block.OutputInventory);
+                Enumerable.Range(0, block.InventoryCount)
+                    .ToList()
+                    .ForEach(inventoryIndex =>
+                    {
+                        ScanInventory(block.GetInventory(inventoryIndex));
+                    });
             });
 
             var components = MonitoringData.GetItems(Item.ItemTypes.Component);
@@ -229,14 +276,16 @@ namespace IngameScript
         }
 
         public void UpdateData(
+            List<IMyTerminalBlock> allBlocks,
             List<IMyPowerProducer> powerBlocks,
             List<IMyTerminalBlock> storageBlocks,
             List<IMyProductionBlock> productionBlocks,
             IEnumerable<IMyGasTank> gasTanks)
         {
             MonitoringData.Reset();
+
             ScanStorageCapacity(storageBlocks);
-            ScanAllInventory(storageBlocks, productionBlocks);
+            ScanAllInventory(allBlocks);
             ScanPower(powerBlocks);
             ScanProduction(productionBlocks);
             ScanHydrogen(gasTanks);

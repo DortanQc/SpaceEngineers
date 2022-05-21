@@ -8,9 +8,12 @@ using VRageMath;
 
 namespace IngameScript
 {
-    public class DisplayManager
+    public static class DisplayManager
     {
         private static Action<string> _logger;
+
+        private static readonly Dictionary<string, TopMarginInfo> TopMarginDictionary =
+            new Dictionary<string, TopMarginInfo>();
 
         public static void Display(
             MonitoringData monitoringData,
@@ -21,7 +24,7 @@ namespace IngameScript
             _logger = logger;
             DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
             DisplayStorageCapacity(monitoringData, allBlocks);
-            DisplayPowerUsage(monitoringData, allBlocks);
+            DisplayElectricalUsage(monitoringData, allBlocks);
             DisplayProduction(monitoringData, allBlocks);
             DisplayHydrogenStatistics(monitoringData, allBlocks);
         }
@@ -410,46 +413,425 @@ namespace IngameScript
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
 
-        private static void DisplayPowerUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
+        private static void DisplayElectricalUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
         {
-            var textBuilder = new StringBuilder();
-            var shortage = monitoringData.MaxPowerOutput - monitoringData.CurrentPowerOutput;
-
-            textBuilder
-                .AppendLine("** Power Usage **")
-                .AppendLine()
-                .AppendLine($"Max Power Output: {monitoringData.MaxPowerOutput:0.##} MW")
-                .AppendLine($"Current Power Output: {monitoringData.CurrentPowerOutput:0.##} MW")
-                .AppendLine(shortage < 0
-                    ? $"Shortage of: {shortage:0.##} MW"
-                    : $"Exceeding of: {shortage:0.##} MW")
-                .AppendLine(
-                    $"Usage Ratio: {monitoringData.CurrentPowerOutput * 100 / monitoringData.MaxPowerOutput:0.##} %");
-
-            if (monitoringData.Batteries.Any())
-                textBuilder
-                    .AppendLine()
-                    .AppendLine("** Batteries ** ")
-                    .AppendLine();
-
-            monitoringData.Batteries.OrderBy(b => b.Name)
-                .ToList()
-                .ForEach(battery =>
-                {
-                    textBuilder
-                        .Append(battery.Name)
-                        .Append(" - ")
-                        .Append(battery.IsCharging
-                            ? "C"
-                            : "D")
-                        .Append(" - ")
-                        .AppendLine(
-                            $"{battery.CurrentStoredPower * 100 / battery.MaxStoredPower:0.##} %");
-                });
+            const float LEFT_MARGIN = 10f;
+            const float GAP_BETWEEN_SECTIONS = 20f;
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_POWER_USAGE);
 
-            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+            textSurfaceBlock.ForEach(surface =>
+            {
+                var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
+                var keepRatio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+
+                var textSurface = surface.TextSurface;
+                var engin = new GraphicEngine(textSurface, keepRatio);
+                var fullBarSize = textSurface.SurfaceSize.X - LEFT_MARGIN * 2;
+                var mediumBarSize = textSurface.SurfaceSize.X - 20f - LEFT_MARGIN * 2;
+                var smallBarSize = textSurface.SurfaceSize.X - 30f - LEFT_MARGIN * 2;
+
+                engin.BackgroundColor = new Color(0, 0, 0, 255);
+
+                var currentYPos = engin.AddProgressBar(
+                    "Electrical Consumption",
+                    fullBarSize,
+                    30f,
+                    1f,
+                    LEFT_MARGIN,
+                    topMargin,
+                    monitoringData.PowerConsumption.CurrentPowerOutput / monitoringData.PowerConsumption.MaxPowerOutput
+                );
+
+                currentYPos += 10f;
+
+                if (monitoringData.PowerConsumption.WindTurbines.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.WindTurbines.Count}] Wind Turbines",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalTurbineOutput =
+                        monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.WindTurbines
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(turbine =>
+                        {
+                            double fill = currentTotalTurbineOutput == 0
+                                ? 0
+                                : turbine.CurrentOutput / currentTotalTurbineOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                turbine.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.SolarPanels.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.SolarPanels.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.SolarPanels.Count}] Solar Panels",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalSolarPanelsOutput =
+                        monitoringData.PowerConsumption.SolarPanels.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.SolarPanels
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(solarPanel =>
+                        {
+                            double fill = currentTotalSolarPanelsOutput == 0
+                                ? 0
+                                : solarPanel.CurrentOutput / currentTotalSolarPanelsOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                solarPanel.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.Batteries.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.Batteries.Count}] Batteries",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalBatteriesOutput =
+                        monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.Batteries
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(battery =>
+                        {
+                            double fill = currentTotalBatteriesOutput == 0
+                                ? 0
+                                : battery.CurrentOutput / currentTotalBatteriesOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                battery.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+
+                    currentYPos += 10f;
+
+                    engin.AddSprite(
+                        "IconEnergy",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 10f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos = engin.AddText(
+                        "Stored Power",
+                        .75f,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos += 5f;
+
+                    monitoringData.PowerConsumption.Batteries
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(battery =>
+                        {
+                            double fill = battery.MaxOutput == 0
+                                ? 0
+                                : battery.CurrentStoredPower / battery.MaxStoredPower;
+
+                            currentYPos = engin.AddProgressBar(
+                                battery.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill,
+                                battery.IsCharging
+                                    ? Color.Green
+                                    : Color.Red
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.Reactors.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.Reactors.Count}] Reactors",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    engin.AddText(
+                        $"Available Uranium Ingots: {monitoringData.PowerConsumption.AvailableUranium.ToString()}",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "MyObjectBuilder_Ingot/Uranium",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos += 10f;
+
+                    var currentTotalReactorsOutput =
+                        monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.Reactors
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(reactor =>
+                        {
+                            double fill = currentTotalReactorsOutput == 0
+                                ? 0
+                                : reactor.CurrentOutput / currentTotalReactorsOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                reactor.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.HydrogenEngines.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.HydrogenEngines.Count}] - Hydrogen Engines",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    engin.AddText(
+                        $"Available Ice Ore: {monitoringData.PowerConsumption.AvailableIce.ToString()}",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "MyObjectBuilder_Ore/Ice",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    var hydroFillRatio = monitoringData.HydrogenTanks.Sum(h => h.FilledRatio);
+                    var availableTank = monitoringData.HydrogenTanks.Count;
+
+                    var ratio = availableTank == 0
+                        ? 0
+                        : hydroFillRatio / availableTank;
+
+                    engin.AddText(
+                        $"Available Hydrogen in tanks: {ratio * 100:F2} %",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos + 1f,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "IconHydrogen",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos + 1f,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos += 10f;
+
+                    var currentTotalEngineOutput =
+                        monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.HydrogenEngines
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(engine =>
+                        {
+                            double fill = currentTotalEngineOutput == 0
+                                ? 0
+                                : engine.CurrentOutput / currentTotalEngineOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                engine.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
+
+                engin.Draw();
+            });
+        }
+
+        private static void SetTopMargin(
+            long surfaceBlockId,
+            string surfaceName,
+            float currentYPos,
+            float surfaceHeight)
+        {
+            var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
+            var marginInfo = TopMarginDictionary[key];
+
+            if (marginInfo.Direction == Directions.Forward)
+            {
+                if (currentYPos > surfaceHeight - 10f)
+                    marginInfo.CurrentMargin -= 5f;
+                else marginInfo.Direction = Directions.Backward;
+            }
+            else
+            {
+                if (marginInfo.CurrentMargin == 10f)
+                    marginInfo.Direction = Directions.Forward;
+                else marginInfo.CurrentMargin += 5f;
+            }
+
+            TopMarginDictionary[key] = marginInfo;
+        }
+
+        private static float GetTopMargin(long surfaceBlockId, string surfaceName)
+        {
+            var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
+
+            if (!TopMarginDictionary.ContainsKey(key))
+                TopMarginDictionary.Add(
+                    key,
+                    new TopMarginInfo
+                    {
+                        Direction = Directions.Forward,
+                        CurrentMargin = 10f
+                    });
+
+            return TopMarginDictionary[key].CurrentMargin;
         }
 
         private static void DisplayHydrogenStatistics(
@@ -460,14 +842,13 @@ namespace IngameScript
 
             textSurfaceBlock.ForEach(surface =>
             {
-                const float LEFT_MARGIN = 30f;
-                const float TOP_MARGIN = 20f;
+                var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
+
+                const float GAP_BETWEEN_SECTIONS = 20f;
+                const float LEFT_MARGIN = 10f;
                 const float ICON_SIZE = 30f;
-                const float TEXT_LEFT_BEGIN = LEFT_MARGIN + 80f;
                 const float BAR_LEFT_BEGIN = LEFT_MARGIN + ICON_SIZE;
-                const float ROW_TOP_BEGIN = 85f;
-                const float BAR_TOP_BEGIN = 50f;
-                const float BAR_HEIGHT = 30f;
+                var isFirst = true;
 
                 var ratio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
 
@@ -477,20 +858,21 @@ namespace IngameScript
 
                 engin.BackgroundColor = new Color(0, 0, 0, 255);
 
-                var i = 0;
+                var currentYPos = topMargin;
 
                 foreach (var tank in monitoringData.HydrogenTanks.OrderBy(x => x.Name))
                 {
-                    var rowYPos = i * ROW_TOP_BEGIN + TOP_MARGIN;
+                    if (isFirst == false)
+                        currentYPos += GAP_BETWEEN_SECTIONS;
 
-                    engin.AddText(
+                    var rowYPos = engin.AddProgressBar(
                         tank.Name,
+                        barSize,
+                        30f,
                         1f,
-                        TEXT_LEFT_BEGIN,
-                        rowYPos,
-                        TextAlignment.LEFT,
-                        textSurface.ScriptForegroundColor
-                    );
+                        BAR_LEFT_BEGIN,
+                        currentYPos,
+                        tank.FilledRatio);
 
                     engin.AddSprite(
                         "IconHydrogen",
@@ -498,97 +880,33 @@ namespace IngameScript
                         ICON_SIZE,
                         textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN,
-                        rowYPos + BAR_TOP_BEGIN,
-                        TextAlignment.CENTER,
-                        0f,
-                        false
-                    );
-
-                    engin.AddSprite(
-                        "SquareSimple",
-                        barSize,
-                        BAR_HEIGHT,
-                        new Color(10, 10, 10, 200),
-                        BAR_LEFT_BEGIN,
-                        rowYPos + BAR_TOP_BEGIN,
+                        currentYPos + 25f,
                         TextAlignment.LEFT,
                         0f,
                         false
                     );
 
-                    engin.AddSprite(
-                        "SquareSimple",
-                        Convert.ToSingle(tank.FilledRatio) * barSize,
-                        BAR_HEIGHT,
-                        textSurface.ScriptBackgroundColor,
-                        BAR_LEFT_BEGIN,
-                        rowYPos + BAR_TOP_BEGIN,
-                        TextAlignment.LEFT,
-                        0f,
-                        false
-                    );
-
-                    engin.AddSprite(
-                        "SquareSimple",
-                        3f,
-                        BAR_HEIGHT,
-                        new Color(0, 0, 0, 255),
-                        BAR_LEFT_BEGIN + barSize / 4,
-                        rowYPos + BAR_TOP_BEGIN,
-                        TextAlignment.LEFT,
-                        0f,
-                        false
-                    );
-
-                    engin.AddSprite(
-                        "SquareSimple",
-                        3f,
-                        BAR_HEIGHT,
-                        new Color(0, 0, 0, 255),
-                        BAR_LEFT_BEGIN + barSize / 4 * 2,
-                        rowYPos + BAR_TOP_BEGIN,
-                        TextAlignment.LEFT,
-                        0f,
-                        false
-                    );
-
-                    engin.AddSprite(
-                        "SquareSimple",
-                        3f,
-                        BAR_HEIGHT,
-                        new Color(0, 0, 0, 255),
-                        BAR_LEFT_BEGIN + barSize / 4 * 3,
-                        rowYPos + BAR_TOP_BEGIN,
-                        TextAlignment.LEFT,
-                        0f,
-                        false
-                    );
-
-                    engin.AddSprite(
-                        "Triangle",
-                        38f,
-                        80f,
-                        new Color(0, 0, 0, 255),
-                        BAR_LEFT_BEGIN + 6,
-                        rowYPos + 41f,
-                        TextAlignment.LEFT,
-                        1.3f,
-                        true
-                    );
-
-                    engin.AddText(
-                        (tank.FilledRatio * 100).ToString("F2") + "%",
-                        .75f,
-                        barSize + BAR_LEFT_BEGIN,
-                        7f + rowYPos,
-                        TextAlignment.RIGHT,
-                        textSurface.ScriptForegroundColor);
-
-                    i++;
+                    isFirst = false;
+                    currentYPos = rowYPos;
                 }
+
+                SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
 
                 engin.Draw();
             });
+        }
+
+        private enum Directions
+        {
+            Forward,
+            Backward
+        }
+
+        private class TopMarginInfo
+        {
+            public Directions Direction { get; set; }
+
+            public float CurrentMargin { get; set; }
         }
     }
 }

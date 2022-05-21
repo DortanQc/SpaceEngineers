@@ -15,11 +15,7 @@ namespace IngameScript
             Reset();
         }
 
-        public float CurrentPowerOutput { get; set; }
-
-        public float MaxPowerOutput { get; set; }
-
-        public List<BatteryInfo> Batteries { get; private set; }
+        public PowerInfo PowerConsumption { get; private set; }
 
         public List<CargoInfo> Cargos { get; private set; }
 
@@ -27,11 +23,9 @@ namespace IngameScript
 
         public void Reset()
         {
-            CurrentPowerOutput = 0f;
-            MaxPowerOutput = 0f;
             _items = new Dictionary<string, int>();
             _itemsInProduction = new Dictionary<string, int>();
-            Batteries = new List<BatteryInfo>();
+            PowerConsumption = new PowerInfo();
             Cargos = new List<CargoInfo>();
             HydrogenTanks = new List<HydrogenTankInfo>();
         }
