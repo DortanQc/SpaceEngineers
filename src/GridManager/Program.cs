@@ -28,13 +28,10 @@ namespace IngameScript
         private List<IMyShipController> _controllers;
         private List<IMyDoor> _doors;
         private Item[] _itemsToProduce;
-        private bool _lastControllerMoveDownAction;
-        private bool _lastControllerMoveUpAction;
-        private bool _lastControllerSelectAction;
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update1;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
 
             _blocks = new List<IMyTerminalBlock>();
             _blocksProducingPower = new List<IMyPowerProducer>();
@@ -204,8 +201,6 @@ namespace IngameScript
 
                 WhenItsTimeTo(DISPLAY_STATS, 250, () =>
                     DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo));
-
-                ReactOnControllersAction();
             }
             else
             {
@@ -213,43 +208,6 @@ namespace IngameScript
             }
 
             _menuNavigationSystem.RenderMenu(_blocks, _monitoring.MonitoringData);
-        }
-
-        private void ReactOnControllersAction()
-        {
-            _controllers.ForEach(controller =>
-            {
-                var currentMoveUp = Convert.ToInt32(controller.MoveIndicator.Z) == -1;
-                var currentMoveDown = Convert.ToInt32(controller.MoveIndicator.Z) == 1;
-                var currentSelect = Convert.ToInt32(controller.MoveIndicator.Y) == 1;
-
-                var moveUpAction = false;
-                var moveDownAction = false;
-                var selectAction = false;
-
-                if (currentMoveUp)
-                    if (_lastControllerMoveUpAction == false)
-                        moveUpAction = true;
-
-                if (currentMoveDown)
-                    if (_lastControllerMoveDownAction == false)
-                        moveDownAction = true;
-
-                if (currentSelect)
-                    if (_lastControllerSelectAction == false)
-                        selectAction = true;
-
-                _lastControllerMoveUpAction = currentMoveUp;
-                _lastControllerMoveDownAction = currentMoveDown;
-                _lastControllerSelectAction = currentSelect;
-
-                if (moveUpAction)
-                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationUp);
-                else if (moveDownAction)
-                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationDown);
-                else if (selectAction)
-                    _menuNavigationSystem.RunAction(MenuNavigationSystem.ScriptActions.NavigationSelect);
-            });
         }
 
         private static List<IMyShipController> ExtractControllersInUse(IEnumerable<IMyTerminalBlock> blocks)
@@ -311,7 +269,7 @@ namespace IngameScript
 
             GridTerminalSystem.GetBlocks(blocks);
 
-            return blocks.Where(block => block.IsSameConstructAs(Me) && block.IsWorking).ToList();
+            return blocks.Where(block => block.IsSameConstructAs(Me)).ToList();
         }
 
         private static List<IMyGasTank> ExtractGasTanksBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
