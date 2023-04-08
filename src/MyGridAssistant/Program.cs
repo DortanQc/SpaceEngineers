@@ -8,7 +8,6 @@ namespace MyGridAssistant
     public class Program : MyGridProgram
     {
         private readonly IConfiguration _configuration;
-        private readonly MenuNavigationSystem _menuNavigationSystem;
         private readonly GridMonitoring _monitoring;
         private readonly Dictionary<TimedAction, DateTime> _timerDictionary = new Dictionary<TimedAction, DateTime>();
         private bool _autoCleanupStorages;
@@ -19,7 +18,6 @@ namespace MyGridAssistant
         private List<IMyProductionBlock> _blocksProducingItems;
         private List<IMyPowerProducer> _blocksProducingPower;
         private List<IMyTerminalBlock> _blocksWithStorage;
-        private List<IMyShipController> _controllers;
         private List<IMyDoor> _doors;
         private Item[] _itemsToProduce;
 
@@ -34,84 +32,63 @@ namespace MyGridAssistant
             _blocksHoldingGas = new List<IMyGasTank>();
             _doors = new List<IMyDoor>();
             _monitoring = new GridMonitoring(Echo);
-            _menuNavigationSystem = new MenuNavigationSystem(Echo);
             _configuration = new Configuration(Me);
         }
 
-        public void Main(string argument, UpdateType updateSource)
+        public void Main(string _, UpdateType __)
         {
-            var action = GetScriptActionRequest(updateSource, argument);
+            WhenItsTimeTo(TimedAction.CheckForUpdatedConfig, RefreshConfig);
 
-            if (action == MenuNavigationSystem.ScriptActions.Normal)
+            WhenItsTimeTo(TimedAction.ScanGrid, () =>
             {
-                WhenItsTimeTo(TimedAction.CheckForUpdatedConfig, RefreshConfig);
+                _blocks = ExtractAllTerminalBlocks();
 
-                WhenItsTimeTo(TimedAction.ScanGrid, () =>
-                {
-                    _blocks = ExtractAllTerminalBlocks();
+                _blocksProducingPower = ExtractPowerBlocks(_blocks);
+                _blocksWithStorage = ExtractStorageBlocks(_blocks);
+                _blocksProducingItems = ExtractItemProductionBlocks(_blocks);
+                _blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
+                _doors = ExtractDoorBlocks(_blocks);
 
-                    _blocksProducingPower = ExtractPowerBlocks(_blocks);
-                    _blocksWithStorage = ExtractStorageBlocks(_blocks);
-                    _blocksProducingItems = ExtractItemProductionBlocks(_blocks);
-                    _blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
-                    _doors = ExtractDoorBlocks(_blocks);
-                    _controllers = ExtractControllersInUse(_blocks);
+                _monitoring.UpdateData(
+                    _blocks,
+                    _blocksProducingPower,
+                    _blocksWithStorage,
+                    _blocksProducingItems,
+                    _blocksHoldingGas);
 
-                    _monitoring.UpdateData(
-                        _blocks,
-                        _blocksProducingPower,
-                        _blocksWithStorage,
-                        _blocksProducingItems,
-                        _blocksHoldingGas);
-                });
+                if (_autoProduceActive)
+                    AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
 
-                WhenItsTimeTo(TimedAction.AutoProduce, () =>
-                {
-                    if (_autoProduceActive)
-                        AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
-                });
+                DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
+            });
 
-                WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
-                {
-                    if (_autoShutDownDoors)
-                        DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
-                });
-
-                WhenItsTimeTo(TimedAction.CleanupStorage, () =>
-                {
-                    if (_autoCleanupStorages)
-                        AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
-                });
-
-                WhenItsTimeTo(TimedAction.ManageAirlocks, () =>
-                {
-                    DoorManager.ManageAirLocks(Echo, _doors);
-                });
-
-                WhenItsTimeTo(TimedAction.DisplayStats, () =>
-                    DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo));
-            }
-            else
+            WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
             {
-                _menuNavigationSystem.RunAction(action);
-            }
+                if (_autoShutDownDoors)
+                    DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
+            });
 
-            _menuNavigationSystem.RenderMenu(_blocks, _monitoring.MonitoringData);
+            WhenItsTimeTo(TimedAction.CleanupStorage, () =>
+            {
+                if (_autoCleanupStorages)
+                    AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
+            });
+
+            WhenItsTimeTo(TimedAction.ManageAirlocks, () =>
+            {
+                DoorManager.ManageAirLocks(Echo, _doors);
+            });
         }
 
         private static int GetActionFrequencyInMs(TimedAction action)
         {
             switch (action)
             {
-                case TimedAction.ScanGrid: return 3000;
+                case TimedAction.ScanGrid: return 5000;
                 case TimedAction.CleanupStorage: return 10000;
-                case TimedAction.ManageAirlocks:
-                case TimedAction.ShutDownDoors:
-                    return 1000;
-                case TimedAction.AutoProduce:
-                case TimedAction.CheckForUpdatedConfig:
-                    return 5000;
-                case TimedAction.DisplayStats: return 250;
+                case TimedAction.ManageAirlocks: return 1000;
+                case TimedAction.ShutDownDoors: return 1000;
+                case TimedAction.CheckForUpdatedConfig: return 10000;
                 default: throw new Exception($"{nameof(action)} not out of range");
             }
         }
@@ -220,54 +197,6 @@ namespace MyGridAssistant
         private static bool InitConfig(string customDataValue) =>
             (customDataValue ?? string.Empty).Equals("true", StringComparison.InvariantCultureIgnoreCase);
 
-        private static List<IMyShipController> ExtractControllersInUse(IEnumerable<IMyTerminalBlock> blocks)
-        {
-            var controllersBlocks = blocks
-                .OfType<IMyShipController>()
-                .Where(c => c.IsUnderControl);
-
-            return controllersBlocks
-                .Where(HasDisplayMenuBlocks)
-                .Where(IsAllowedToControlMenu)
-                .ToList();
-        }
-
-        private static bool HasDisplayMenuBlocks(IMyTerminalBlock block)
-        {
-            var customData = Configuration.GetBlockConfiguration(block, Settings.GRID_MANAGER_MENU_ACCESS);
-
-            if (customData == null) return false;
-
-            var index = 0;
-            if (customData.Length > 0)
-                int.TryParse(customData, out index);
-
-            var textSurface = block as IMyTextSurfaceProvider;
-
-            return textSurface != null && textSurface.SurfaceCount > index;
-        }
-
-        private static bool IsAllowedToControlMenu(IMyTerminalBlock block)
-        {
-            var customData = Configuration.GetBlockConfiguration(block, Settings.GRID_MANAGER_MENU_SHIP_CONTROLLABLE);
-            
-            return customData != null;
-        }
-
-        private static MenuNavigationSystem.ScriptActions GetScriptActionRequest(UpdateType updateSource, string argument)
-        {
-            if (updateSource != UpdateType.Trigger)
-                return MenuNavigationSystem.ScriptActions.Normal;
-
-            switch (argument.ToUpper())
-            {
-                case "UP": return MenuNavigationSystem.ScriptActions.NavigationUp;
-                case "DOWN": return MenuNavigationSystem.ScriptActions.NavigationDown;
-                case "SELECT": return MenuNavigationSystem.ScriptActions.NavigationSelect;
-                default: return MenuNavigationSystem.ScriptActions.Normal;
-            }
-        }
-
         private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
         {
             var blocks = new List<IMyTerminalBlock>();
@@ -320,9 +249,7 @@ namespace MyGridAssistant
             CleanupStorage = 1,
             ManageAirlocks = 2,
             ShutDownDoors = 3,
-            AutoProduce = 4,
-            CheckForUpdatedConfig = 5,
-            DisplayStats = 6
+            CheckForUpdatedConfig = 5
         }
     }
 }

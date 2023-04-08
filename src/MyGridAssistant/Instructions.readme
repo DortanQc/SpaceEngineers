@@ -28,12 +28,6 @@ Add "exclude-when-over-threshold" in any LCD's custom data you wish to hide a sp
 Add "stats-in-production" in any LCD's custom data you wish to show all items currently in production
 Add "lcd-width-ratio" in any wide LCD's custom data you wish to preserve height ratio
 
--- Menu Navigation --
-Add "grid-manager-menu-access" in any LCD's custom data you wish to show the menu
-    - By default, le lcd panel used will be the first one. However, if a block contains more than one, you can
-      add an zero base index value to the key ex.: grid-manager-menu-access=1
-Add "grid-manager-menu-ship-controllable" to Ship Controllers you wish to gain access to Menu Navigation ('W', 'S', 'Space')
-
 -- Auto Cleanup --
 Add "component-default-storage" on any cargo container to have all component items transfer to it automatically
 Add "ingot-default-storage" on any cargo container to have all ingot items transfer to it automatically
