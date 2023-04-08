@@ -1,0 +1,912 @@
+using Sandbox.ModAPI.Ingame;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using VRage.Game.GUI.TextPanel;
+using VRageMath;
+
+namespace MyGridAssistant
+{
+    public static class DisplayManager
+    {
+        private static Action<string> _logger;
+
+        private static readonly Dictionary<string, TopMarginInfo> TopMarginDictionary =
+            new Dictionary<string, TopMarginInfo>();
+
+        public static void Display(
+            MonitoringData monitoringData,
+            IEnumerable<Item> itemsWithThreshold,
+            List<IMyTerminalBlock> allBlocks,
+            Action<string> logger)
+        {
+            _logger = logger;
+            DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
+            DisplayStorageCapacity(monitoringData, allBlocks);
+            DisplayElectricalUsage(monitoringData, allBlocks);
+            DisplayProduction(monitoringData, allBlocks);
+            DisplayHydrogenStatistics(monitoringData, allBlocks);
+        }
+
+        private static List<Surface> GetDisplayBlocks(
+            IEnumerable<IMyTerminalBlock> blocks,
+            string customDataKeyToLookup)
+        {
+            var results = new List<Surface>();
+
+            foreach (var block in blocks)
+            {
+                var customDataManager = new CustomDataManager(block.CustomData);
+                var customData = customDataManager.GetPropertyValue(customDataKeyToLookup);
+
+                if (customData == null) continue;
+
+                var index = 0;
+                if (customData.Length > 0)
+                    int.TryParse(customData, out index);
+
+                var textSurface = block as IMyTextSurfaceProvider;
+
+                if (textSurface == null || textSurface.SurfaceCount <= index) continue;
+
+                var result = new Surface
+                {
+                    BlockId = block.EntityId,
+                    TextSurface = textSurface.GetSurface(index),
+                    BlockCustomData = customDataManager
+                };
+
+                results.Add(result);
+            }
+
+            return results;
+        }
+
+        private static void DisplayProduction(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
+        {
+            var textBuilder = new StringBuilder();
+
+            textBuilder
+                .AppendLine("** Currently in production **")
+                .AppendLine();
+
+            monitoringData
+                .GetItemsInProduction()
+                .ForEach(inProd =>
+                {
+                    textBuilder.AppendLine(inProd.ItemType == Item.ItemTypes.Ingot
+                        ? $"{ToFriendlyQuantity(inProd.Amount / inProd.Volume)} {inProd.Name}"
+                        : $"{ToFriendlyQuantity(inProd.Amount)} {inProd.Name}");
+                });
+
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_IN_PRODUCTION);
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+        }
+
+        private static string ToFriendlyQuantity(float quantity) =>
+            quantity >= 1000
+                ? $"{quantity / 1000:0.##}K"
+                : quantity.ToString("0.##");
+
+        private static void DisplayInventoryForTypes(
+            Surface block,
+            IEnumerable<Item> itemsToDisplay,
+            IReadOnlyCollection<Item> itemsWithThreshold,
+            MonitoringData monitoringData,
+            IEnumerable<Item.ItemTypes> itemTypes)
+        {
+            var textBuilder = new StringBuilder();
+            var alreadyHasType = new Dictionary<Item.ItemTypes, bool>();
+            var hasSomethingToDisplay = false;
+
+            itemsToDisplay.OrderByDescending(i => i.Amount)
+                .ToList()
+                .ForEach(item =>
+                {
+                    if (ShouldHideItem(block.BlockCustomData, item))
+                        return;
+
+                    if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.BlockCustomData))
+                        return;
+
+                    itemTypes
+                        .ToList()
+                        .ForEach(type =>
+                        {
+                            if (item.ItemType != type)
+                                return;
+
+                            if (!alreadyHasType.ContainsKey(type))
+                                alreadyHasType.Add(type, false);
+
+                            alreadyHasType[type] = DisplayItems(
+                                type,
+                                item,
+                                alreadyHasType[type],
+                                textBuilder,
+                                ref hasSomethingToDisplay);
+                        });
+                });
+
+            block.TextSurface.WriteText(textBuilder);
+        }
+
+        private static bool ShouldHideBecauseMetThreshold(
+            Item item,
+            IReadOnlyCollection<Item> itemsWithThreshold,
+            MonitoringData monitoringData,
+            CustomDataManager customData)
+        {
+            var hideWhenMetThreshold =
+                customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) !=
+                null;
+
+            var itemMetThreshold = IsItemMetThreshold(
+                item,
+                itemsWithThreshold,
+                monitoringData);
+
+            var itemHasThresholdDefined = HasItemThresholdDefined(item, itemsWithThreshold);
+
+            return hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold;
+        }
+
+        private static bool ShouldHideItem(CustomDataManager customData, Item item)
+        {
+            var show = customData.GetPropertyValue(
+                           $"{CustomDataSettings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") ==
+                       null;
+
+            return show == false;
+        }
+
+        private static bool DisplayItems(
+            Item.ItemTypes itemType,
+            Item item,
+            bool alreadyHasItem,
+            StringBuilder textBuilder,
+            ref bool hasSomethingToDisplay)
+        {
+            if (item.ItemType == itemType)
+                if (!alreadyHasItem)
+                {
+                    if (hasSomethingToDisplay)
+                        textBuilder.AppendLine();
+
+                    textBuilder.AppendLine($"** Owned {itemType.ToString()} **");
+                    alreadyHasItem = true;
+                }
+
+            hasSomethingToDisplay = true;
+            textBuilder.AppendLine($"{ToFriendlyQuantity(item.Amount)} {item.Name}");
+
+            return alreadyHasItem;
+        }
+
+        private static void DisplayItemInventory(
+            MonitoringData monitoringData,
+            IReadOnlyCollection<Item> itemsWithThreshold,
+            IReadOnlyCollection<IMyTerminalBlock> blocks)
+        {
+            var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
+
+            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY);
+            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_COMPONENTS);
+            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_ORES);
+            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_INGOTS);
+            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_TOOLS);
+            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(
+                blocks,
+                CustomDataSettings.STATS_INVENTORY_AMMUNITION);
+
+            var combinations = Combine(
+                displayAllSurfaceBlocks,
+                displayComponentSurfaceBlocks,
+                displayOreSurfaceBlocks,
+                displayIngotSurfaceBlocks,
+                displayToolsSurfaceBlocks,
+                displayAmmunitionSurfaceBlocks);
+
+            combinations.ForEach(combination =>
+            {
+                DisplayInventoryForTypes(
+                    combination.Block,
+                    itemsToDisplay,
+                    itemsWithThreshold,
+                    monitoringData,
+                    combination.ItemTypes);
+            });
+        }
+
+        private static List<SurfaceByType> Combine(
+            IEnumerable<Surface> allSurfaceBlocks,
+            IEnumerable<Surface> componentSurfaceBlocks,
+            IEnumerable<Surface> oreSurfaceBlocks,
+            IEnumerable<Surface> ingotSurfaceBlocks,
+            IEnumerable<Surface> toolsSurfaceBlocks,
+            IEnumerable<Surface> ammunitionSurfaceBlocks)
+        {
+            var allBlocks = allSurfaceBlocks
+                .Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ammunition,
+                        Item.ItemTypes.Component,
+                        Item.ItemTypes.Consumable,
+                        Item.ItemTypes.Ingot,
+                        Item.ItemTypes.Ore,
+                        Item.ItemTypes.Tools,
+                        Item.ItemTypes.Unknown
+                    }
+                })
+                .Concat(componentSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Component,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(oreSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ore,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(ingotSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ingot,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(toolsSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Tools,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .Concat(ammunitionSurfaceBlocks.Select(b => new SurfaceByType
+                {
+                    Block = b,
+                    ItemTypes = new[]
+                    {
+                        Item.ItemTypes.Ammunition,
+                        Item.ItemTypes.Unknown
+                    }
+                }))
+                .ToList();
+
+            var dictionary = new Dictionary<long, SurfaceByType>();
+
+            allBlocks.ForEach(block =>
+            {
+                if (dictionary.ContainsKey(block.Block.BlockId))
+                {
+                    var actualTypes = dictionary[block.Block.BlockId].ItemTypes.ToList();
+                    var typesToAdd = block.ItemTypes.ToList();
+                    var newTypesToAdd = new List<Item.ItemTypes>(actualTypes);
+
+                    typesToAdd.ForEach(type =>
+                    {
+                        if (actualTypes.All(x => x != type))
+                            newTypesToAdd.Add(type);
+                    });
+
+                    dictionary[block.Block.BlockId].ItemTypes = newTypesToAdd;
+                }
+                else
+                {
+                    var typesToAdd = block.ItemTypes.ToList();
+
+                    dictionary.Add(
+                        block.Block.BlockId,
+                        new SurfaceByType
+                        {
+                            Block = block.Block,
+                            ItemTypes = typesToAdd
+                        });
+                }
+            });
+
+            return dictionary.Select(d => new SurfaceByType
+                {
+                    Block = allBlocks.First(b => b.Block.BlockId == d.Key).Block,
+                    ItemTypes = d.Value.ItemTypes
+                })
+                .ToList();
+        }
+
+        private static List<Item> BuildItemsToDisplay(
+            IEnumerable<Item> itemsInInventory,
+            IEnumerable<Item> itemsWithThreshold)
+        {
+            var itemsToDisplay = itemsInInventory.ToList();
+
+            foreach (var itemWithThreshold in itemsWithThreshold)
+                if (!itemsToDisplay.Any(itemToDisplay =>
+                        itemToDisplay.ItemType == itemWithThreshold.ItemType &&
+                        itemToDisplay.ItemSubType == itemWithThreshold.ItemSubType))
+                    itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinition.ToString(), 0));
+
+            return itemsToDisplay.OrderBy(item => item.ItemType).ThenBy(item => item.Name).ToList();
+        }
+
+        private static bool HasItemThresholdDefined(Item item, IEnumerable<Item> itemsWithThreshold)
+        {
+            return itemsWithThreshold.Any(itemWithThreshold =>
+                itemWithThreshold.ItemType == item.ItemType &&
+                itemWithThreshold.ItemSubType == item.ItemSubType);
+        }
+
+        private static bool IsItemMetThreshold(
+            Item itemToDisplay,
+            IEnumerable<Item> itemsWithThreshold,
+            MonitoringData data)
+        {
+            var item = itemsWithThreshold.FirstOrDefault(itemWithThreshold =>
+                itemWithThreshold.ItemType == itemToDisplay.ItemType &&
+                itemWithThreshold.ItemSubType == itemToDisplay.ItemSubType);
+
+            if (item == null) return true;
+
+            var inventoryCount = data.GetItems()
+                .Where(i =>
+                    i.ItemType == itemToDisplay.ItemType &&
+                    i.ItemSubType == itemToDisplay.ItemSubType)
+                .Sum(x => x.Amount);
+
+            return inventoryCount >= item.Amount;
+        }
+
+        private static void DisplayStorageCapacity(
+            MonitoringData monitoringData,
+            IEnumerable<IMyTerminalBlock> blocks)
+        {
+            var textBuilder = new StringBuilder();
+
+            var remainingCapacity =
+                monitoringData.Cargos.Sum(c => (float)c.MaxVolume) -
+                monitoringData.Cargos.Sum(c => (float)c.CurrentVolume);
+
+            textBuilder
+                .AppendLine("** Storage Capacity **")
+                .AppendLine()
+                .AppendLine($"Max Storage Capacity: {monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} m^3")
+                .AppendLine($"Current Volume: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume):0.##} m^3")
+                .AppendLine($"Remaining Capacity: {remainingCapacity:0.##} m^3")
+                .AppendLine(
+                    $"Filled Ratio: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume) * 100 / monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} %");
+
+            if (monitoringData.Cargos.Any())
+                textBuilder
+                    .AppendLine()
+                    .AppendLine("** Containers ** ")
+                    .AppendLine();
+
+            monitoringData.Cargos.OrderBy(b => b.Name)
+                .ToList()
+                .ForEach(cargo =>
+                {
+                    textBuilder
+                        .Append(cargo.Name)
+                        .Append(" - ")
+                        .AppendLine(
+                            $"{cargo.CurrentVolume.ToIntSafe() * 100 / cargo.MaxVolume.ToIntSafe():0.##} %");
+                });
+
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_STORAGE_CAPACITY);
+
+            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+        }
+
+        private static void DisplayElectricalUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
+        {
+            const float LEFT_MARGIN = 10f;
+            const float GAP_BETWEEN_SECTIONS = 20f;
+
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_POWER_USAGE);
+
+            textSurfaceBlock.ForEach(surface =>
+            {
+                var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
+                var keepRatio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+
+                var textSurface = surface.TextSurface;
+                var engin = new GraphicEngine(textSurface, keepRatio);
+                var fullBarSize = textSurface.SurfaceSize.X - LEFT_MARGIN * 2;
+                var mediumBarSize = textSurface.SurfaceSize.X - 20f - LEFT_MARGIN * 2;
+                var smallBarSize = textSurface.SurfaceSize.X - 30f - LEFT_MARGIN * 2;
+
+                engin.BackgroundColor = new Color(0, 0, 0, 255);
+
+                var currentYPos = engin.AddProgressBar(
+                    "Electrical Consumption",
+                    fullBarSize,
+                    30f,
+                    1f,
+                    LEFT_MARGIN,
+                    topMargin,
+                    monitoringData.PowerConsumption.CurrentPowerOutput / monitoringData.PowerConsumption.MaxPowerOutput
+                );
+
+                currentYPos += 10f;
+
+                if (monitoringData.PowerConsumption.WindTurbines.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.WindTurbines.Count}] Wind Turbines",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalTurbineOutput =
+                        monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.WindTurbines
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(turbine =>
+                        {
+                            double fill = currentTotalTurbineOutput == 0
+                                ? 0
+                                : turbine.CurrentOutput / currentTotalTurbineOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                turbine.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.SolarPanels.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.SolarPanels.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.SolarPanels.Count}] Solar Panels",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalSolarPanelsOutput =
+                        monitoringData.PowerConsumption.SolarPanels.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.SolarPanels
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(solarPanel =>
+                        {
+                            double fill = currentTotalSolarPanelsOutput == 0
+                                ? 0
+                                : solarPanel.CurrentOutput / currentTotalSolarPanelsOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                solarPanel.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.Batteries.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.Batteries.Count}] Batteries",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    var currentTotalBatteriesOutput =
+                        monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.Batteries
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(battery =>
+                        {
+                            double fill = currentTotalBatteriesOutput == 0
+                                ? 0
+                                : battery.CurrentOutput / currentTotalBatteriesOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                battery.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+
+                    currentYPos += 10f;
+
+                    engin.AddSprite(
+                        "IconEnergy",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 10f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos = engin.AddText(
+                        "Stored Power",
+                        .75f,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos += 5f;
+
+                    monitoringData.PowerConsumption.Batteries
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(battery =>
+                        {
+                            double fill = battery.MaxOutput == 0
+                                ? 0
+                                : battery.CurrentStoredPower / battery.MaxStoredPower;
+
+                            currentYPos = engin.AddProgressBar(
+                                battery.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill,
+                                battery.IsCharging
+                                    ? Color.Green
+                                    : Color.Red
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.Reactors.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.Reactors.Count}] Reactors",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    engin.AddText(
+                        $"Available Uranium Ingots: {monitoringData.PowerConsumption.AvailableUranium.ToString()}",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "MyObjectBuilder_Ingot/Uranium",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos += 10f;
+
+                    var currentTotalReactorsOutput =
+                        monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.Reactors
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(reactor =>
+                        {
+                            double fill = currentTotalReactorsOutput == 0
+                                ? 0
+                                : reactor.CurrentOutput / currentTotalReactorsOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                reactor.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                if (monitoringData.PowerConsumption.HydrogenEngines.Any())
+                {
+                    var currentOutput = monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
+                    var currentTotalOutput = monitoringData.PowerConsumption.CurrentPowerOutput;
+                    double fillRatio = currentTotalOutput == 0
+                        ? 0
+                        : currentOutput / currentTotalOutput;
+
+                    currentYPos = engin.AddProgressBar(
+                        $"[{monitoringData.PowerConsumption.HydrogenEngines.Count}] - Hydrogen Engines",
+                        mediumBarSize,
+                        22f,
+                        .75f,
+                        LEFT_MARGIN + 20f,
+                        currentYPos + GAP_BETWEEN_SECTIONS,
+                        fillRatio
+                    );
+
+                    currentYPos += 5f;
+
+                    engin.AddText(
+                        $"Available Ice Ore: {monitoringData.PowerConsumption.AvailableIce.ToString()}",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "MyObjectBuilder_Ore/Ice",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    var hydroFillRatio = monitoringData.HydrogenTanks.Sum(h => h.FilledRatio);
+                    var availableTank = monitoringData.HydrogenTanks.Count;
+
+                    var ratio = availableTank == 0
+                        ? 0
+                        : hydroFillRatio / availableTank;
+
+                    engin.AddText(
+                        $"Available Hydrogen in tanks: {ratio * 100:F2} %",
+                        .75f,
+                        LEFT_MARGIN + 50f,
+                        currentYPos + 1f,
+                        TextAlignment.LEFT,
+                        textSurface.ScriptForegroundColor
+                    );
+
+                    currentYPos = engin.AddSprite(
+                        "IconHydrogen",
+                        15,
+                        15,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN + 30f,
+                        currentYPos + 1f,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    currentYPos += 10f;
+
+                    var currentTotalEngineOutput =
+                        monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
+
+                    monitoringData.PowerConsumption.HydrogenEngines
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(engine =>
+                        {
+                            double fill = currentTotalEngineOutput == 0
+                                ? 0
+                                : engine.CurrentOutput / currentTotalEngineOutput;
+
+                            currentYPos = engin.AddProgressBar(
+                                engine.Name,
+                                smallBarSize,
+                                5f,
+                                .50f,
+                                LEFT_MARGIN + 30f,
+                                currentYPos + 1f,
+                                fill
+                            );
+                        });
+                }
+
+                SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
+
+                engin.Draw();
+            });
+        }
+
+        private static void SetTopMargin(
+            long surfaceBlockId,
+            string surfaceName,
+            float currentYPos,
+            float surfaceHeight)
+        {
+            var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
+            var marginInfo = TopMarginDictionary[key];
+
+            if (marginInfo.Direction == Directions.Forward)
+            {
+                if (currentYPos > surfaceHeight - 10f)
+                    marginInfo.CurrentMargin -= 5f;
+                else marginInfo.Direction = Directions.Backward;
+            }
+            else
+            {
+                if (marginInfo.CurrentMargin == 10f)
+                    marginInfo.Direction = Directions.Forward;
+                else marginInfo.CurrentMargin += 5f;
+            }
+
+            TopMarginDictionary[key] = marginInfo;
+        }
+
+        private static float GetTopMargin(long surfaceBlockId, string surfaceName)
+        {
+            var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
+
+            if (!TopMarginDictionary.ContainsKey(key))
+                TopMarginDictionary.Add(
+                    key,
+                    new TopMarginInfo
+                    {
+                        Direction = Directions.Forward,
+                        CurrentMargin = 10f
+                    });
+
+            return TopMarginDictionary[key].CurrentMargin;
+        }
+
+        private static void DisplayHydrogenStatistics(
+            MonitoringData monitoringData,
+            IEnumerable<IMyTerminalBlock> blocks)
+        {
+            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
+
+            textSurfaceBlock.ForEach(surface =>
+            {
+                var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
+
+                const float GAP_BETWEEN_SECTIONS = 20f;
+                const float LEFT_MARGIN = 10f;
+                const float ICON_SIZE = 30f;
+                const float BAR_LEFT_BEGIN = LEFT_MARGIN + ICON_SIZE;
+                var isFirst = true;
+
+                var ratio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+
+                var textSurface = surface.TextSurface;
+                var engin = new GraphicEngine(textSurface, ratio);
+                var barSize = textSurface.SurfaceSize.X - 90f;
+
+                engin.BackgroundColor = new Color(0, 0, 0, 255);
+
+                var currentYPos = topMargin;
+
+                foreach (var tank in monitoringData.HydrogenTanks.OrderBy(x => x.Name))
+                {
+                    if (isFirst == false)
+                        currentYPos += GAP_BETWEEN_SECTIONS;
+
+                    var rowYPos = engin.AddProgressBar(
+                        tank.Name,
+                        barSize,
+                        30f,
+                        1f,
+                        BAR_LEFT_BEGIN,
+                        currentYPos,
+                        tank.FilledRatio);
+
+                    engin.AddSprite(
+                        "IconHydrogen",
+                        ICON_SIZE,
+                        ICON_SIZE,
+                        textSurface.ScriptBackgroundColor,
+                        LEFT_MARGIN,
+                        currentYPos + 25f,
+                        TextAlignment.LEFT,
+                        0f,
+                        false
+                    );
+
+                    isFirst = false;
+                    currentYPos = rowYPos;
+                }
+
+                SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
+
+                engin.Draw();
+            });
+        }
+
+        private enum Directions
+        {
+            Forward,
+            Backward
+        }
+
+        private class TopMarginInfo
+        {
+            public Directions Direction { get; set; }
+
+            public float CurrentMargin { get; set; }
+        }
+    }
+}

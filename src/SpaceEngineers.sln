@@ -3,15 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32228.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridManager", "GridManager\GridManager.csproj", "{27CFEB01-7ADD-4E3B-9FF7-16F056991286}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{7A46A70C-25BE-4057-B44F-57EB986814DB}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGridAssistant", "MyGridAssistant\MyGridAssistant.csproj", "{9045AE1D-853A-40C8-93D7-FF23BB981F69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Publisher", "Publisher\Publisher.csproj", "{DEACC70A-6FC7-4291-B46F-9D85A03916BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.ActiveCfg = Debug|x64
-		{27CFEB01-7ADD-4E3B-9FF7-16F056991286}.Debug|x64.Build.0 = Debug|x64
+		{9045AE1D-853A-40C8-93D7-FF23BB981F69}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9045AE1D-853A-40C8-93D7-FF23BB981F69}.Debug|x64.Build.0 = Debug|Any CPU
+		{DEACC70A-6FC7-4291-B46F-9D85A03916BB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DEACC70A-6FC7-4291-B46F-9D85A03916BB}.Debug|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
