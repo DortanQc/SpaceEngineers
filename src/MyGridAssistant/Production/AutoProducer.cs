@@ -46,9 +46,7 @@ namespace MyGridAssistant
         {
             return blocks.Where(block =>
                 {
-                    var customData = new CustomDataManager(block.CustomData);
-
-                    var isIgnored = customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_AUTO_PRODUCTION);
+                    var isIgnored = Configuration.GetBlockConfiguration(block, Settings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
                     if (isIgnored == null) return true;
 

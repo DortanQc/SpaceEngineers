@@ -189,7 +189,7 @@ namespace MyGridAssistant
 
         public void RenderMenu(IEnumerable<IMyTerminalBlock> blocks, MonitoringData monitoringMonitoringData)
         {
-            var displayBlocks = GetDisplayBlocks(blocks, CustomDataSettings.GRID_MANAGER_MENU_ACCESS);
+            var displayBlocks = GetDisplayBlocks(blocks, Settings.GRID_MANAGER_MENU_ACCESS);
 
             displayBlocks.ForEach(block =>
             {
@@ -205,8 +205,7 @@ namespace MyGridAssistant
 
             foreach (var block in blocks)
             {
-                var customDataManager = new CustomDataManager(block.CustomData);
-                var customData = customDataManager.GetPropertyValue(customDataKeyToLookup);
+                var customData = Configuration.GetBlockConfiguration(block, customDataKeyToLookup);
 
                 if (customData == null) continue;
 

@@ -1,6 +1,6 @@
 ﻿namespace MyGridAssistant
 {
-    public static class CustomDataSettings
+    public static class Settings
     {
         public const string EXCLUDE_FROM_AUTO_PRODUCTION = "exclude-from-auto-production";
         public const string EXCLUDE_ITEM_FROM_STATS_INVENTORY = "hide-item";

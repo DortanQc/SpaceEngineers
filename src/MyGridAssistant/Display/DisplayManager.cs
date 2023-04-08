@@ -37,8 +37,8 @@ namespace MyGridAssistant
 
             foreach (var block in blocks)
             {
-                var customDataManager = new CustomDataManager(block.CustomData);
-                var customData = customDataManager.GetPropertyValue(customDataKeyToLookup);
+                IConfiguration configuration = new Configuration(block);
+                var customData = configuration.GetConfig(customDataKeyToLookup);
 
                 if (customData == null) continue;
 
@@ -54,7 +54,7 @@ namespace MyGridAssistant
                 {
                     BlockId = block.EntityId,
                     TextSurface = textSurface.GetSurface(index),
-                    BlockCustomData = customDataManager
+                    Configuration = configuration
                 };
 
                 results.Add(result);
@@ -80,7 +80,7 @@ namespace MyGridAssistant
                         : $"{ToFriendlyQuantity(inProd.Amount)} {inProd.Name}");
                 });
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_IN_PRODUCTION);
+            var textSurfaceBlock = GetDisplayBlocks(blocks, Settings.STATS_IN_PRODUCTION);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
@@ -105,10 +105,10 @@ namespace MyGridAssistant
                 .ToList()
                 .ForEach(item =>
                 {
-                    if (ShouldHideItem(block.BlockCustomData, item))
+                    if (ShouldHideItem(block.Configuration, item))
                         return;
 
-                    if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.BlockCustomData))
+                    if (ShouldHideBecauseMetThreshold(item, itemsWithThreshold, monitoringData, block.Configuration))
                         return;
 
                     itemTypes
@@ -137,10 +137,10 @@ namespace MyGridAssistant
             Item item,
             IReadOnlyCollection<Item> itemsWithThreshold,
             MonitoringData monitoringData,
-            CustomDataManager customData)
+            IConfiguration configuration)
         {
             var hideWhenMetThreshold =
-                customData.GetPropertyValue(CustomDataSettings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) !=
+                configuration.GetConfig(Settings.EXCLUDE_FROM_STATS_INVENTORY_WHEN_OVER_THRESHOLD) !=
                 null;
 
             var itemMetThreshold = IsItemMetThreshold(
@@ -153,11 +153,9 @@ namespace MyGridAssistant
             return hideWhenMetThreshold && itemHasThresholdDefined && itemMetThreshold;
         }
 
-        private static bool ShouldHideItem(CustomDataManager customData, Item item)
+        private static bool ShouldHideItem(IConfiguration customData, Item item)
         {
-            var show = customData.GetPropertyValue(
-                           $"{CustomDataSettings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") ==
-                       null;
+            var show = customData.GetConfig($"{Settings.EXCLUDE_ITEM_FROM_STATS_INVENTORY}-{item.ItemSubType}") == null;
 
             return show == false;
         }
@@ -192,14 +190,14 @@ namespace MyGridAssistant
         {
             var itemsToDisplay = BuildItemsToDisplay(monitoringData.GetItems(), itemsWithThreshold);
 
-            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY);
-            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_COMPONENTS);
-            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_ORES);
-            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_INGOTS);
-            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, CustomDataSettings.STATS_INVENTORY_TOOLS);
+            var displayAllSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY);
+            var displayComponentSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_COMPONENTS);
+            var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_ORES);
+            var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_INGOTS);
+            var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_TOOLS);
             var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(
                 blocks,
-                CustomDataSettings.STATS_INVENTORY_AMMUNITION);
+                Settings.STATS_INVENTORY_AMMUNITION);
 
             var combinations = Combine(
                 displayAllSurfaceBlocks,
@@ -408,7 +406,7 @@ namespace MyGridAssistant
                             $"{cargo.CurrentVolume.ToIntSafe() * 100 / cargo.MaxVolume.ToIntSafe():0.##} %");
                 });
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_STORAGE_CAPACITY);
+            var textSurfaceBlock = GetDisplayBlocks(blocks, Settings.STATS_STORAGE_CAPACITY);
 
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
@@ -418,12 +416,12 @@ namespace MyGridAssistant
             const float LEFT_MARGIN = 10f;
             const float GAP_BETWEEN_SECTIONS = 20f;
 
-            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_POWER_USAGE);
+            var textSurfaceBlock = GetDisplayBlocks(blocks, Settings.STATS_POWER_USAGE);
 
             textSurfaceBlock.ForEach(surface =>
             {
                 var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
-                var keepRatio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+                var keepRatio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
                 var textSurface = surface.TextSurface;
                 var engin = new GraphicEngine(textSurface, keepRatio);
@@ -838,7 +836,7 @@ namespace MyGridAssistant
             MonitoringData monitoringData,
             IEnumerable<IMyTerminalBlock> blocks)
         {
-            var textSurfaceBlock = GetDisplayBlocks(blocks, CustomDataSettings.STATS_HYDROGEN_USAGE);
+            var textSurfaceBlock = GetDisplayBlocks(blocks, Settings.STATS_HYDROGEN_USAGE);
 
             textSurfaceBlock.ForEach(surface =>
             {
@@ -850,7 +848,7 @@ namespace MyGridAssistant
                 const float BAR_LEFT_BEGIN = LEFT_MARGIN + ICON_SIZE;
                 var isFirst = true;
 
-                var ratio = surface.BlockCustomData.GetPropertyValue(CustomDataSettings.LCD_WIDTH_RATIO) != null;
+                var ratio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
                 var textSurface = surface.TextSurface;
                 var engin = new GraphicEngine(textSurface, ratio);

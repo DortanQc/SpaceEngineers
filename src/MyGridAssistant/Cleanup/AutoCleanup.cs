@@ -218,40 +218,20 @@ namespace MyGridAssistant
             });
         }
 
-        private static bool IsComponentStorage(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
+        private static bool IsComponentStorage(IMyTerminalBlock block) =>
+            Configuration.GetBlockConfiguration(block, Settings.DEFAULT_STORAGE_FOR_COMPONENTS) != null;
 
-            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_COMPONENTS) != null;
-        }
+        private static bool IsAmmoStorage(IMyTerminalBlock block) =>
+            Configuration.GetBlockConfiguration(block, Settings.DEFAULT_STORAGE_FOR_AMMO) != null;
 
-        private static bool IsAmmoStorage(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
+        private static bool IsToolStorage(IMyTerminalBlock block) =>
+            Configuration.GetBlockConfiguration(block, Settings.DEFAULT_STORAGE_FOR_TOOLS) != null;
 
-            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_AMMO) != null;
-        }
+        private static bool IsIngotStorage(IMyTerminalBlock block) =>
+            Configuration.GetBlockConfiguration(block, Settings.DEFAULT_STORAGE_FOR_INGOTS) != null;
 
-        private static bool IsToolStorage(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
-
-            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_TOOLS) != null;
-        }
-
-        private static bool IsIngotStorage(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
-
-            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_INGOTS) != null;
-        }
-
-        private static bool IsOreStorage(IMyTerminalBlock block)
-        {
-            var customDataManager = new CustomDataManager(block.CustomData);
-
-            return customDataManager.GetPropertyValue(CustomDataSettings.DEFAULT_STORAGE_FOR_ORES) != null;
-        }
+        private static bool IsOreStorage(IMyTerminalBlock block) =>
+            Configuration.GetBlockConfiguration(block, Settings.DEFAULT_STORAGE_FOR_ORES) != null;
 
         private static void StackItems(
             IEnumerable<IMyTerminalBlock> storageBlocks,

@@ -37,9 +37,7 @@ namespace MyGridAssistant
 
             doors.ForEach(door =>
             {
-                var customDataManager = new CustomDataManager(door.CustomData);
-
-                var group = customDataManager.GetPropertyValue(CustomDataSettings.IS_AIR_LOCK);
+                var group = Configuration.GetBlockConfiguration(door, Settings.IS_AIR_LOCK);
 
                 if (group == null) return;
 

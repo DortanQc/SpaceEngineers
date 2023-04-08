@@ -6,7 +6,7 @@ namespace MyGridAssistant
     {
         public IMyTextSurface TextSurface { get; set; }
 
-        public CustomDataManager BlockCustomData { get; set; }
+        public IConfiguration Configuration { get; set; }
 
         public long BlockId { get; set; }
     }
