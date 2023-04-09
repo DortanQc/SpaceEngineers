@@ -8,11 +8,19 @@ namespace MyGridAssistant
 {
     public class AutoCleanup
     {
-        public static void Cleanup(
-            Action<string> echo,
+        private IMyGridAssistantLogger _logger;
+
+        public AutoCleanup(IMyGridAssistantLogger logger)
+        {
+            _logger = logger;
+        }
+        
+        public void Cleanup(
+            IMyGridAssistantLogger logger,
             List<IMyTerminalBlock> storageBlocks,
             List<IMyProductionBlock> producingItemBlocks)
         {
+            _logger = logger;
             MoveItemsInProperContainer(storageBlocks, producingItemBlocks);
             StackItems(storageBlocks, producingItemBlocks);
         }

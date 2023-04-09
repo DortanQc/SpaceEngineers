@@ -9,8 +9,14 @@ namespace MyGridAssistant
     {
         private const int ALLOWED_OPEN_SECOND = 5;
         private static readonly Dictionary<long, DateTime> DoorOpenedCount = new Dictionary<long, DateTime>();
+        private IMyGridAssistantLogger _logger;
 
-        public static void ShutDownDoorWhenOpenedLongerThanExpected(List<IMyDoor> doors)
+        public DoorManager(IMyGridAssistantLogger logger)
+        {
+            _logger = logger;
+        }
+        
+        public void ShutDownDoorWhenOpenedLongerThanExpected(List<IMyDoor> doors)
         {
             foreach (var door in doors)
             {
@@ -31,7 +37,7 @@ namespace MyGridAssistant
             }
         }
 
-        public static void ManageAirLocks(Action<string> echo, List<IMyDoor> doors)
+        public void ManageAirLocks(List<IMyDoor> doors)
         {
             var airlockDictionary = new Dictionary<string, List<IMyDoor>>();
 

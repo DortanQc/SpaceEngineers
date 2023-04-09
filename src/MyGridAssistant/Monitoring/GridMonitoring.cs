@@ -9,11 +9,11 @@ namespace MyGridAssistant
 {
     public class GridMonitoring
     {
-        private readonly Action<string> _logger;
+        private readonly IMyGridAssistantLogger _logger;
 
-        public GridMonitoring(Action<string> logAction)
+        public GridMonitoring(IMyGridAssistantLogger logger)
         {
-            _logger = logAction;
+            _logger = logger;
             MonitoringData = new MonitoringData();
         }
 
@@ -34,10 +34,10 @@ namespace MyGridAssistant
                     });
                 });
 
-            _logger("");
-            _logger("** Hydrogen **");
-            _logger($"Current Hydrogen Capacity: {MonitoringData.HydrogenTanks.Sum(h => h.Capacity):0.##}");
-            _logger(
+            _logger.LogInfo("GridMonitoring.ScanHydrogen_1", "");
+            _logger.LogInfo("GridMonitoring.ScanHydrogen_2", "** Hydrogen **");
+            _logger.LogInfo("GridMonitoring.ScanHydrogen_3", $"Current Hydrogen Capacity: {MonitoringData.HydrogenTanks.Sum(h => h.Capacity):0.##}");
+            _logger.LogInfo("GridMonitoring.ScanHydrogen_4",
                 $"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenTanks.Sum(h => h.FilledRatio) / MonitoringData.HydrogenTanks.Count:0.##} %");
         }
 
@@ -105,19 +105,19 @@ namespace MyGridAssistant
                 MonitoringData.PowerConsumption.AvailableIce = iceCount;
             });
 
-            _logger("");
-            _logger("** Power **");
-            _logger($"Battery Count: {MonitoringData.PowerConsumption.Batteries.Count}");
-            _logger($"Solar Panel Count: {MonitoringData.PowerConsumption.SolarPanels.Count}");
-            _logger($"Reactor Count: {MonitoringData.PowerConsumption.Reactors.Count}");
-            _logger($"Hydrogen Engine Count: {MonitoringData.PowerConsumption.HydrogenEngines.Count}");
-            _logger($"Wind Turret Count: {MonitoringData.PowerConsumption.WindTurbines.Count}");
-            _logger("");
-            _logger($"Current Power Output: {MonitoringData.PowerConsumption.CurrentPowerOutput} MW");
-            _logger($"Max Power Output: {MonitoringData.PowerConsumption.MaxPowerOutput} MW");
-            _logger("");
-            _logger($"Available Uranium: {MonitoringData.PowerConsumption.AvailableUranium}");
-            _logger($"Available Ice: {MonitoringData.PowerConsumption.AvailableIce}");
+            _logger.LogInfo("GridMonitoring.ScanPower_1", "");
+            _logger.LogInfo("GridMonitoring.ScanPower_2", "** Power **");
+            _logger.LogInfo("GridMonitoring.ScanPower_3", $"Battery Count: {MonitoringData.PowerConsumption.Batteries.Count}");
+            _logger.LogInfo("GridMonitoring.ScanPower_4", $"Solar Panel Count: {MonitoringData.PowerConsumption.SolarPanels.Count}");
+            _logger.LogInfo("GridMonitoring.ScanPower_5", $"Reactor Count: {MonitoringData.PowerConsumption.Reactors.Count}");
+            _logger.LogInfo("GridMonitoring.ScanPower_6", $"Hydrogen Engine Count: {MonitoringData.PowerConsumption.HydrogenEngines.Count}");
+            _logger.LogInfo("GridMonitoring.ScanPower_7", $"Wind Turret Count: {MonitoringData.PowerConsumption.WindTurbines.Count}");
+            _logger.LogInfo("GridMonitoring.ScanPower_8", "");
+            _logger.LogInfo("GridMonitoring.ScanPower_9", $"Current Power Output: {MonitoringData.PowerConsumption.CurrentPowerOutput} MW");
+            _logger.LogInfo("GridMonitoring.ScanPower_10", $"Max Power Output: {MonitoringData.PowerConsumption.MaxPowerOutput} MW");
+            _logger.LogInfo("GridMonitoring.ScanPower_11", "");
+            _logger.LogInfo("GridMonitoring.ScanPower_12", $"Available Uranium: {MonitoringData.PowerConsumption.AvailableUranium}");
+            _logger.LogInfo("GridMonitoring.ScanPower_13", $"Available Ice: {MonitoringData.PowerConsumption.AvailableIce}");
         }
 
         private void ScanStorageCapacity(IEnumerable<IMyTerminalBlock> storageBlocks)
@@ -137,10 +137,10 @@ namespace MyGridAssistant
                     });
                 });
 
-            _logger("");
-            _logger("** Items **");
-            _logger($"Max Storage Capacity: {MonitoringData.Cargos.Sum(x => (float)x.MaxVolume)} m^3");
-            _logger($"Current Storage Volume: {MonitoringData.Cargos.Sum(x => (float)x.CurrentVolume)} m^3");
+            _logger.LogInfo("GridMonitoring.ScanStorageCapacity_1", "");
+            _logger.LogInfo("GridMonitoring.ScanStorageCapacity_2", "** Items **");
+            _logger.LogInfo("GridMonitoring.ScanStorageCapacity_3", $"Max Storage Capacity: {MonitoringData.Cargos.Sum(x => (float)x.MaxVolume)} m^3");
+            _logger.LogInfo("GridMonitoring.ScanStorageCapacity_4", $"Current Storage Volume: {MonitoringData.Cargos.Sum(x => (float)x.CurrentVolume)} m^3");
         }
 
         private void ScanAllInventory(List<IMyTerminalBlock> allBlocks)
@@ -163,55 +163,11 @@ namespace MyGridAssistant
             var tools = MonitoringData.GetItems(Item.ItemTypes.Tools);
             var unknowns = MonitoringData.GetItems(Item.ItemTypes.Unknown);
 
-            if (components.Count > 0)
-            {
-                _logger("");
-                _logger("** Components **");
-                components.ForEach(component =>
-                {
-                    _logger($"{component.Name} {component.Amount}");
-                });
-            }
-
-            if (ingots.Count > 0)
-            {
-                _logger("");
-                _logger("** Ingots **");
-                ingots.ForEach(ingot =>
-                {
-                    _logger($"{ingot.Name} {ingot.Amount}");
-                });
-            }
-
-            if (ores.Count > 0)
-            {
-                _logger("");
-                _logger("** Ores **");
-                ores.ForEach(ore =>
-                {
-                    _logger($"{ore.Name} {ore.Amount}");
-                });
-            }
-
-            if (tools.Count > 0)
-            {
-                _logger("");
-                _logger("** Tools **");
-                tools.ForEach(tool =>
-                {
-                    _logger($"{tool.Name} {tool.Amount}");
-                });
-            }
-
-            if (unknowns.Count > 0)
-            {
-                _logger("");
-                _logger("** Unknown Items **");
-                unknowns.ForEach(unknown =>
-                {
-                    _logger($"{unknown.Name} {unknown.Amount}");
-                });
-            }
+            _logger.LogInfo("GridMonitoring.ScanAllInventory_1", $"Components found: {components.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanAllInventory_2", $"Ingots found: {ingots.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanAllInventory_3", $"Ores found: {ores.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanAllInventory_4", $"Tools found: {tools.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanAllInventory_5", $"Unknowns found: {unknowns.Count.ToString()}");
         }
 
         private void ScanProduction(List<IMyProductionBlock> productionBlocks)
@@ -232,35 +188,9 @@ namespace MyGridAssistant
             var ingots = MonitoringData.GetItemsInProduction(Item.ItemTypes.Ingot);
             var unknowns = MonitoringData.GetItemsInProduction(Item.ItemTypes.Unknown);
 
-            if (components.Count > 0)
-            {
-                _logger("");
-                _logger("** Components Production **");
-                components.ForEach(component =>
-                {
-                    _logger($"{component.Name} {component.Amount}");
-                });
-            }
-
-            if (ingots.Count > 0)
-            {
-                _logger("");
-                _logger("** Ingots Production **");
-                ingots.ForEach(ingot =>
-                {
-                    _logger($"{ingot.Name} {ingot.Amount * ingot.Volume}");
-                });
-            }
-
-            if (unknowns.Count > 0)
-            {
-                _logger("");
-                _logger("** Unknown Items In Production **");
-                unknowns.ForEach(unknown =>
-                {
-                    _logger($"{unknown.Name} {unknown.Amount}");
-                });
-            }
+            _logger.LogInfo("GridMonitoring.ScanProduction_1", $"Components in production found: {components.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanProduction_2", $"Ingots in production found: {ingots.Count.ToString()}");
+            _logger.LogInfo("GridMonitoring.ScanProduction_3", $"Unknown in production found: {unknowns.Count.ToString()}");
         }
 
         private void ScanInventory(IMyInventory inventory)

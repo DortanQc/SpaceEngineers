@@ -7,9 +7,15 @@ namespace MyGridAssistant
 {
     public class Program : MyGridProgram
     {
+        private readonly AutoCleanup _autoCleanup;
+        private readonly AutoProducer _autoProducer;
         private readonly IConfiguration _configuration;
+        private readonly DisplayManager _displayManager;
+        private readonly DoorManager _doorManager;
+        private readonly MyGridAssistantLogger _logger;
         private readonly GridMonitoring _monitoring;
         private readonly Dictionary<TimedAction, DateTime> _timerDictionary = new Dictionary<TimedAction, DateTime>();
+        private bool _alreadyRunning;
         private bool _autoCleanupStorages;
         private bool _autoProduceActive;
         private bool _autoShutDownDoors;
@@ -23,20 +29,31 @@ namespace MyGridAssistant
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
+            _logger = new MyGridAssistantLogger(Echo);
             _blocks = new List<IMyTerminalBlock>();
             _blocksProducingPower = new List<IMyPowerProducer>();
             _blocksWithStorage = new List<IMyTerminalBlock>();
             _blocksProducingItems = new List<IMyProductionBlock>();
             _blocksHoldingGas = new List<IMyGasTank>();
             _doors = new List<IMyDoor>();
-            _monitoring = new GridMonitoring(Echo);
+            _monitoring = new GridMonitoring(_logger);
             _configuration = new Configuration(Me);
+
+            _autoProducer = new AutoProducer(_logger);
+            _displayManager = new DisplayManager(_logger);
+            _doorManager = new DoorManager(_logger);
+            _autoCleanup = new AutoCleanup(_logger);
         }
 
-        public void Main(string _, UpdateType __)
+        public void Main(string argument, UpdateType updateSource)
         {
+            if (_alreadyRunning)
+                return;
+
+            _alreadyRunning = true;
+
             WhenItsTimeTo(TimedAction.CheckForUpdatedConfig, RefreshConfig);
 
             WhenItsTimeTo(TimedAction.ScanGrid, () =>
@@ -57,27 +74,30 @@ namespace MyGridAssistant
                     _blocksHoldingGas);
 
                 if (_autoProduceActive)
-                    AutoProducer.Produce(Echo, _monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
+                    _autoProducer.Produce(_monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
 
-                DisplayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, Echo);
+                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger);
             });
 
             WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
             {
                 if (_autoShutDownDoors)
-                    DoorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
+                    _doorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
             });
 
             WhenItsTimeTo(TimedAction.CleanupStorage, () =>
             {
                 if (_autoCleanupStorages)
-                    AutoCleanup.Cleanup(Echo, _blocksWithStorage, _blocksProducingItems);
+                    _autoCleanup.Cleanup(_logger, _blocksWithStorage, _blocksProducingItems);
             });
 
             WhenItsTimeTo(TimedAction.ManageAirlocks, () =>
             {
-                DoorManager.ManageAirLocks(Echo, _doors);
+                _doorManager.ManageAirLocks(_doors);
             });
+
+            _logger.ShowLogs();
+            _alreadyRunning = false;
         }
 
         private static int GetActionFrequencyInMs(TimedAction action)
@@ -238,7 +258,13 @@ namespace MyGridAssistant
             if (DateTime.Now.Subtract(_timerDictionary[actionKey]).TotalMilliseconds < totalMillisecond)
                 return;
 
+            var begin = DateTime.Now;
             action();
+            var end = DateTime.Now;
+
+            var elapsed = end.Subtract(begin).Milliseconds;
+            if (elapsed > 10)
+                _logger.LogDebug($"{actionKey.ToString()} took {elapsed} ms to complete");
 
             _timerDictionary[actionKey] = DateTime.Now;
         }

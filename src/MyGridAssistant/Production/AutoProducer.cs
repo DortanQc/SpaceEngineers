@@ -1,22 +1,24 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game;
 
 namespace MyGridAssistant
 {
-    public static class AutoProducer
+    public class AutoProducer
     {
-        private static Action<string> _logger;
+        private static IMyGridAssistantLogger _logger;
 
-        public static void Produce(
-            Action<string> logger,
+        public AutoProducer(IMyGridAssistantLogger logger)
+        {
+            _logger = logger;
+        }
+
+        public void Produce(
             MonitoringData data,
             IEnumerable<Item> itemsToProduce,
             IEnumerable<IMyProductionBlock> blocksProducingItems)
         {
-            _logger = logger;
             var allowedBlockForProduction = GetAllowedBlocksForProduction(blocksProducingItems);
             var allItemsInInventory = data.GetItems();
             var allItemsInProduction = data.GetItemsInProduction();
@@ -48,11 +50,10 @@ namespace MyGridAssistant
                 {
                     var isIgnored = Configuration.GetBlockConfiguration(block, Settings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
-                    if (isIgnored == null) return true;
+                    if (isIgnored == null) 
+                        return true;
 
-                    _logger("");
-                    _logger($"block {block.CustomName} ignored for auto producing items");
-                    _logger("");
+                    _logger.LogDebug($"block {block.CustomName} ignored for auto producing items", 3);
 
                     return false;
                 })
@@ -66,17 +67,8 @@ namespace MyGridAssistant
         {
             var best = GetBestBlockForJob(itemDefinitionId, blocksProducingItems);
 
-            if (best != null)
-            {
-                best.AddQueueItem(itemDefinitionId, amount);
-                _logger("");
-                _logger($"Queued item: {amount} {itemDefinitionId.SubtypeName} into {best.CustomName}");
-            }
-            else
-            {
-                _logger("");
-                _logger($"No Block found for producing {amount} {itemDefinitionId.SubtypeName}");
-            }
+            best.AddQueueItem(itemDefinitionId, amount);
+            _logger.LogDebug($"Queued item: {amount} {itemDefinitionId.SubtypeName} into {best.CustomName}");
         }
 
         private static IMyProductionBlock GetBestBlockForJob(

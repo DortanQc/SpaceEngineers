@@ -8,20 +8,24 @@ using VRageMath;
 
 namespace MyGridAssistant
 {
-    public static class DisplayManager
+    public class DisplayManager
     {
-        private static Action<string> _logger;
-
         private static readonly Dictionary<string, TopMarginInfo> TopMarginDictionary =
             new Dictionary<string, TopMarginInfo>();
 
-        public static void Display(
+        private IMyGridAssistantLogger _logger;
+
+        public DisplayManager(IMyGridAssistantLogger logger)
+        {
+            _logger = logger;
+        }
+        
+        public void Display(
             MonitoringData monitoringData,
             IEnumerable<Item> itemsWithThreshold,
             List<IMyTerminalBlock> allBlocks,
-            Action<string> logger)
+            IMyGridAssistantLogger logger)
         {
-            _logger = logger;
             DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
             DisplayStorageCapacity(monitoringData, allBlocks);
             DisplayElectricalUsage(monitoringData, allBlocks);
