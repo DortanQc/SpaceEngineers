@@ -82,6 +82,12 @@ namespace MyGridAssistant
                         _blocksProducingItems);
             });
 
+            WhenItsTimeTo(TimedAction.CleanupStorage, () =>
+            {
+                if (_autoCleanupStorages)
+                    _autoCleanup.Cleanup(_blocksWithStorage, _blocksProducingItems);
+            });
+            
             WhenItsTimeTo(TimedAction.DisplayStats, () =>
                 _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger));
 
@@ -89,12 +95,6 @@ namespace MyGridAssistant
             {
                 if (_autoShutDownDoors)
                     _doorManager.ShutDownDoorWhenOpenedLongerThanExpected(_doors);
-            });
-
-            WhenItsTimeTo(TimedAction.CleanupStorage, () =>
-            {
-                if (_autoCleanupStorages)
-                    _autoCleanup.Cleanup(_logger, _blocksWithStorage, _blocksProducingItems);
             });
 
             WhenItsTimeTo(TimedAction.ManageAirlocks, () =>

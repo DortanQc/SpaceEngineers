@@ -14,12 +14,8 @@ namespace MyGridAssistant
             _logger = logger;
         }
 
-        public void Cleanup(
-            IMyGridAssistantLogger logger,
-            List<IMyTerminalBlock> storageBlocks,
-            List<IMyProductionBlock> producingItemBlocks)
+        public void Cleanup(List<IMyTerminalBlock> storageBlocks, List<IMyProductionBlock> producingItemBlocks)
         {
-            _logger = logger;
             MoveItemsInProperContainer(storageBlocks, producingItemBlocks);
             StackItems(storageBlocks, producingItemBlocks);
         }
@@ -45,6 +41,7 @@ namespace MyGridAssistant
 
             var productionBlockInventories = producingItemBlocks
                 .Where(x => !IsAmmoStorage(x))
+                .Where(IsNotDisassembling)
                 .Select(b => b.OutputInventory);
 
             var storageBlockInventories = storageBlocks
@@ -83,6 +80,7 @@ namespace MyGridAssistant
 
             var productionBlockInventories = producingItemBlocks
                 .Where(x => !IsToolStorage(x))
+                .Where(IsNotDisassembling)
                 .Select(b => b.OutputInventory);
 
             var storageBlockInventories = storageBlocks
@@ -120,6 +118,7 @@ namespace MyGridAssistant
 
             var productionBlockInventories = producingItemBlocks
                 .Where(x => !IsComponentStorage(x))
+                .Where(IsNotDisassembling)
                 .Select(b => b.OutputInventory);
 
             var storageBlockInventories = storageBlocks
@@ -145,6 +144,16 @@ namespace MyGridAssistant
                                 break;
                     });
             });
+        }
+
+        private static bool IsNotDisassembling(IMyProductionBlock block)
+        {
+            var assemblerBlock = block as IMyAssembler;
+
+            if (assemblerBlock == null)
+                return true;
+
+            return assemblerBlock.Mode == MyAssemblerMode.Assembly;
         }
 
         private static void MoveIngotsToCargo(
