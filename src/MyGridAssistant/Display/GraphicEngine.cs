@@ -8,14 +8,16 @@ namespace MyGridAssistant
 {
     public class GraphicEngine
     {
+        private readonly IMyGridAssistantLogger _logger;
         private readonly float _ratio;
         private readonly List<MySprite> _sprites = new List<MySprite>();
         private readonly IMyTextSurface _textSurface;
         private readonly float _yOffset;
 
-        public GraphicEngine(IMyTextSurface textSurface, bool screenSizeRatio)
+        public GraphicEngine(IMyTextSurface textSurface, bool screenSizeRatio, IMyGridAssistantLogger logger)
         {
             _textSurface = textSurface;
+            _logger = logger;
             _ratio = screenSizeRatio
                 ? textSurface.SurfaceSize.Y / textSurface.SurfaceSize.X
                 : 1f;
@@ -23,9 +25,6 @@ namespace MyGridAssistant
             _yOffset = Math.Abs(textSurface.SurfaceSize.Y / textSurface.SurfaceSize.X - 1f) > 0
                 ? (textSurface.SurfaceSize.X - textSurface.SurfaceSize.Y) / 2
                 : 0;
-
-            _textSurface.ContentType = ContentType.SCRIPT;
-            _textSurface.Script = "None";
         }
 
         public Color? BackgroundColor { get; set; }

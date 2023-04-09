@@ -1,5 +1,4 @@
 using Sandbox.ModAPI.Ingame;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,13 +12,13 @@ namespace MyGridAssistant
         private static readonly Dictionary<string, TopMarginInfo> TopMarginDictionary =
             new Dictionary<string, TopMarginInfo>();
 
-        private IMyGridAssistantLogger _logger;
+        private readonly IMyGridAssistantLogger _logger;
 
         public DisplayManager(IMyGridAssistantLogger logger)
         {
             _logger = logger;
         }
-        
+
         public void Display(
             MonitoringData monitoringData,
             IEnumerable<Item> itemsWithThreshold,
@@ -415,7 +414,7 @@ namespace MyGridAssistant
             textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
         }
 
-        private static void DisplayElectricalUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
+        private void DisplayElectricalUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
         {
             const float LEFT_MARGIN = 10f;
             const float GAP_BETWEEN_SECTIONS = 20f;
@@ -428,7 +427,7 @@ namespace MyGridAssistant
                 var keepRatio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
                 var textSurface = surface.TextSurface;
-                var engin = new GraphicEngine(textSurface, keepRatio);
+                var engin = new GraphicEngine(textSurface, keepRatio, _logger);
                 var fullBarSize = textSurface.SurfaceSize.X - LEFT_MARGIN * 2;
                 var mediumBarSize = textSurface.SurfaceSize.X - 20f - LEFT_MARGIN * 2;
                 var smallBarSize = textSurface.SurfaceSize.X - 30f - LEFT_MARGIN * 2;
@@ -836,7 +835,7 @@ namespace MyGridAssistant
             return TopMarginDictionary[key].CurrentMargin;
         }
 
-        private static void DisplayHydrogenStatistics(
+        private void DisplayHydrogenStatistics(
             MonitoringData monitoringData,
             IEnumerable<IMyTerminalBlock> blocks)
         {
@@ -855,7 +854,7 @@ namespace MyGridAssistant
                 var ratio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
                 var textSurface = surface.TextSurface;
-                var engin = new GraphicEngine(textSurface, ratio);
+                var engin = new GraphicEngine(textSurface, ratio, _logger);
                 var barSize = textSurface.SurfaceSize.X - 90f;
 
                 engin.BackgroundColor = new Color(0, 0, 0, 255);

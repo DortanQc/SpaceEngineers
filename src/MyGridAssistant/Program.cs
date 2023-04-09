@@ -75,9 +75,11 @@ namespace MyGridAssistant
 
                 if (_autoProduceActive)
                     _autoProducer.Produce(_monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
-
-                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger);
+                
             });
+            
+            WhenItsTimeTo(TimedAction.DisplayStats, () =>
+                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger));
 
             WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
             {
@@ -109,6 +111,7 @@ namespace MyGridAssistant
                 case TimedAction.ManageAirlocks: return 1000;
                 case TimedAction.ShutDownDoors: return 1000;
                 case TimedAction.CheckForUpdatedConfig: return 10000;
+                case TimedAction.DisplayStats: return 250;
                 default: throw new Exception($"{nameof(action)} not out of range");
             }
         }
@@ -275,7 +278,8 @@ namespace MyGridAssistant
             CleanupStorage = 1,
             ManageAirlocks = 2,
             ShutDownDoors = 3,
-            CheckForUpdatedConfig = 5
+            CheckForUpdatedConfig = 5,
+            DisplayStats = 6
         }
     }
 }
