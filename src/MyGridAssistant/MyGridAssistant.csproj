@@ -30,8 +30,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="Instructions.readme" />
-        <AdditionalFiles Include="thumb.png" />
+        <AdditionalFiles Include="Instructions.readme"/>
+        <AdditionalFiles Include="thumb.png"/>
     </ItemGroup>
 
 </Project>

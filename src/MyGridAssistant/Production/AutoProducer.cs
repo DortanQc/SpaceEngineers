@@ -50,7 +50,7 @@ namespace MyGridAssistant
                 {
                     var isIgnored = Configuration.GetBlockConfiguration(block, Settings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
-                    if (isIgnored == null) 
+                    if (isIgnored == null)
                         return true;
 
                     _logger.LogDebug($"block {block.CustomName} ignored for auto producing items", 3);

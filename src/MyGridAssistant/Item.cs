@@ -1,4 +1,5 @@
 ﻿using VRage.Game;
+using VRage.Game.ModAPI.Ingame;
 
 namespace MyGridAssistant
 {
@@ -75,15 +76,21 @@ namespace MyGridAssistant
             Consumable
         }
 
-        public Item(string itemType, int amount)
+        public Item(MyItemType itemType, int amount)
         {
             Amount = amount;
             Build(itemType);
         }
 
+        public Item(MyDefinitionId itemDefinition, int amount)
+        {
+            Amount = amount;
+            Build(itemDefinition);
+        }
+
         public MyDefinitionId ItemDefinition { get; private set; }
 
-        public int Amount { get; }
+        public int Amount { get; set; }
 
         public string Name { get; private set; }
 
@@ -93,9 +100,9 @@ namespace MyGridAssistant
 
         public ItemSubTypes ItemSubType { get; private set; }
 
-        private void Build(string itemType)
+        private void Build(MyItemType itemType)
         {
-            switch (itemType)
+            switch (itemType.ToString())
             {
                 case "MyObjectBuilder_BlueprintDefinition/BulletproofGlass":
                 case "MyObjectBuilder_Component/BulletproofGlass":
@@ -690,7 +697,7 @@ namespace MyGridAssistant
                 default:
                     ItemType = ItemTypes.Unknown;
                     ItemSubType = ItemSubTypes.Unknown;
-                    Name = itemType;
+                    Name = itemType.ToString();
                     Volume = 0;
 
                     break;

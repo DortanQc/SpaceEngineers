@@ -13,7 +13,7 @@ namespace MyGridAssistant
         {
             _logger = logger;
         }
-        
+
         public void Cleanup(
             IMyGridAssistantLogger logger,
             List<IMyTerminalBlock> storageBlocks,

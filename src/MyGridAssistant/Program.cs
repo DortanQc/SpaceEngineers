@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VRage.Game;
 
 namespace MyGridAssistant
 {
@@ -75,9 +76,8 @@ namespace MyGridAssistant
 
                 if (_autoProduceActive)
                     _autoProducer.Produce(_monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
-                
             });
-            
+
             WhenItsTimeTo(TimedAction.DisplayStats, () =>
                 _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger));
 
@@ -199,12 +199,21 @@ namespace MyGridAssistant
             };
         }
 
-        private static Item InitAutoProductionValue(string customDataValue, string objectName)
+        private static Item InitAutoProductionValue(string rawThresholdAmount, string itemType)
         {
             int amount;
-            int.TryParse(customDataValue, out amount);
+            MyDefinitionId itemDefinitionId;
 
-            return new Item($"MyObjectBuilder_BlueprintDefinition/{objectName}", amount);
+            var isItemDefinitionValid = MyDefinitionId.TryParse($"MyObjectBuilder_BlueprintDefinition/{itemType}", out itemDefinitionId);
+            var isAmountValid = int.TryParse(rawThresholdAmount, out amount);
+
+            if (!isItemDefinitionValid)
+                throw new Exception($"{itemType} is not a valid Item Type.");
+
+            if (!isAmountValid)
+                throw new Exception($"{rawThresholdAmount} is not a valid number for auto producing {itemType}.");
+
+            return new Item(itemDefinitionId, amount);
         }
 
         private string SetupCustomData(string key, string defaultValue)

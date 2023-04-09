@@ -51,6 +51,9 @@ namespace MyGridAssistant
                 .Where(i => i.ItemSubType == Item.ItemSubTypes.Ice)
                 .Sum(i => i.Amount);
 
+            MonitoringData.PowerConsumption.AvailableUranium = uraniumCount;
+            MonitoringData.PowerConsumption.AvailableIce = iceCount;
+
             powerBlocks.ForEach(block =>
             {
                 var battery = block as IMyBatteryBlock;
@@ -100,9 +103,6 @@ namespace MyGridAssistant
                         CurrentOutput = block.CurrentOutput,
                         MaxOutput = block.MaxOutput
                     });
-
-                MonitoringData.PowerConsumption.AvailableUranium = uraniumCount;
-                MonitoringData.PowerConsumption.AvailableIce = iceCount;
             });
 
             _logger.LogInfo("GridMonitoring.ScanPower_1", "");

@@ -15,7 +15,7 @@ namespace MyGridAssistant
         {
             _logger = logger;
         }
-        
+
         public void ShutDownDoorWhenOpenedLongerThanExpected(List<IMyDoor> doors)
         {
             foreach (var door in doors)
