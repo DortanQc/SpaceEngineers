@@ -1,7 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Linq;
-using VRage.Game;
 
 namespace MyGridAssistant
 {
@@ -15,32 +14,31 @@ namespace MyGridAssistant
         }
 
         public void Produce(
-            MonitoringData data,
+            List<Item> allItemsInInventory,
+            List<Item> allItemsInProduction,
             IEnumerable<Item> itemsToProduce,
             IEnumerable<IMyProductionBlock> blocksProducingItems)
         {
             var allowedBlockForProduction = GetAllowedBlocksForProduction(blocksProducingItems);
-            var allItemsInInventory = data.GetItems();
-            var allItemsInProduction = data.GetItemsInProduction();
 
-            foreach (var item in itemsToProduce)
+            foreach (var itemToProduce in itemsToProduce)
             {
-                var inventoryCount = allItemsInInventory
-                    .Where(i => i.ItemDefinition == item.ItemDefinition)
+                var ownedInventoryCount = allItemsInInventory
+                    .Where(ownerItem => ownerItem.IsSameAs(itemToProduce))
                     .Sum(x => x.Amount);
 
                 var producingCount = allItemsInProduction
-                    .Where(i => i.ItemDefinition == item.ItemDefinition)
+                    .Where(producingItem => producingItem.IsSameAs(itemToProduce))
                     .Sum(x => x.Amount);
 
-                var count = inventoryCount + producingCount;
+                var count = ownedInventoryCount + producingCount;
 
-                if (count >= item.Amount) continue;
+                if (count >= itemToProduce.Amount) continue;
 
-                var delta = item.Amount - count;
+                var delta = itemToProduce.Amount - count;
 
                 if (delta > 0)
-                    ProduceItem(item.ItemDefinition, delta, allowedBlockForProduction);
+                    ProduceItem(itemToProduce, delta, allowedBlockForProduction);
             }
         }
 
@@ -50,51 +48,67 @@ namespace MyGridAssistant
                 {
                     var isIgnored = Configuration.GetBlockConfiguration(block, Settings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
-                    if (isIgnored == null)
+                    if (isIgnored != null)
+                    {
+                        _logger.LogDebug($"block {block.CustomName} ignored for auto producing items", 3);
+
+                        return false;
+                    }
+
+                    var assemblerBlock = block as IMyAssembler;
+
+                    if (assemblerBlock == null)
                         return true;
 
-                    _logger.LogDebug($"block {block.CustomName} ignored for auto producing items", 3);
+                    if (assemblerBlock.Mode == MyAssemblerMode.Assembly) return true;
+
+                    _logger.LogDebug($"block {block.CustomName} ignored because set in `Disassembly` mode", 3);
 
                     return false;
                 })
                 .ToList();
         }
 
-        private static void ProduceItem(
-            MyDefinitionId itemDefinitionId,
-            decimal amount,
-            IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
+        private static void ProduceItem(Item itemToProduce, decimal amount, IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
         {
-            var best = GetBestBlockForJob(itemDefinitionId, blocksProducingItems);
+            var best = GetBestBlockForJob(itemToProduce, blocksProducingItems);
 
-            best.AddQueueItem(itemDefinitionId, amount);
-            _logger.LogDebug($"Queued item: {amount} {itemDefinitionId.SubtypeName} into {best.CustomName}");
+            if (best == null)
+            {
+                _logger.LogDebug($"No production block found for producing {amount} {itemToProduce.ItemDefinitionId.SubtypeName}");
+
+                return;
+            }
+
+            best.AddQueueItem(itemToProduce.ItemDefinitionId, amount);
+            _logger.LogDebug($"Queued item: {amount} {itemToProduce.ItemDefinitionId.SubtypeName} into {best.CustomName}");
         }
 
-        private static IMyProductionBlock GetBestBlockForJob(
-            MyDefinitionId itemDefinitionId,
-            IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
+        private static IMyProductionBlock GetBestBlockForJob(Item itemToProduce, IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
         {
             var dict = new Dictionary<long, int>();
 
+            if (!blocksProducingItems.Any())
+                return null;
+
             foreach (var block in blocksProducingItems)
             {
-                if (!block.CanUseBlueprint(itemDefinitionId)) continue;
+                if (!block.CanUseBlueprint(itemToProduce.ItemDefinitionId))
+                    continue;
 
-                var queue = new List<MyProductionItem>();
-                block.GetQueue(queue);
+                var actualQueue = new List<MyProductionItem>();
+                block.GetQueue(actualQueue);
 
-                var count = queue.Sum(q => q.Amount.ToIntSafe());
-                dict.Add(block.EntityId, count);
+                var actualQueueCount = actualQueue.Sum(q => q.Amount.ToIntSafe());
+                dict.Add(block.EntityId, actualQueueCount);
             }
 
-            var best = dict
-                .OrderBy(x => x.Value)
-                .Select(orderedBlocks =>
-                    blocksProducingItems.First(x => x.EntityId == orderedBlocks.Key))
-                .FirstOrDefault();
+            if (!dict.Any())
+                return null;
 
-            return best;
+            var bestBlockId = dict.OrderBy(x => x.Value).First().Key;
+
+            return blocksProducingItems.First(x => x.EntityId == bestBlockId);
         }
     }
 }

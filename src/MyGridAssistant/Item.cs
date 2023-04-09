@@ -1,5 +1,4 @@
-﻿using VRage.Game;
-using VRage.Game.ModAPI.Ingame;
+using VRage.Game;
 
 namespace MyGridAssistant
 {
@@ -62,7 +61,13 @@ namespace MyGridAssistant
             AngleGrinder2,
             HandDrill2,
             Powerkit,
-            EngineerPlushie
+            EngineerPlushie,
+            HandDrill3,
+            HandDrill4,
+            AngleGrinder3,
+            AngleGrinder4,
+            Welder3,
+            Welder4
         }
 
         public enum ItemTypes
@@ -76,19 +81,13 @@ namespace MyGridAssistant
             Consumable
         }
 
-        public Item(MyItemType itemType, int amount)
+        public Item(MyDefinitionId itemDefinitionId, int amount)
         {
             Amount = amount;
-            Build(itemType);
+            Build(itemDefinitionId);
         }
 
-        public Item(MyDefinitionId itemDefinition, int amount)
-        {
-            Amount = amount;
-            Build(itemDefinition);
-        }
-
-        public MyDefinitionId ItemDefinition { get; private set; }
+        public MyDefinitionId ItemDefinitionId { get; private set; }
 
         public int Amount { get; set; }
 
@@ -100,16 +99,25 @@ namespace MyGridAssistant
 
         public ItemSubTypes ItemSubType { get; private set; }
 
-        private void Build(MyItemType itemType)
+        public bool IsSameAs(Item itemToCompareWith)
         {
-            switch (itemType.ToString())
+            if (itemToCompareWith == null) return false;
+            if (ItemType != itemToCompareWith.ItemType) return false;
+            if (ItemSubType != itemToCompareWith.ItemSubType) return false;
+
+            return true;
+        }
+
+        private void Build(MyDefinitionId definitionId)
+        {
+            switch (definitionId.ToString())
             {
                 case "MyObjectBuilder_BlueprintDefinition/BulletproofGlass":
                 case "MyObjectBuilder_Component/BulletproofGlass":
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.BulletproofGlass;
                     Name = "Bulletproof Glass";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/BulletproofGlass");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/BulletproofGlass");
                     Volume = 8;
 
                     break;
@@ -118,7 +126,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Canvas;
                     Name = "Canvas";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Canvas");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Canvas");
                     Volume = 8;
 
                     break;
@@ -127,7 +135,7 @@ namespace MyGridAssistant
                     Name = "Computer";
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Computer;
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ComputerComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ComputerComponent");
                     Volume = 1;
 
                     break;
@@ -136,7 +144,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Construction;
                     Name = "Construction Comp";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ConstructionComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ConstructionComponent");
                     Volume = 2;
 
                     break;
@@ -145,7 +153,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Detector;
                     Name = "Detector Comp";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/DetectorComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/DetectorComponent");
                     Volume = 6;
 
                     break;
@@ -154,7 +162,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Display;
                     Name = "Display";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Display");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Display");
                     Volume = 6;
 
                     break;
@@ -163,7 +171,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Explosives;
                     Name = "Explosives";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ExplosivesComponent");
                     Volume = 2;
 
                     break;
@@ -172,7 +180,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Girder;
                     Name = "Girder";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GirderComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GirderComponent");
                     Volume = 2;
 
                     break;
@@ -181,9 +189,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.GravityGenerator;
                     Name = "Gravity Gen. Comp";
-                    ItemDefinition =
-                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent");
-
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GravityGeneratorComponent");
                     Volume = 200;
 
                     break;
@@ -192,7 +198,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.InteriorPlate;
                     Name = "Interior Plate";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/InteriorPlate");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/InteriorPlate");
                     Volume = 5;
 
                     break;
@@ -201,7 +207,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.LargeTube;
                     Name = "Large Steel Tube";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/LargeTube");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/LargeTube");
                     Volume = 38;
 
                     break;
@@ -210,7 +216,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Medical;
                     Name = "Medical Comp";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MedicalComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MedicalComponent");
                     Volume = 160;
 
                     break;
@@ -219,7 +225,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.MetalGrid;
                     Name = "Metal Grid";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MetalGrid");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MetalGrid");
                     Volume = 15;
 
                     break;
@@ -228,7 +234,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Motor;
                     Name = "Motor";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MotorComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MotorComponent");
                     Volume = 8;
 
                     break;
@@ -237,7 +243,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.PowerCell;
                     Name = "Power Cell";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PowerCell");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PowerCell");
                     Volume = 45;
 
                     break;
@@ -246,7 +252,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.RadioCommunication;
                     Name = "Radio Comm. Comp";
-                    ItemDefinition =
+                    ItemDefinitionId =
                         MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RadioCommunicationComponent");
 
                     Volume = 70;
@@ -257,7 +263,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Reactor;
                     Name = "Reactor Comp";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ReactorComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ReactorComponent");
                     Volume = 8;
 
                     break;
@@ -266,7 +272,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.SmallTube;
                     Name = "Small Steel Tube";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SmallTube");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SmallTube");
                     Volume = 2;
 
                     break;
@@ -275,7 +281,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.SolarCell;
                     Name = "Solar Cell";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SolarCell");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SolarCell");
                     Volume = 20;
 
                     break;
@@ -284,7 +290,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.SteelPlate;
                     Name = "Steel Plate";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SteelPlate");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SteelPlate");
                     Volume = 3;
 
                     break;
@@ -293,7 +299,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Superconductor;
                     Name = "Superconductor";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Superconductor");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Superconductor");
                     Volume = 8;
 
                     break;
@@ -302,7 +308,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.Thrust;
                     Name = "Thruster Comp";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ThrustComponent");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/ThrustComponent");
                     Volume = 10;
 
                     break;
@@ -311,7 +317,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Component;
                     ItemSubType = ItemSubTypes.EngineerPlushie;
                     Name = "Engineer Plushie";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/EngineerPlushie");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/EngineerPlushie");
                     Volume = 3;
 
                     break;
@@ -321,7 +327,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.112f;
 
                     break;
@@ -330,7 +336,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.052f;
 
                     break;
@@ -339,7 +345,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Stone;
                     Name = "Gravel";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -348,7 +354,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.127f;
 
                     break;
@@ -357,7 +363,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Powder";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.575f;
 
                     break;
@@ -366,7 +372,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.112f;
 
                     break;
@@ -375,7 +381,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.047f;
 
                     break;
@@ -384,7 +390,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Wafer";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.429f;
 
                     break;
@@ -393,7 +399,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.095f;
 
                     break;
@@ -402,7 +408,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ingot";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.052f;
 
                     break;
@@ -411,7 +417,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -419,7 +425,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -427,7 +433,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Ice;
                     Name = "Ice";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -435,7 +441,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -443,7 +449,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -451,7 +457,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -459,7 +465,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -467,7 +473,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Scrap;
                     Name = "Scrap Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -475,7 +481,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -483,7 +489,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -491,7 +497,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Stone;
                     Name = "Stone";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -499,7 +505,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ore";
-                    ItemDefinition = new MyDefinitionId();
+                    ItemDefinitionId = new MyDefinitionId();
                     Volume = 0.37f;
 
                     break;
@@ -509,7 +515,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.AutomaticRifle;
                     Name = "Automatic Rifle";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifle");
                     Volume = 14f;
 
                     break;
@@ -518,7 +524,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.PreciseAutomaticRifle;
                     Name = "Precise Rifle";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PreciseAutomaticRifle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PreciseAutomaticRifle");
                     Volume = 14f;
 
                     break;
@@ -527,8 +533,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.RapidFireAutomaticRifle;
                     Name = "Rapid Fire Rifle";
-                    ItemDefinition =
-                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifle");
 
                     Volume = 14f;
 
@@ -538,7 +543,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.UltimateAutomaticRifle;
                     Name = "Ultimate Rifle";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/UltimateAutomaticRifle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/UltimateAutomaticRifle");
                     Volume = 14f;
 
                     break;
@@ -548,7 +553,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.Welder;
                     Name = "Welder 1";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder");
                     Volume = 8f;
 
                     break;
@@ -557,7 +562,25 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.Welder2;
                     Name = "Welder 2";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder2");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder2");
+                    Volume = 8f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/Welder3Item":
+                case "MyObjectBuilder_BlueprintDefinition/Welder3":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.Welder3;
+                    Name = "Welder 3";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder3");
+                    Volume = 8f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/Welder4Item":
+                case "MyObjectBuilder_BlueprintDefinition/Welder4":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.Welder4;
+                    Name = "Welder 4";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Welder4");
                     Volume = 8f;
 
                     break;
@@ -566,7 +589,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.AngleGrinder;
                     Name = "Grinder 1";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder");
                     Volume = 20f;
 
                     break;
@@ -575,7 +598,25 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.AngleGrinder2;
                     Name = "Grinder 2";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder2");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder2");
+                    Volume = 20f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/AngleGrinder3Item":
+                case "MyObjectBuilder_BlueprintDefinition/Angle3Grinder":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.AngleGrinder3;
+                    Name = "Grinder 3";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder3");
+                    Volume = 20f;
+
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/AngleGrinder4Item":
+                case "MyObjectBuilder_BlueprintDefinition/Angle4Grinder":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.AngleGrinder4;
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AngleGrinder4");
+                    Name = "Grinder 4";
                     Volume = 20f;
 
                     break;
@@ -584,7 +625,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.HandDrill;
                     Name = "Drill 1";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill");
                     Volume = 25f;
 
                     break;
@@ -593,17 +634,34 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Tools;
                     ItemSubType = ItemSubTypes.HandDrill2;
                     Name = "Drill 2";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill2");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill2");
                     Volume = 25f;
 
                     break;
+                case "MyObjectBuilder_PhysicalGunObject/HandDrill3Item":
+                case "MyObjectBuilder_BlueprintDefinition/HandDrill3":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.HandDrill3;
+                    Name = "Drill 3";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill3");
+                    Volume = 25f;
 
+                    break;
+                case "MyObjectBuilder_PhysicalGunObject/HandDrill4Item":
+                case "MyObjectBuilder_BlueprintDefinition/HandDrill4":
+                    ItemType = ItemTypes.Tools;
+                    ItemSubType = ItemSubTypes.HandDrill4;
+                    Name = "Drill 4";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HandDrill4");
+                    Volume = 25f;
+
+                    break;
                 case "MyObjectBuilder_AmmoMagazine/NATO_5p56x45mm":
                 case "MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine":
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.Nato5P56X45MmMagazine;
                     Name = "NATO 5.56x45mm";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
                     Volume = 0.2f;
 
                     break;
@@ -612,7 +670,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.Nato25X184MmMagazine;
                     Name = "NATO 25x184mm";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
                     Volume = 16f;
 
                     break;
@@ -621,7 +679,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.Missile200Mm;
                     Name = "Missile 200mm";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Missile200mm");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Missile200mm");
                     Volume = 60f;
 
                     break;
@@ -630,8 +688,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.RapidFireAutomaticRifleGunMag50Rd;
                     Name = "MR-50A Magazine";
-                    ItemDefinition =
-                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/RapidFireAutomaticRifleGun_Mag_50rd");
 
                     Volume = 2.7f;
 
@@ -641,8 +698,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.AutomaticRifleGunMag20Rd;
                     Name = "MR-50A Magazine";
-                    ItemDefinition =
-                        MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutomaticRifleGun_Mag_20rd");
 
                     Volume = 1.8f;
 
@@ -652,7 +708,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.AFullAutoPistolMagazine;
                     Name = "S-20A Magazine";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/FullAutoPistolMagazine");
                     Volume = 3.45f;
 
                     break;
@@ -662,7 +718,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Consumable;
                     ItemSubType = ItemSubTypes.SpaceCredit;
                     Name = "Space Credit";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SpaceCredit");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SpaceCredit");
                     Volume = 8.26f;
 
                     break;
@@ -671,7 +727,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Consumable;
                     ItemSubType = ItemSubTypes.HydrogenBottle;
                     Name = "Hydrogen Bottle";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HydrogenBottle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/HydrogenBottle");
                     Volume = 120f;
 
                     break;
@@ -680,7 +736,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Consumable;
                     ItemSubType = ItemSubTypes.OxygenBottle;
                     Name = "Oxygen Bottle";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/OxygenBottle");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/OxygenBottle");
                     Volume = 120f;
 
                     break;
@@ -689,7 +745,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Consumable;
                     ItemSubType = ItemSubTypes.Powerkit;
                     Name = "Powerkit";
-                    ItemDefinition = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Powerkit");
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/Powerkit");
                     Volume = 18f;
 
                     break;
@@ -697,18 +753,11 @@ namespace MyGridAssistant
                 default:
                     ItemType = ItemTypes.Unknown;
                     ItemSubType = ItemSubTypes.Unknown;
-                    Name = itemType.ToString();
+                    Name = definitionId.ToString();
                     Volume = 0;
 
                     break;
             }
-
-            // "Welder 3", "Welder3Item", "MyObjectBuilder_PhysicalGunObject", "Welder3", 8
-            // "Welder 4", "Welder4Item", "MyObjectBuilder_PhysicalGunObject", "Welder4", 8
-            // "Grinder 3", "AngleGrinder3Item", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder3", 20
-            // "Grinder 4", "AngleGrinder4Item", "MyObjectBuilder_PhysicalGunObject", "AngleGrinder4", 20
-            // "Drill 3", "HandDrill3Item", "MyObjectBuilder_PhysicalGunObject", "HandDrill3", 25
-            // "Drill 4", "HandDrill4Item", "MyObjectBuilder_PhysicalGunObject", "HandDrill4", 25
         }
     }
 }

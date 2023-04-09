@@ -14,7 +14,7 @@ namespace MyGridAssistant
         public GridMonitoring(IMyGridAssistantLogger logger)
         {
             _logger = logger;
-            MonitoringData = new MonitoringData();
+            MonitoringData = new MonitoringData(_logger);
         }
 
         public MonitoringData MonitoringData { get; }

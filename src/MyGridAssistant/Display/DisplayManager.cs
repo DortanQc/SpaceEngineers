@@ -341,7 +341,7 @@ namespace MyGridAssistant
                 if (!itemsToDisplay.Any(itemToDisplay =>
                         itemToDisplay.ItemType == itemWithThreshold.ItemType &&
                         itemToDisplay.ItemSubType == itemWithThreshold.ItemSubType))
-                    itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinition, 0));
+                    itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinitionId, 0));
 
             return itemsToDisplay.OrderBy(item => item.ItemType).ThenBy(item => item.Name).ToList();
         }

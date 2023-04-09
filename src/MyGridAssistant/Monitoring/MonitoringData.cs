@@ -8,11 +8,13 @@ namespace MyGridAssistant
 {
     public class MonitoringData
     {
+        private readonly IMyGridAssistantLogger _logger;
         private Dictionary<MyItemType, Item> _items;
         private Dictionary<MyDefinitionId, Item> _itemsInProduction;
 
-        public MonitoringData()
+        public MonitoringData(IMyGridAssistantLogger logger)
         {
+            _logger = logger;
             Reset();
         }
 

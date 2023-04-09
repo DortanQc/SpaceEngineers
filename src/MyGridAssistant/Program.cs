@@ -75,7 +75,11 @@ namespace MyGridAssistant
                     _blocksHoldingGas);
 
                 if (_autoProduceActive)
-                    _autoProducer.Produce(_monitoring.MonitoringData, _itemsToProduce, _blocksProducingItems);
+                    _autoProducer.Produce(
+                        _monitoring.MonitoringData.GetItems(),
+                        _monitoring.MonitoringData.GetItemsInProduction(),
+                        _itemsToProduce,
+                        _blocksProducingItems);
             });
 
             WhenItsTimeTo(TimedAction.DisplayStats, () =>
