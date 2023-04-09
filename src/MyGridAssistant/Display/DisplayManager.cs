@@ -21,11 +21,10 @@ namespace MyGridAssistant
 
         public void Display(
             MonitoringData monitoringData,
-            IEnumerable<Item> itemsWithThreshold,
-            List<IMyTerminalBlock> allBlocks,
-            IMyGridAssistantLogger logger)
+            List<Item> itemsWithThreshold,
+            List<IMyTerminalBlock> allBlocks)
         {
-            DisplayItemInventory(monitoringData, itemsWithThreshold.ToList(), allBlocks);
+            DisplayItemInventory(monitoringData, itemsWithThreshold, allBlocks);
             DisplayStorageCapacity(monitoringData, allBlocks);
             DisplayElectricalUsage(monitoringData, allBlocks);
             DisplayProduction(monitoringData, allBlocks);
@@ -104,7 +103,10 @@ namespace MyGridAssistant
             var alreadyHasType = new Dictionary<Item.ItemTypes, bool>();
             var hasSomethingToDisplay = false;
 
-            itemsToDisplay.OrderByDescending(i => i.Amount)
+            itemsToDisplay
+                .Where(i => itemTypes.Contains(i.ItemType))
+                .OrderBy(i => i.ItemType)
+                .ThenByDescending(i => i.Amount)
                 .ToList()
                 .ForEach(item =>
                 {
@@ -115,12 +117,11 @@ namespace MyGridAssistant
                         return;
 
                     itemTypes
+                        .Where(i => i == item.ItemType)
+                        .OrderBy(i => i)
                         .ToList()
                         .ForEach(type =>
                         {
-                            if (item.ItemType != type)
-                                return;
-
                             if (!alreadyHasType.ContainsKey(type))
                                 alreadyHasType.Add(type, false);
 
@@ -198,11 +199,9 @@ namespace MyGridAssistant
             var displayOreSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_ORES);
             var displayIngotSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_INGOTS);
             var displayToolsSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_TOOLS);
-            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(
-                blocks,
-                Settings.STATS_INVENTORY_AMMUNITION);
+            var displayAmmunitionSurfaceBlocks = GetDisplayBlocks(blocks, Settings.STATS_INVENTORY_AMMUNITION);
 
-            var combinations = Combine(
+            var surfaceByTypes = Combine(
                 displayAllSurfaceBlocks,
                 displayComponentSurfaceBlocks,
                 displayOreSurfaceBlocks,
@@ -210,14 +209,14 @@ namespace MyGridAssistant
                 displayToolsSurfaceBlocks,
                 displayAmmunitionSurfaceBlocks);
 
-            combinations.ForEach(combination =>
+            surfaceByTypes.ForEach(surfaceByType =>
             {
                 DisplayInventoryForTypes(
-                    combination.Block,
+                    surfaceByType.Surface,
                     itemsToDisplay,
                     itemsWithThreshold,
                     monitoringData,
-                    combination.ItemTypes);
+                    surfaceByType.ItemTypes);
             });
         }
 
@@ -229,10 +228,9 @@ namespace MyGridAssistant
             IEnumerable<Surface> toolsSurfaceBlocks,
             IEnumerable<Surface> ammunitionSurfaceBlocks)
         {
-            var allBlocks = allSurfaceBlocks
-                .Select(b => new SurfaceByType
+            var allSurfaces = allSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Ammunition,
@@ -244,45 +242,45 @@ namespace MyGridAssistant
                         Item.ItemTypes.Unknown
                     }
                 })
-                .Concat(componentSurfaceBlocks.Select(b => new SurfaceByType
+                .Concat(componentSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Component,
                         Item.ItemTypes.Unknown
                     }
                 }))
-                .Concat(oreSurfaceBlocks.Select(b => new SurfaceByType
+                .Concat(oreSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Ore,
                         Item.ItemTypes.Unknown
                     }
                 }))
-                .Concat(ingotSurfaceBlocks.Select(b => new SurfaceByType
+                .Concat(ingotSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Ingot,
                         Item.ItemTypes.Unknown
                     }
                 }))
-                .Concat(toolsSurfaceBlocks.Select(b => new SurfaceByType
+                .Concat(toolsSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Tools,
                         Item.ItemTypes.Unknown
                     }
                 }))
-                .Concat(ammunitionSurfaceBlocks.Select(b => new SurfaceByType
+                .Concat(ammunitionSurfaceBlocks.Select(surface => new SurfaceByType
                 {
-                    Block = b,
+                    Surface = surface,
                     ItemTypes = new[]
                     {
                         Item.ItemTypes.Ammunition,
@@ -293,57 +291,55 @@ namespace MyGridAssistant
 
             var dictionary = new Dictionary<long, SurfaceByType>();
 
-            allBlocks.ForEach(block =>
-            {
-                if (dictionary.ContainsKey(block.Block.BlockId))
+            foreach (var surfaceByType in allSurfaces)
+                if (dictionary.ContainsKey(surfaceByType.Surface.BlockId))
                 {
-                    var actualTypes = dictionary[block.Block.BlockId].ItemTypes.ToList();
-                    var typesToAdd = block.ItemTypes.ToList();
-                    var newTypesToAdd = new List<Item.ItemTypes>(actualTypes);
+                    var actualTypes = dictionary[surfaceByType.Surface.BlockId].ItemTypes.ToList();
+                    var typesToAdd = surfaceByType.ItemTypes.ToList();
 
-                    typesToAdd.ForEach(type =>
-                    {
-                        if (actualTypes.All(x => x != type))
-                            newTypesToAdd.Add(type);
-                    });
+                    var newItemTypes = new List<Item.ItemTypes>(actualTypes);
 
-                    dictionary[block.Block.BlockId].ItemTypes = newTypesToAdd;
+                    foreach (var itemType in typesToAdd.Where(itemType => !newItemTypes.Exists(newItemType => newItemType == itemType)))
+                        newItemTypes.Add(itemType);
+
+                    dictionary[surfaceByType.Surface.BlockId].ItemTypes = newItemTypes;
                 }
                 else
                 {
-                    var typesToAdd = block.ItemTypes.ToList();
+                    var typesToAdd = surfaceByType.ItemTypes.ToList();
 
                     dictionary.Add(
-                        block.Block.BlockId,
+                        surfaceByType.Surface.BlockId,
                         new SurfaceByType
                         {
-                            Block = block.Block,
+                            Surface = surfaceByType.Surface,
                             ItemTypes = typesToAdd
                         });
                 }
-            });
 
             return dictionary.Select(d => new SurfaceByType
                 {
-                    Block = allBlocks.First(b => b.Block.BlockId == d.Key).Block,
+                    Surface = allSurfaces.First(b => b.Surface.BlockId == d.Key).Surface,
                     ItemTypes = d.Value.ItemTypes
                 })
                 .ToList();
         }
 
         private static List<Item> BuildItemsToDisplay(
-            IEnumerable<Item> itemsInInventory,
+            ICollection<Item> itemsInInventory,
             IEnumerable<Item> itemsWithThreshold)
         {
-            var itemsToDisplay = itemsInInventory.ToList();
+            var result = new List<Item>(itemsInInventory);
 
             foreach (var itemWithThreshold in itemsWithThreshold)
-                if (!itemsToDisplay.Any(itemToDisplay =>
-                        itemToDisplay.ItemType == itemWithThreshold.ItemType &&
-                        itemToDisplay.ItemSubType == itemWithThreshold.ItemSubType))
-                    itemsToDisplay.Add(new Item(itemWithThreshold.ItemDefinitionId, 0));
+            {
+                var isItemWithThresholdFound = itemsInInventory.Any(itemToDisplay => itemToDisplay.IsSameAs(itemWithThreshold));
 
-            return itemsToDisplay.OrderBy(item => item.ItemType).ThenBy(item => item.Name).ToList();
+                if (!isItemWithThresholdFound)
+                    itemsInInventory.Add(new Item(itemWithThreshold.ItemDefinitionId, 0));
+            }
+
+            return result.OrderBy(item => item.ItemType).ThenBy(item => item.Name).ToList();
         }
 
         private static bool HasItemThresholdDefined(Item item, IEnumerable<Item> itemsWithThreshold)

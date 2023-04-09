@@ -26,7 +26,7 @@ namespace MyGridAssistant
         private List<IMyPowerProducer> _blocksProducingPower;
         private List<IMyTerminalBlock> _blocksWithStorage;
         private List<IMyDoor> _doors;
-        private Item[] _itemsToProduce;
+        private List<Item> _itemsToProduce;
 
         public Program()
         {
@@ -87,9 +87,9 @@ namespace MyGridAssistant
                 if (_autoCleanupStorages)
                     _autoCleanup.Cleanup(_blocksWithStorage, _blocksProducingItems);
             });
-            
+
             WhenItsTimeTo(TimedAction.DisplayStats, () =>
-                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks, _logger));
+                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks));
 
             WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
             {
@@ -176,7 +176,7 @@ namespace MyGridAssistant
             var superconductorValue = SetupCustomData(superconductorKeyName, "0");
             var thrustComponentValue = SetupCustomData(thrustKeyName, "0");
 
-            _itemsToProduce = new[]
+            _itemsToProduce = new List<Item>
             {
                 InitAutoProductionValue(bulletproofGlassValue, "BulletproofGlass"),
                 InitAutoProductionValue(canvasValue, "Canvas"),

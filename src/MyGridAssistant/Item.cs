@@ -327,7 +327,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/CobaltOreToIngot");
                     Volume = 0.112f;
 
                     break;
@@ -336,7 +336,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GoldOreToIngot");
                     Volume = 0.052f;
 
                     break;
@@ -345,7 +345,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Stone;
                     Name = "Gravel";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/StoneOreToIngot");
                     Volume = 0.37f;
 
                     break;
@@ -354,7 +354,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/IronOreToIngot");
                     Volume = 0.127f;
 
                     break;
@@ -363,7 +363,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Powder";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MagnesiumOreToIngot");
                     Volume = 0.575f;
 
                     break;
@@ -372,7 +372,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NickelOreToIngot");
                     Volume = 0.112f;
 
                     break;
@@ -381,7 +381,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PlatinumOreToIngot");
                     Volume = 0.047f;
 
                     break;
@@ -390,7 +390,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Wafer";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SiliconOreToIngot");
                     Volume = 0.429f;
 
                     break;
@@ -408,7 +408,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ingot;
                     ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ingot";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/UraniumOreToIngot");
                     Volume = 0.052f;
 
                     break;
@@ -417,7 +417,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Cobalt");
                     Volume = 0.37f;
 
                     break;
@@ -425,7 +425,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Gold");
                     Volume = 0.37f;
 
                     break;
@@ -433,7 +433,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Ice;
                     Name = "Ice";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Ice");
                     Volume = 0.37f;
 
                     break;
@@ -441,7 +441,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Iron");
                     Volume = 0.37f;
 
                     break;
@@ -449,7 +449,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Magnesium");
                     Volume = 0.37f;
 
                     break;
@@ -457,7 +457,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Nickel");
                     Volume = 0.37f;
 
                     break;
@@ -465,7 +465,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Platinum");
                     Volume = 0.37f;
 
                     break;
@@ -473,7 +473,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Scrap;
                     Name = "Scrap Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Scrap");
                     Volume = 0.37f;
 
                     break;
@@ -481,7 +481,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Silicon");
                     Volume = 0.37f;
 
                     break;
@@ -489,7 +489,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Silver");
                     Volume = 0.37f;
 
                     break;
@@ -497,7 +497,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Stone;
                     Name = "Stone";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Stone");
                     Volume = 0.37f;
 
                     break;
@@ -505,7 +505,7 @@ namespace MyGridAssistant
                     ItemType = ItemTypes.Ore;
                     ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ore";
-                    ItemDefinitionId = new MyDefinitionId();
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_Ore/Uranium");
                     Volume = 0.37f;
 
                     break;

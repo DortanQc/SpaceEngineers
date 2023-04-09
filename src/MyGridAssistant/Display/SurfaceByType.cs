@@ -6,6 +6,6 @@ namespace MyGridAssistant
     {
         public IEnumerable<Item.ItemTypes> ItemTypes { get; set; }
 
-        public Surface Block { get; set; }
+        public Surface Surface { get; set; }
     }
 }
