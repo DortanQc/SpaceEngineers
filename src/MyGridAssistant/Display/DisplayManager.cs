@@ -622,6 +622,30 @@ namespace MyGridAssistant
                                     : Color.Red
                             );
                         });
+
+                    monitoringData.ForeignPowerConsumption.Batteries
+                        .OrderBy(x => x.Name)
+                        .ToList()
+                        .ForEach(battery =>
+                        {
+                            double fill = battery.MaxStoredPower == 0
+                                ? 0
+                                : battery.CurrentStoredPower / battery.MaxStoredPower;
+
+                            if (fill < .99f)
+                                currentYPos = engin.AddProgressBar(
+                                    battery.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill,
+                                    battery.IsCharging
+                                        ? Color.DarkGreen
+                                        : Color.DarkRed
+                                );
+                        });
                 }
 
                 if (monitoringData.PowerConsumption.Reactors.Any())

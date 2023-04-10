@@ -20,6 +20,8 @@ namespace MyGridAssistant
 
         public PowerInfo PowerConsumption { get; private set; }
 
+        public PowerInfo ForeignPowerConsumption { get; private set; }
+
         public List<CargoInfo> Cargos { get; private set; }
 
         public List<HydrogenTankInfo> HydrogenTanks { get; private set; }
@@ -29,6 +31,7 @@ namespace MyGridAssistant
             _items = new Dictionary<MyItemType, Item>();
             _itemsInProduction = new Dictionary<MyDefinitionId, Item>();
             PowerConsumption = new PowerInfo();
+            ForeignPowerConsumption = new PowerInfo();
             Cargos = new List<CargoInfo>();
             HydrogenTanks = new List<HydrogenTankInfo>();
         }

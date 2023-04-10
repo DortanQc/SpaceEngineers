@@ -120,6 +120,29 @@ namespace MyGridAssistant
             _logger.LogInfo("GridMonitoring.ScanPower_13", $"Available Ice: {MonitoringData.PowerConsumption.AvailableIce}");
         }
 
+        private void ScanForeignPower(List<IMyPowerProducer> powerBlocks)
+        {
+            powerBlocks.ForEach(block =>
+            {
+                var battery = block as IMyBatteryBlock;
+
+                if (battery != null)
+                    MonitoringData.ForeignPowerConsumption.Batteries.Add(new BatteryInfo
+                    {
+                        Name = battery.CustomName,
+                        IsCharging = battery.IsCharging,
+                        CurrentStoredPower = battery.CurrentStoredPower,
+                        MaxStoredPower = battery.MaxStoredPower,
+                        CurrentOutput = battery.CurrentOutput,
+                        MaxOutput = battery.MaxOutput
+                    });
+            });
+
+            _logger.LogInfo("GridMonitoring.ScanForeignPower_1", "");
+            _logger.LogInfo("GridMonitoring.ScanForeignPower_2", "** Power **");
+            _logger.LogInfo("GridMonitoring.ScanForeignPower_3", $"Foreign Battery Count: {MonitoringData.ForeignPowerConsumption.Batteries.Count}");
+        }
+
         private void ScanStorageCapacity(IEnumerable<IMyTerminalBlock> storageBlocks)
         {
             storageBlocks
@@ -208,6 +231,7 @@ namespace MyGridAssistant
         public void UpdateData(
             List<IMyTerminalBlock> allBlocks,
             List<IMyPowerProducer> powerBlocks,
+            List<IMyPowerProducer> foreignPowerBlocks,
             List<IMyTerminalBlock> storageBlocks,
             List<IMyProductionBlock> productionBlocks,
             IEnumerable<IMyGasTank> gasTanks)
@@ -217,6 +241,7 @@ namespace MyGridAssistant
             ScanStorageCapacity(storageBlocks);
             ScanAllInventory(allBlocks);
             ScanPower(powerBlocks);
+            ScanForeignPower(foreignPowerBlocks);
             ScanProduction(productionBlocks);
             ScanHydrogen(gasTanks);
         }

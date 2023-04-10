@@ -26,6 +26,8 @@ namespace MyGridAssistant
         private List<IMyPowerProducer> _blocksProducingPower;
         private List<IMyTerminalBlock> _blocksWithStorage;
         private List<IMyDoor> _doors;
+        private List<IMyTerminalBlock> _foreignBlocks;
+        private List<IMyPowerProducer> _foreignBlocksProducingPower;
         private List<Item> _itemsToProduce;
 
         public Program()
@@ -34,7 +36,9 @@ namespace MyGridAssistant
 
             _logger = new MyGridAssistantLogger(Echo);
             _blocks = new List<IMyTerminalBlock>();
+            _foreignBlocks = new List<IMyTerminalBlock>();
             _blocksProducingPower = new List<IMyPowerProducer>();
+            _foreignBlocksProducingPower = new List<IMyPowerProducer>();
             _blocksWithStorage = new List<IMyTerminalBlock>();
             _blocksProducingItems = new List<IMyProductionBlock>();
             _blocksHoldingGas = new List<IMyGasTank>();
@@ -60,8 +64,10 @@ namespace MyGridAssistant
             WhenItsTimeTo(TimedAction.ScanGrid, () =>
             {
                 _blocks = ExtractAllTerminalBlocks();
+                _foreignBlocks = ExtractAllForeignTerminalBlocks();
 
                 _blocksProducingPower = ExtractPowerBlocks(_blocks);
+                _foreignBlocksProducingPower = ExtractPowerBlocks(_foreignBlocks);
                 _blocksWithStorage = ExtractStorageBlocks(_blocks);
                 _blocksProducingItems = ExtractItemProductionBlocks(_blocks);
                 _blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
@@ -70,6 +76,7 @@ namespace MyGridAssistant
                 _monitoring.UpdateData(
                     _blocks,
                     _blocksProducingPower,
+                    _foreignBlocksProducingPower,
                     _blocksWithStorage,
                     _blocksProducingItems,
                     _blocksHoldingGas);
@@ -232,6 +239,15 @@ namespace MyGridAssistant
 
         private static bool InitConfig(string customDataValue) =>
             (customDataValue ?? string.Empty).Equals("true", StringComparison.InvariantCultureIgnoreCase);
+
+        private List<IMyTerminalBlock> ExtractAllForeignTerminalBlocks()
+        {
+            var blocks = new List<IMyTerminalBlock>();
+
+            GridTerminalSystem.GetBlocks(blocks);
+
+            return blocks.Where(block => block.IsSameConstructAs(Me) == false).ToList();
+        }
 
         private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
         {
