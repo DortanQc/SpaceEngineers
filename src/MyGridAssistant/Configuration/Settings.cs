@@ -15,8 +15,6 @@
         public const string STATS_INVENTORY_INGOTS = "stats-inventory-ingots";
         public const string STATS_INVENTORY_TOOLS = "stats-inventory-tools";
         public const string STATS_INVENTORY_AMMUNITION = "stats-inventory-ammunition";
-        public const string GRID_MANAGER_MENU_ACCESS = "grid-manager-menu-access";
-        public const string GRID_MANAGER_MENU_SHIP_CONTROLLABLE = "grid-manager-menu-ship-controllable";
         public const string DEFAULT_STORAGE_FOR_COMPONENTS = "component-default-storage";
         public const string DEFAULT_STORAGE_FOR_INGOTS = "ingot-default-storage";
         public const string DEFAULT_STORAGE_FOR_TOOLS = "tool-default-storage";
@@ -28,5 +26,6 @@
         public const string AUTO_SHUTDOWN_DOORS_ACTIVE = "auto-shutdown-doors";
         public const string AUTO_CLEANUP_STORAGES_ACTIVE = "auto-cleanup-storages";
         public const string COMPONENT_THRESHOLD = "component-threshold";
+        public const string HIDE_POWER_USAGE_DETAILS = "hide-power-usage-details";
     }
 }

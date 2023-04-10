@@ -419,6 +419,7 @@ namespace MyGridAssistant
 
             textSurfaceBlock.ForEach(surface =>
             {
+                var withDetails = surface.Configuration.GetConfig(Settings.HIDE_POWER_USAGE_DETAILS) != null;
                 var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
                 var keepRatio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
@@ -462,28 +463,28 @@ namespace MyGridAssistant
 
                     currentYPos += 5f;
 
-                    var currentTotalTurbineOutput =
-                        monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
+                    var currentTotalTurbineOutput = monitoringData.PowerConsumption.WindTurbines.Sum(t => t.CurrentOutput);
 
-                    monitoringData.PowerConsumption.WindTurbines
-                        .OrderBy(x => x.Name)
-                        .ToList()
-                        .ForEach(turbine =>
-                        {
-                            double fill = currentTotalTurbineOutput == 0
-                                ? 0
-                                : turbine.CurrentOutput / currentTotalTurbineOutput;
+                    if (withDetails)
+                        monitoringData.PowerConsumption.WindTurbines
+                            .OrderBy(x => x.Name)
+                            .ToList()
+                            .ForEach(turbine =>
+                            {
+                                double fill = currentTotalTurbineOutput == 0
+                                    ? 0
+                                    : turbine.CurrentOutput / currentTotalTurbineOutput;
 
-                            currentYPos = engin.AddProgressBar(
-                                turbine.Name,
-                                smallBarSize,
-                                5f,
-                                .50f,
-                                LEFT_MARGIN + 30f,
-                                currentYPos + 1f,
-                                fill
-                            );
-                        });
+                                currentYPos = engin.AddProgressBar(
+                                    turbine.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill
+                                );
+                            });
                 }
 
                 if (monitoringData.PowerConsumption.SolarPanels.Any())
@@ -509,25 +510,26 @@ namespace MyGridAssistant
                     var currentTotalSolarPanelsOutput =
                         monitoringData.PowerConsumption.SolarPanels.Sum(t => t.CurrentOutput);
 
-                    monitoringData.PowerConsumption.SolarPanels
-                        .OrderBy(x => x.Name)
-                        .ToList()
-                        .ForEach(solarPanel =>
-                        {
-                            double fill = currentTotalSolarPanelsOutput == 0
-                                ? 0
-                                : solarPanel.CurrentOutput / currentTotalSolarPanelsOutput;
+                    if (withDetails)
+                        monitoringData.PowerConsumption.SolarPanels
+                            .OrderBy(x => x.Name)
+                            .ToList()
+                            .ForEach(solarPanel =>
+                            {
+                                double fill = currentTotalSolarPanelsOutput == 0
+                                    ? 0
+                                    : solarPanel.CurrentOutput / currentTotalSolarPanelsOutput;
 
-                            currentYPos = engin.AddProgressBar(
-                                solarPanel.Name,
-                                smallBarSize,
-                                5f,
-                                .50f,
-                                LEFT_MARGIN + 30f,
-                                currentYPos + 1f,
-                                fill
-                            );
-                        });
+                                currentYPos = engin.AddProgressBar(
+                                    solarPanel.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill
+                                );
+                            });
                 }
 
                 if (monitoringData.PowerConsumption.Batteries.Any())
@@ -550,28 +552,28 @@ namespace MyGridAssistant
 
                     currentYPos += 5f;
 
-                    var currentTotalBatteriesOutput =
-                        monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
+                    var currentTotalBatteriesOutput = monitoringData.PowerConsumption.Batteries.Sum(t => t.CurrentOutput);
 
-                    monitoringData.PowerConsumption.Batteries
-                        .OrderBy(x => x.Name)
-                        .ToList()
-                        .ForEach(battery =>
-                        {
-                            double fill = currentTotalBatteriesOutput == 0
-                                ? 0
-                                : battery.CurrentOutput / currentTotalBatteriesOutput;
+                    if (withDetails)
+                        monitoringData.PowerConsumption.Batteries
+                            .OrderBy(x => x.Name)
+                            .ToList()
+                            .ForEach(battery =>
+                            {
+                                double fill = currentTotalBatteriesOutput == 0
+                                    ? 0
+                                    : battery.CurrentOutput / currentTotalBatteriesOutput;
 
-                            currentYPos = engin.AddProgressBar(
-                                battery.Name,
-                                smallBarSize,
-                                5f,
-                                .50f,
-                                LEFT_MARGIN + 30f,
-                                currentYPos + 1f,
-                                fill
-                            );
-                        });
+                                currentYPos = engin.AddProgressBar(
+                                    battery.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill
+                                );
+                            });
 
                     currentYPos += 10f;
 
@@ -603,7 +605,7 @@ namespace MyGridAssistant
                         .ToList()
                         .ForEach(battery =>
                         {
-                            double fill = battery.MaxOutput == 0
+                            double fill = battery.MaxStoredPower == 0
                                 ? 0
                                 : battery.CurrentStoredPower / battery.MaxStoredPower;
 
@@ -665,28 +667,28 @@ namespace MyGridAssistant
 
                     currentYPos += 10f;
 
-                    var currentTotalReactorsOutput =
-                        monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
+                    var currentTotalReactorsOutput = monitoringData.PowerConsumption.Reactors.Sum(t => t.CurrentOutput);
 
-                    monitoringData.PowerConsumption.Reactors
-                        .OrderBy(x => x.Name)
-                        .ToList()
-                        .ForEach(reactor =>
-                        {
-                            double fill = currentTotalReactorsOutput == 0
-                                ? 0
-                                : reactor.CurrentOutput / currentTotalReactorsOutput;
+                    if (withDetails)
+                        monitoringData.PowerConsumption.Reactors
+                            .OrderBy(x => x.Name)
+                            .ToList()
+                            .ForEach(reactor =>
+                            {
+                                double fill = currentTotalReactorsOutput == 0
+                                    ? 0
+                                    : reactor.CurrentOutput / currentTotalReactorsOutput;
 
-                            currentYPos = engin.AddProgressBar(
-                                reactor.Name,
-                                smallBarSize,
-                                5f,
-                                .50f,
-                                LEFT_MARGIN + 30f,
-                                currentYPos + 1f,
-                                fill
-                            );
-                        });
+                                currentYPos = engin.AddProgressBar(
+                                    reactor.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill
+                                );
+                            });
                 }
 
                 if (monitoringData.PowerConsumption.HydrogenEngines.Any())
@@ -760,28 +762,28 @@ namespace MyGridAssistant
 
                     currentYPos += 10f;
 
-                    var currentTotalEngineOutput =
-                        monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
+                    var currentTotalEngineOutput = monitoringData.PowerConsumption.HydrogenEngines.Sum(t => t.CurrentOutput);
 
-                    monitoringData.PowerConsumption.HydrogenEngines
-                        .OrderBy(x => x.Name)
-                        .ToList()
-                        .ForEach(engine =>
-                        {
-                            double fill = currentTotalEngineOutput == 0
-                                ? 0
-                                : engine.CurrentOutput / currentTotalEngineOutput;
+                    if (withDetails)
+                        monitoringData.PowerConsumption.HydrogenEngines
+                            .OrderBy(x => x.Name)
+                            .ToList()
+                            .ForEach(engine =>
+                            {
+                                double fill = currentTotalEngineOutput == 0
+                                    ? 0
+                                    : engine.CurrentOutput / currentTotalEngineOutput;
 
-                            currentYPos = engin.AddProgressBar(
-                                engine.Name,
-                                smallBarSize,
-                                5f,
-                                .50f,
-                                LEFT_MARGIN + 30f,
-                                currentYPos + 1f,
-                                fill
-                            );
-                        });
+                                currentYPos = engin.AddProgressBar(
+                                    engine.Name,
+                                    smallBarSize,
+                                    5f,
+                                    .50f,
+                                    LEFT_MARGIN + 30f,
+                                    currentYPos + 1f,
+                                    fill
+                                );
+                            });
                 }
 
                 SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
