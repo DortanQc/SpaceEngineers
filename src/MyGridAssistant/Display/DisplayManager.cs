@@ -369,45 +369,65 @@ namespace MyGridAssistant
             return inventoryCount >= item.Amount;
         }
 
-        private static void DisplayStorageCapacity(
+        private void DisplayStorageCapacity(
             MonitoringData monitoringData,
             IEnumerable<IMyTerminalBlock> blocks)
         {
-            var textBuilder = new StringBuilder();
-
-            var remainingCapacity =
-                monitoringData.Cargos.Sum(c => (float)c.MaxVolume) -
-                monitoringData.Cargos.Sum(c => (float)c.CurrentVolume);
-
-            textBuilder
-                .AppendLine("** Storage Capacity **")
-                .AppendLine()
-                .AppendLine($"Max Storage Capacity: {monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} m^3")
-                .AppendLine($"Current Volume: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume):0.##} m^3")
-                .AppendLine($"Remaining Capacity: {remainingCapacity:0.##} m^3")
-                .AppendLine(
-                    $"Filled Ratio: {monitoringData.Cargos.Sum(c => (float)c.CurrentVolume) * 100 / monitoringData.Cargos.Sum(c => (float)c.MaxVolume):0.##} %");
-
-            if (monitoringData.Cargos.Any())
-                textBuilder
-                    .AppendLine()
-                    .AppendLine("** Containers ** ")
-                    .AppendLine();
-
-            monitoringData.Cargos.OrderBy(b => b.Name)
-                .ToList()
-                .ForEach(cargo =>
-                {
-                    textBuilder
-                        .Append(cargo.Name)
-                        .Append(" - ")
-                        .AppendLine(
-                            $"{cargo.CurrentVolume.ToIntSafe() * 100 / cargo.MaxVolume.ToIntSafe():0.##} %");
-                });
+            const float LEFT_MARGIN = 10f;
 
             var textSurfaceBlock = GetDisplayBlocks(blocks, Settings.STATS_STORAGE_CAPACITY);
 
-            textSurfaceBlock.ForEach(block => block.TextSurface.WriteText(textBuilder));
+            textSurfaceBlock.ForEach(surface =>
+            {
+                var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
+                var keepRatio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
+
+                var textSurface = surface.TextSurface;
+                var engin = new GraphicEngine(textSurface, keepRatio, _logger);
+                var fullBarSize = textSurface.SurfaceSize.X - LEFT_MARGIN * 2;
+                var smallBarSize = textSurface.SurfaceSize.X - 30f - LEFT_MARGIN * 2;
+
+                engin.BackgroundColor = new Color(0, 0, 0, 255);
+                var fillRatio = monitoringData.Cargos.Sum(c => (float)c.MaxVolume) == 0
+                    ? 0
+                    : monitoringData.Cargos.Sum(c => (float)c.CurrentVolume) / monitoringData.Cargos.Sum(c => (float)c.MaxVolume);
+
+                var currentYPos = engin.AddProgressBar(
+                    "Storage Capacity",
+                    fullBarSize,
+                    30f,
+                    1f,
+                    LEFT_MARGIN,
+                    topMargin,
+                    fillRatio
+                );
+
+                currentYPos += 10f;
+
+                monitoringData.Cargos
+                    .OrderBy(b => b.Name)
+                    .ToList()
+                    .ForEach(cargo =>
+                    {
+                        double fill = cargo.MaxVolume.ToIntSafe() == 0
+                            ? 0
+                            : (float)cargo.CurrentVolume / cargo.MaxVolume.ToIntSafe();
+
+                        currentYPos = engin.AddProgressBar(
+                            cargo.Name,
+                            smallBarSize,
+                            5f,
+                            .50f,
+                            LEFT_MARGIN + 30f,
+                            currentYPos + 1f,
+                            fill
+                        );
+                    });
+
+                SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
+
+                engin.Draw();
+            });
         }
 
         private void DisplayElectricalUsage(MonitoringData monitoringData, IEnumerable<IMyTerminalBlock> blocks)
@@ -912,6 +932,57 @@ namespace MyGridAssistant
                     isFirst = false;
                     currentYPos = rowYPos;
                 }
+
+                currentYPos += 5f;
+
+                engin.AddText(
+                    $"Available Ice Ore: {monitoringData.PowerConsumption.AvailableIce.ToString()}",
+                    .75f,
+                    LEFT_MARGIN + 50f,
+                    currentYPos,
+                    TextAlignment.LEFT,
+                    textSurface.ScriptForegroundColor
+                );
+
+                currentYPos = engin.AddSprite(
+                    "MyObjectBuilder_Ore/Ice",
+                    15,
+                    15,
+                    textSurface.ScriptBackgroundColor,
+                    LEFT_MARGIN + 30f,
+                    currentYPos,
+                    TextAlignment.LEFT,
+                    0f,
+                    false
+                );
+
+                var hydroFillRatio = monitoringData.HydrogenTanks.Sum(h => h.FilledRatio);
+                var availableTank = monitoringData.HydrogenTanks.Count;
+
+                var hydrogenRatio = availableTank == 0
+                    ? 0
+                    : hydroFillRatio / availableTank;
+
+                engin.AddText(
+                    $"Available Hydrogen in tanks: {hydrogenRatio * 100:F2} %",
+                    .75f,
+                    LEFT_MARGIN + 50f,
+                    currentYPos + 1f,
+                    TextAlignment.LEFT,
+                    textSurface.ScriptForegroundColor
+                );
+
+                currentYPos = engin.AddSprite(
+                    "IconHydrogen",
+                    15,
+                    15,
+                    textSurface.ScriptBackgroundColor,
+                    LEFT_MARGIN + 30f,
+                    currentYPos + 1f,
+                    TextAlignment.LEFT,
+                    0f,
+                    false
+                );
 
                 SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);
 
