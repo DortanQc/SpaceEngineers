@@ -159,6 +159,9 @@ namespace MyGridAssistant
             var steelPlateKeyName = $"{Settings.COMPONENT_THRESHOLD}-SteelPlate";
             var superconductorKeyName = $"{Settings.COMPONENT_THRESHOLD}-Superconductor";
             var thrustKeyName = $"{Settings.COMPONENT_THRESHOLD}-ThrustComponent";
+            var gatlingAmmoBoxName = $"{Settings.COMPONENT_THRESHOLD}-GatlingAmmoBox";
+            var assaultCannonShellName = $"{Settings.COMPONENT_THRESHOLD}-AssaultCannonShell";
+            var largeRailgunSabotName = $"{Settings.COMPONENT_THRESHOLD}-LargeRailgunSabot";
 
             var bulletproofGlassValue = SetupCustomData(bulletproofGlassKeyName, "0");
             var canvasValue = SetupCustomData(canvasKeyName, "0");
@@ -182,6 +185,9 @@ namespace MyGridAssistant
             var steelPlateValue = SetupCustomData(steelPlateKeyName, "0");
             var superconductorValue = SetupCustomData(superconductorKeyName, "0");
             var thrustComponentValue = SetupCustomData(thrustKeyName, "0");
+            var gatlingAmmoBoxValue = SetupCustomData(gatlingAmmoBoxName, "0");
+            var assaultCannonShellValue = SetupCustomData(assaultCannonShellName, "0");
+            var largeRailgunSabotValue = SetupCustomData(largeRailgunSabotName, "0");
 
             _itemsToProduce = new List<Item>
             {
@@ -206,7 +212,10 @@ namespace MyGridAssistant
                 InitAutoProductionValue(solarCellValue, "SolarCell"),
                 InitAutoProductionValue(steelPlateValue, "SteelPlate"),
                 InitAutoProductionValue(superconductorValue, "Superconductor"),
-                InitAutoProductionValue(thrustComponentValue, "ThrustComponent")
+                InitAutoProductionValue(thrustComponentValue, "ThrustComponent"),
+                InitAutoProductionValue(gatlingAmmoBoxValue, "NATO_25x184mmMagazine"),
+                InitAutoProductionValue(assaultCannonShellValue, "MediumCalibreAmmo"),
+                InitAutoProductionValue(largeRailgunSabotValue, "LargeRailgunAmmo")
             };
         }
 

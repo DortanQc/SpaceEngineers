@@ -26,6 +26,6 @@
         public const string AUTO_SHUTDOWN_DOORS_ACTIVE = "auto-shutdown-doors";
         public const string AUTO_CLEANUP_STORAGES_ACTIVE = "auto-cleanup-storages";
         public const string COMPONENT_THRESHOLD = "component-threshold";
-        public const string HIDE_POWER_USAGE_DETAILS = "hide-power-usage-details";
+        public const string SHOW_POWER_USAGE_DETAILS = "show-power-usage-details";
     }
 }

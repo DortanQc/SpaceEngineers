@@ -439,7 +439,7 @@ namespace MyGridAssistant
 
             textSurfaceBlock.ForEach(surface =>
             {
-                var withDetails = surface.Configuration.GetConfig(Settings.HIDE_POWER_USAGE_DETAILS) != null;
+                var withDetails = surface.Configuration.GetConfig(Settings.SHOW_POWER_USAGE_DETAILS) != null;
                 var topMargin = GetTopMargin(surface.BlockId, surface.TextSurface.Name);
                 var keepRatio = surface.Configuration.GetConfig(Settings.LCD_WIDTH_RATIO) != null;
 
@@ -601,12 +601,12 @@ namespace MyGridAssistant
                         "IconEnergy",
                         15,
                         15,
-                        textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN + 10f,
                         currentYPos,
                         TextAlignment.LEFT,
                         0f,
-                        false
+                        false,
+                        Color.Yellow
                     );
 
                     currentYPos = engin.AddText(
@@ -614,8 +614,7 @@ namespace MyGridAssistant
                         .75f,
                         LEFT_MARGIN + 30f,
                         currentYPos,
-                        TextAlignment.LEFT,
-                        textSurface.ScriptForegroundColor
+                        TextAlignment.LEFT
                     );
 
                     currentYPos += 5f;
@@ -693,20 +692,19 @@ namespace MyGridAssistant
                         .75f,
                         LEFT_MARGIN + 50f,
                         currentYPos,
-                        TextAlignment.LEFT,
-                        textSurface.ScriptForegroundColor
+                        TextAlignment.LEFT
                     );
 
                     currentYPos = engin.AddSprite(
                         "MyObjectBuilder_Ingot/Uranium",
                         15,
                         15,
-                        textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN + 30f,
                         currentYPos,
                         TextAlignment.LEFT,
                         0f,
-                        false
+                        false,
+                        new Color(26, 174, 122, 255)
                     );
 
                     currentYPos += 10f;
@@ -760,20 +758,19 @@ namespace MyGridAssistant
                         .75f,
                         LEFT_MARGIN + 50f,
                         currentYPos,
-                        TextAlignment.LEFT,
-                        textSurface.ScriptForegroundColor
+                        TextAlignment.LEFT
                     );
 
                     currentYPos = engin.AddSprite(
                         "MyObjectBuilder_Ore/Ice",
                         15,
                         15,
-                        textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN + 30f,
                         currentYPos,
                         TextAlignment.LEFT,
                         0f,
-                        false
+                        false,
+                        new Color(255, 255, 255, 255)
                     );
 
                     var hydroFillRatio = monitoringData.HydrogenTanks.Sum(h => h.FilledRatio);
@@ -788,20 +785,19 @@ namespace MyGridAssistant
                         .75f,
                         LEFT_MARGIN + 50f,
                         currentYPos + 1f,
-                        TextAlignment.LEFT,
-                        textSurface.ScriptForegroundColor
+                        TextAlignment.LEFT
                     );
 
                     currentYPos = engin.AddSprite(
                         "IconHydrogen",
                         15,
                         15,
-                        textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN + 30f,
                         currentYPos + 1f,
                         TextAlignment.LEFT,
                         0f,
-                        false
+                        false,
+                        new Color(61, 165, 244, 255)
                     );
 
                     currentYPos += 10f;
@@ -921,12 +917,12 @@ namespace MyGridAssistant
                         "IconHydrogen",
                         ICON_SIZE,
                         ICON_SIZE,
-                        textSurface.ScriptBackgroundColor,
                         LEFT_MARGIN,
                         currentYPos + 25f,
                         TextAlignment.LEFT,
                         0f,
-                        false
+                        false,
+                        new Color(61, 165, 244, 255)
                     );
 
                     isFirst = false;
@@ -940,20 +936,19 @@ namespace MyGridAssistant
                     .75f,
                     LEFT_MARGIN + 50f,
                     currentYPos,
-                    TextAlignment.LEFT,
-                    textSurface.ScriptForegroundColor
+                    TextAlignment.LEFT
                 );
 
                 currentYPos = engin.AddSprite(
                     "MyObjectBuilder_Ore/Ice",
                     15,
                     15,
-                    textSurface.ScriptBackgroundColor,
                     LEFT_MARGIN + 30f,
                     currentYPos,
                     TextAlignment.LEFT,
                     0f,
-                    false
+                    false,
+                    new Color(255, 255, 255, 255)
                 );
 
                 var hydroFillRatio = monitoringData.HydrogenTanks.Sum(h => h.FilledRatio);
@@ -968,20 +963,19 @@ namespace MyGridAssistant
                     .75f,
                     LEFT_MARGIN + 50f,
                     currentYPos + 1f,
-                    TextAlignment.LEFT,
-                    textSurface.ScriptForegroundColor
+                    TextAlignment.LEFT
                 );
 
                 currentYPos = engin.AddSprite(
                     "IconHydrogen",
                     15,
                     15,
-                    textSurface.ScriptBackgroundColor,
                     LEFT_MARGIN + 30f,
                     currentYPos + 1f,
                     TextAlignment.LEFT,
                     0f,
-                    false
+                    false,
+                    new Color(61, 165, 244, 255)
                 );
 
                 SetTopMargin(surface.BlockId, textSurface.Name, currentYPos, textSurface.SurfaceSize.Y);

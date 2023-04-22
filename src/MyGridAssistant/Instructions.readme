@@ -1,4 +1,4 @@
-﻿R e a d m e
+R e a d m e
 -----------
 
 ** Grid Manager **
@@ -17,7 +17,7 @@ Add "exclude-from-auto-production" in any production block's custom data you wis
 Add "stats-storage-capacity" in any LCD's custom data you wish to show storage capacity related statistics
 Add "stats-power-usage" in any LCD's custom data you wish to show power usage statistics (LCD BLOCK SCRIPT)
     Add "lcd-width-ratio" in any wide LCD's custom data you wish to preserve height ratio
-    Add "hide-power-usage-details" in any power usage LCD you want to hide individual energy bloc details
+    Add "show-power-usage-details" in any power usage LCD you want to hide individual energy bloc details
 Add "stats-hydrogen-usage" in any LCD's custom data you wish to show hydrogen usage statistics
     Add "lcd-width-ratio" in any wide LCD's custom data you wish to preserve height ratio
 Add "stats-inventory" in any LCD's custom data you wish to show all of your inventory

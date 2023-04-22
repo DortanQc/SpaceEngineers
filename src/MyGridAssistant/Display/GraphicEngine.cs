@@ -1,4 +1,4 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRage.Game.GUI.TextPanel;
@@ -8,6 +8,7 @@ namespace MyGridAssistant
 {
     public class GraphicEngine
     {
+        private readonly Color _defaultTextColor = new Color(171, 146, 91, 255);
         private readonly IMyGridAssistantLogger _logger;
         private readonly float _ratio;
         private readonly List<MySprite> _sprites = new List<MySprite>();
@@ -17,6 +18,7 @@ namespace MyGridAssistant
         public GraphicEngine(IMyTextSurface textSurface, bool screenSizeRatio, IMyGridAssistantLogger logger)
         {
             _textSurface = textSurface;
+
             _logger = logger;
             _ratio = screenSizeRatio
                 ? textSurface.SurfaceSize.Y / textSurface.SurfaceSize.X
@@ -33,18 +35,18 @@ namespace MyGridAssistant
         {
             using (var frame = _textSurface.DrawFrame())
             {
-                if (BackgroundColor != null)
+                var bgColor = BackgroundColor ?? _textSurface.ScriptBackgroundColor;
                 {
                     var sprite = new MySprite(
                         SpriteType.TEXTURE,
                         "SquareSimple",
                         size: new Vector2(512.0f, 512.0f * _ratio),
-                        color: new Color(0, 0, 0, 255));
+                        color: bgColor);
 
                     frame.Add(sprite);
                 }
 
-                _sprites.ForEach(sprite => frame.Add(sprite));
+                frame.AddRange(_sprites);
             }
         }
 
@@ -54,15 +56,18 @@ namespace MyGridAssistant
             float left,
             float top,
             TextAlignment alignment,
-            Color color)
+            Color? color = null)
         {
+            if (color == null)
+                color = _defaultTextColor;
+
             const float Y_MARGIN = -5f;
             const float TEXT_BOX_SIZE = 20f;
 
             var sprite = MySprite.CreateText(
                 text,
                 "debug",
-                color,
+                color.Value,
                 scale * _ratio,
                 alignment);
 
@@ -79,12 +84,12 @@ namespace MyGridAssistant
             string spriteId,
             float width,
             float height,
-            Color color,
             float left,
             float top,
             TextAlignment alignment,
             float rotation,
-            bool preserveRatio)
+            bool preserveRatio,
+            Color? color = null)
         {
             var sizeX = width *
                         (preserveRatio
@@ -122,7 +127,7 @@ namespace MyGridAssistant
             Color? color = null)
         {
             if (color == null)
-                color = _textSurface.ScriptBackgroundColor;
+                color = new Color(61, 165, 244);
 
             var textLeftBegin = left + 30f;
             var margin = 5f * textScale;
@@ -132,68 +137,67 @@ namespace MyGridAssistant
                 textScale,
                 textLeftBegin,
                 top,
-                TextAlignment.LEFT,
-                _textSurface.ScriptForegroundColor
+                TextAlignment.LEFT
             );
 
             var barEnd = AddSprite(
                 "SquareSimple",
                 width,
                 barHeight,
-                new Color(10, 10, 10, 200),
                 left,
                 barTop + margin,
                 TextAlignment.LEFT,
                 0f,
-                false
+                false,
+                new Color(47, 50, 52, 255)
             );
 
             AddSprite(
                 "SquareSimple",
                 Convert.ToSingle(fillRatio) * width,
                 barHeight,
-                color.Value,
                 left,
                 barTop + margin,
                 TextAlignment.LEFT,
                 0f,
-                false
+                false,
+                color.Value
             );
 
             AddSprite(
                 "SquareSimple",
                 3f,
                 barHeight,
-                new Color(0, 0, 0, 255),
                 left + width / 4,
                 barTop + margin,
                 TextAlignment.LEFT,
                 0f,
-                false
+                false,
+                new Color(0, 0, 0, 255)
             );
 
             AddSprite(
                 "SquareSimple",
                 3f,
                 barHeight,
-                new Color(0, 0, 0, 255),
                 left + width / 4 * 2,
                 barTop + margin,
                 TextAlignment.LEFT,
                 0f,
-                false
+                false,
+                new Color(0, 0, 0, 255)
             );
 
             AddSprite(
                 "SquareSimple",
                 3f,
                 barHeight,
-                new Color(0, 0, 0, 255),
                 left + width / 4 * 3,
                 barTop + margin,
                 TextAlignment.LEFT,
                 0f,
-                false
+                false,
+                new Color(0, 0, 0, 255)
             );
 
             AddText(
@@ -202,7 +206,7 @@ namespace MyGridAssistant
                 width + left,
                 7f * textScale + top,
                 TextAlignment.RIGHT,
-                _textSurface.ScriptBackgroundColor);
+                color.Value);
 
             return barEnd + 1;
         }

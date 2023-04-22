@@ -67,7 +67,10 @@ namespace MyGridAssistant
             AngleGrinder3,
             AngleGrinder4,
             Welder3,
-            Welder4
+            Welder4,
+            AmmoCannonMagazine,
+            AssaultCannonShell,
+            LargeRailgunAmmo
         }
 
         public enum ItemTypes
@@ -328,7 +331,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Cobalt;
                     Name = "Cobalt Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/CobaltOreToIngot");
-                    Volume = 0.112f;
+                    Volume = 1.12f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/GoldOreToIngot":
@@ -337,7 +340,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Gold;
                     Name = "Gold Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/GoldOreToIngot");
-                    Volume = 0.052f;
+                    Volume = 5.2f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/StoneOreToIngot":
@@ -346,7 +349,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Stone;
                     Name = "Gravel";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/StoneOreToIngot");
-                    Volume = 0.37f;
+                    Volume = 3.7f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/IronOreToIngot":
@@ -355,7 +358,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Iron;
                     Name = "Iron Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/IronOreToIngot");
-                    Volume = 0.127f;
+                    Volume = 1.27f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/MagnesiumOreToIngot":
@@ -364,7 +367,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Magnesium;
                     Name = "Magnesium Powder";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MagnesiumOreToIngot");
-                    Volume = 0.575f;
+                    Volume = 5.75f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/NickelOreToIngot":
@@ -373,7 +376,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Nickel;
                     Name = "Nickel Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NickelOreToIngot");
-                    Volume = 0.112f;
+                    Volume = 1.12f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/PlatinumOreToIngot":
@@ -382,7 +385,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Platinum;
                     Name = "Platinum Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/PlatinumOreToIngot");
-                    Volume = 0.047f;
+                    Volume = 4.7f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/SiliconOreToIngot":
@@ -391,7 +394,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Silicon;
                     Name = "Silicon Wafer";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/SiliconOreToIngot");
-                    Volume = 0.429f;
+                    Volume = 4.29f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/SilverOreToIngot":
@@ -400,7 +403,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Silver;
                     Name = "Silver Ingot";
                     ItemDefinitionId = new MyDefinitionId();
-                    Volume = 0.095f;
+                    Volume = 9.5f;
 
                     break;
                 case "MyObjectBuilder_BlueprintDefinition/UraniumOreToIngot":
@@ -409,7 +412,7 @@ namespace MyGridAssistant
                     ItemSubType = ItemSubTypes.Uranium;
                     Name = "Uranium Ingot";
                     ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/UraniumOreToIngot");
-                    Volume = 0.052f;
+                    Volume = 5.2f;
 
                     break;
 
@@ -669,8 +672,8 @@ namespace MyGridAssistant
                 case "MyObjectBuilder_BlueprintDefinition/NATO_25x184mmMagazine":
                     ItemType = ItemTypes.Ammunition;
                     ItemSubType = ItemSubTypes.Nato25X184MmMagazine;
-                    Name = "NATO 25x184mm";
-                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_5p56x45mmMagazine");
+                    Name = "Gatling ammo box";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/NATO_25x184mmMagazine");
                     Volume = 16f;
 
                     break;
@@ -713,6 +716,36 @@ namespace MyGridAssistant
 
                     break;
 
+                case "MyObjectBuilder_AmmoMagazine/AutocannonClip":
+                case "MyObjectBuilder_BlueprintDefinition/AutocannonClip":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.AmmoCannonMagazine;
+                    Name = "Auto Cannon Magazine";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/AutocannonClip");
+                    Volume = 2.64f;
+
+                    break;
+
+                case "MyObjectBuilder_AmmoMagazine/MediumCalibreAmmo":
+                case "MyObjectBuilder_BlueprintDefinition/MediumCalibreAmmo":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.AssaultCannonShell;
+                    Name = "Assault Cannon Shell";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/MediumCalibreAmmo");
+                    Volume = 3.0f;
+
+                    break;
+                
+                case "MyObjectBuilder_AmmoMagazine/LargeRailgunAmmo":
+                case "MyObjectBuilder_BlueprintDefinition/LargeRailgunAmmo":
+                    ItemType = ItemTypes.Ammunition;
+                    ItemSubType = ItemSubTypes.LargeRailgunAmmo;
+                    Name = "Large Railgun Sabot";
+                    ItemDefinitionId = MyDefinitionId.Parse("MyObjectBuilder_BlueprintDefinition/LargeRailgunAmmo");
+                    Volume = 4.0f;
+
+                    break;
+
                 case "MyObjectBuilder_PhysicalObject/SpaceCredit":
                 case "MyObjectBuilder_BlueprintDefinition/SpaceCredit":
                     ItemType = ItemTypes.Consumable;
@@ -750,6 +783,7 @@ namespace MyGridAssistant
 
                     break;
 
+                //
                 default:
                     ItemType = ItemTypes.Unknown;
                     ItemSubType = ItemSubTypes.Unknown;
