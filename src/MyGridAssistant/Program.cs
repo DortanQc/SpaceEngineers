@@ -1,4 +1,4 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,14 +20,13 @@ namespace MyGridAssistant
         private bool _autoCleanupStorages;
         private bool _autoProduceActive;
         private bool _autoShutDownDoors;
-        private List<IMyTerminalBlock> _blocks;
-        private List<IMyGasTank> _blocksHoldingGas;
-        private List<IMyProductionBlock> _blocksProducingItems;
-        private List<IMyPowerProducer> _blocksProducingPower;
-        private List<IMyTerminalBlock> _blocksWithStorage;
-        private List<IMyDoor> _doors;
-        private List<IMyTerminalBlock> _foreignBlocks;
-        private List<IMyPowerProducer> _foreignBlocksProducingPower;
+        private List<BlockEntity<IMyGasTank>> _blocksHoldingGas;
+        private List<BlockEntity<IMyProductionBlock>> _blocksProducingItems;
+        private List<BlockEntity<IMyPowerProducer>> _blocksProducingPower;
+        private List<BlockEntity<IMyTerminalBlock>> _blocksWithStorage;
+        private List<BlockEntity<IMyTerminalBlock>> _blockWithTextSurfaces;
+        private List<BlockEntity<IMyDoor>> _doors;
+        private List<BlockEntity<IMyPowerProducer>> _foreignBlocksProducingPower;
         private List<Item> _itemsToProduce;
 
         public Program()
@@ -35,14 +34,13 @@ namespace MyGridAssistant
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
             _logger = new MyGridAssistantLogger(Echo);
-            _blocks = new List<IMyTerminalBlock>();
-            _foreignBlocks = new List<IMyTerminalBlock>();
-            _blocksProducingPower = new List<IMyPowerProducer>();
-            _foreignBlocksProducingPower = new List<IMyPowerProducer>();
-            _blocksWithStorage = new List<IMyTerminalBlock>();
-            _blocksProducingItems = new List<IMyProductionBlock>();
-            _blocksHoldingGas = new List<IMyGasTank>();
-            _doors = new List<IMyDoor>();
+            _blocksProducingPower = new List<BlockEntity<IMyPowerProducer>>();
+            _foreignBlocksProducingPower = new List<BlockEntity<IMyPowerProducer>>();
+            _blocksWithStorage = new List<BlockEntity<IMyTerminalBlock>>();
+            _blocksProducingItems = new List<BlockEntity<IMyProductionBlock>>();
+            _blocksHoldingGas = new List<BlockEntity<IMyGasTank>>();
+            _doors = new List<BlockEntity<IMyDoor>>();
+            _blockWithTextSurfaces = new List<BlockEntity<IMyTerminalBlock>>();
             _monitoring = new GridMonitoring(_logger);
             _configuration = new Configuration(Me);
 
@@ -63,18 +61,23 @@ namespace MyGridAssistant
 
             WhenItsTimeTo(TimedAction.ScanGrid, () =>
             {
-                _blocks = ExtractAllTerminalBlocks();
-                _foreignBlocks = ExtractAllForeignTerminalBlocks();
+                var allTerminalBlocks = new List<IMyTerminalBlock>();
+                GridTerminalSystem.GetBlocks(allTerminalBlocks);
 
-                _blocksProducingPower = ExtractPowerBlocks(_blocks);
-                _foreignBlocksProducingPower = ExtractPowerBlocks(_foreignBlocks);
-                _blocksWithStorage = ExtractStorageBlocks(_blocks);
-                _blocksProducingItems = ExtractItemProductionBlocks(_blocks);
-                _blocksHoldingGas = ExtractGasTanksBlocks(_blocks);
-                _doors = ExtractDoorBlocks(_blocks);
+                var blocks = ExtractLocalTerminalBlocks(allTerminalBlocks);
+                var foreignBlocks = ExtractForeignTerminalBlocks(allTerminalBlocks);
+                _blocksProducingPower = ExtractPowerBlocks(blocks);
+                _foreignBlocksProducingPower = ExtractPowerBlocks(foreignBlocks);
+                _blocksWithStorage = ExtractStorageBlocks(blocks);
+                _blocksProducingItems = ExtractItemProductionBlocks(blocks);
+                _blocksHoldingGas = ExtractGasTanksBlocks(blocks);
+                _doors = ExtractDoorBlocks(blocks);
+                _blockWithTextSurfaces = ExtractTextSurfaceBlocks(blocks);
+            });
 
+            WhenItsTimeTo(TimedAction.MonitorGrid, () =>
+            {
                 _monitoring.UpdateData(
-                    _blocks,
                     _blocksProducingPower,
                     _foreignBlocksProducingPower,
                     _blocksWithStorage,
@@ -92,11 +95,13 @@ namespace MyGridAssistant
             WhenItsTimeTo(TimedAction.CleanupStorage, () =>
             {
                 if (_autoCleanupStorages)
-                    _autoCleanup.Cleanup(_blocksWithStorage, _blocksProducingItems);
+                    _autoCleanup.Cleanup(
+                        _blocksWithStorage,
+                        _blocksProducingItems);
             });
 
             WhenItsTimeTo(TimedAction.DisplayStats, () =>
-                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blocks));
+                _displayManager.Display(_monitoring.MonitoringData, _itemsToProduce, _blockWithTextSurfaces));
 
             WhenItsTimeTo(TimedAction.ShutDownDoors, () =>
             {
@@ -105,9 +110,7 @@ namespace MyGridAssistant
             });
 
             WhenItsTimeTo(TimedAction.ManageAirlocks, () =>
-            {
-                _doorManager.ManageAirLocks(_doors);
-            });
+                _doorManager.ManageAirLocks(_doors));
 
             _logger.ShowLogs();
             _alreadyRunning = false;
@@ -117,7 +120,8 @@ namespace MyGridAssistant
         {
             switch (action)
             {
-                case TimedAction.ScanGrid: return 5000;
+                case TimedAction.ScanGrid: return 10000;
+                case TimedAction.MonitorGrid: return 5000;
                 case TimedAction.CleanupStorage: return 10000;
                 case TimedAction.ManageAirlocks: return 1000;
                 case TimedAction.ShutDownDoors: return 1000;
@@ -249,45 +253,57 @@ namespace MyGridAssistant
         private static bool InitConfig(string customDataValue) =>
             (customDataValue ?? string.Empty).Equals("true", StringComparison.InvariantCultureIgnoreCase);
 
-        private List<IMyTerminalBlock> ExtractAllForeignTerminalBlocks()
-        {
-            var blocks = new List<IMyTerminalBlock>();
-
-            GridTerminalSystem.GetBlocks(blocks);
-
-            return blocks.Where(block => block.IsSameConstructAs(Me) == false).ToList();
-        }
-
-        private List<IMyTerminalBlock> ExtractAllTerminalBlocks()
-        {
-            var blocks = new List<IMyTerminalBlock>();
-
-            GridTerminalSystem.GetBlocks(blocks);
-
-            return blocks.Where(block => block.IsSameConstructAs(Me)).ToList();
-        }
-
-        private static List<IMyGasTank> ExtractGasTanksBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
-            blocks.OfType<IMyGasTank>().ToList();
-
-        private static List<IMyDoor> ExtractDoorBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
-            blocks.OfType<IMyDoor>()
-                .Where(block =>
-                    block
-                        .BlockDefinition
-                        .TypeIdString
-                        .IndexOf("hangar", StringComparison.InvariantCultureIgnoreCase) <
-                    0)
+        private List<BlockEntity<IMyTerminalBlock>> ExtractForeignTerminalBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks
+                .Where(block => block.IsSameConstructAs(Me) == false)
+                .Select(block => new BlockEntity<IMyTerminalBlock>(_logger, GridTerminalSystem, block))
                 .ToList();
 
-        private static List<IMyProductionBlock> ExtractItemProductionBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
-            blocks.OfType<IMyProductionBlock>().Where(block => block.HasInventory).ToList();
+        private List<BlockEntity<IMyTerminalBlock>> ExtractLocalTerminalBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
+            blocks
+                .Where(block => block.IsSameConstructAs(Me))
+                .Select(block => new BlockEntity<IMyTerminalBlock>(_logger, GridTerminalSystem, block))
+                .ToList();
 
-        private static List<IMyTerminalBlock> ExtractStorageBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
-            blocks.Where(block => block.HasInventory).ToList();
+        private static List<BlockEntity<IMyGasTank>> ExtractGasTanksBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.IsOfType<IMyGasTank>())
+                .Select(block => block.CastTo<IMyGasTank>())
+                .ToList();
 
-        private static List<IMyPowerProducer> ExtractPowerBlocks(IEnumerable<IMyTerminalBlock> blocks) =>
-            blocks.OfType<IMyPowerProducer>().ToList();
+        private static List<BlockEntity<IMyDoor>> ExtractDoorBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.IsOfType<IMyDoor>())
+                .Where(block =>
+                    block.Block
+                        .BlockDefinition
+                        .TypeIdString
+                        .IndexOf("hangar", StringComparison.InvariantCultureIgnoreCase) < 0)
+                .Select(block => block.CastTo<IMyDoor>())
+                .ToList();
+
+        private static List<BlockEntity<IMyProductionBlock>> ExtractItemProductionBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.IsOfType<IMyProductionBlock>())
+                .Where(block => block.Block.HasInventory)
+                .Select(block => block.CastTo<IMyProductionBlock>())
+                .ToList();
+
+        private static List<BlockEntity<IMyTerminalBlock>> ExtractStorageBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.Block.HasInventory)
+                .ToList();
+
+        private static List<BlockEntity<IMyPowerProducer>> ExtractPowerBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.IsOfType<IMyPowerProducer>())
+                .Select(block => block.CastTo<IMyPowerProducer>())
+                .ToList();
+
+        private static List<BlockEntity<IMyTerminalBlock>> ExtractTextSurfaceBlocks(IEnumerable<BlockEntity<IMyTerminalBlock>> blocks) =>
+            blocks
+                .Where(block => block.IsOfType<IMyTextSurfaceProvider>())
+                .ToList();
 
         private void WhenItsTimeTo(TimedAction actionKey, Action action)
         {
@@ -317,7 +333,8 @@ namespace MyGridAssistant
             ManageAirlocks = 2,
             ShutDownDoors = 3,
             CheckForUpdatedConfig = 5,
-            DisplayStats = 6
+            DisplayStats = 6,
+            MonitorGrid
         }
     }
 }

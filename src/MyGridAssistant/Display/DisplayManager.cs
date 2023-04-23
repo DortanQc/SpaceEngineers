@@ -9,10 +9,8 @@ namespace MyGridAssistant
 {
     public class DisplayManager
     {
-        private static readonly Dictionary<string, TopMarginInfo> TopMarginDictionary =
-            new Dictionary<string, TopMarginInfo>();
-
         private readonly IMyGridAssistantLogger _logger;
+        private readonly Dictionary<string, TopMarginInfo> _topMarginDictionary = new Dictionary<string, TopMarginInfo>();
 
         public DisplayManager(IMyGridAssistantLogger logger)
         {
@@ -22,13 +20,18 @@ namespace MyGridAssistant
         public void Display(
             MonitoringData monitoringData,
             List<Item> itemsWithThreshold,
-            List<IMyTerminalBlock> allBlocks)
+            IEnumerable<BlockEntity<IMyTerminalBlock>> textSurfacesBlocks)
         {
-            DisplayItemInventory(monitoringData, itemsWithThreshold, allBlocks);
-            DisplayStorageCapacity(monitoringData, allBlocks);
-            DisplayElectricalUsage(monitoringData, allBlocks);
-            DisplayProduction(monitoringData, allBlocks);
-            DisplayHydrogenStatistics(monitoringData, allBlocks);
+            var blockWithTextSurfaces = textSurfacesBlocks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
+                .ToList();
+
+            DisplayItemInventory(monitoringData, itemsWithThreshold, blockWithTextSurfaces);
+            DisplayStorageCapacity(monitoringData, blockWithTextSurfaces);
+            DisplayElectricalUsage(monitoringData, blockWithTextSurfaces);
+            DisplayProduction(monitoringData, blockWithTextSurfaces);
+            DisplayHydrogenStatistics(monitoringData, blockWithTextSurfaces);
         }
 
         private static List<Surface> GetDisplayBlocks(
@@ -832,14 +835,14 @@ namespace MyGridAssistant
             });
         }
 
-        private static void SetTopMargin(
+        private void SetTopMargin(
             long surfaceBlockId,
             string surfaceName,
             float currentYPos,
             float surfaceHeight)
         {
             var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
-            var marginInfo = TopMarginDictionary[key];
+            var marginInfo = _topMarginDictionary[key];
 
             if (marginInfo.Direction == Directions.Forward)
             {
@@ -854,15 +857,15 @@ namespace MyGridAssistant
                 else marginInfo.CurrentMargin += 5f;
             }
 
-            TopMarginDictionary[key] = marginInfo;
+            _topMarginDictionary[key] = marginInfo;
         }
 
-        private static float GetTopMargin(long surfaceBlockId, string surfaceName)
+        private float GetTopMargin(long surfaceBlockId, string surfaceName)
         {
             var key = $"{surfaceBlockId.ToString()}-{surfaceName}";
 
-            if (!TopMarginDictionary.ContainsKey(key))
-                TopMarginDictionary.Add(
+            if (!_topMarginDictionary.ContainsKey(key))
+                _topMarginDictionary.Add(
                     key,
                     new TopMarginInfo
                     {
@@ -870,7 +873,7 @@ namespace MyGridAssistant
                         CurrentMargin = 10f
                     });
 
-            return TopMarginDictionary[key].CurrentMargin;
+            return _topMarginDictionary[key].CurrentMargin;
         }
 
         private void DisplayHydrogenStatistics(

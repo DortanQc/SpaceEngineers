@@ -19,20 +19,37 @@ namespace MyGridAssistant
 
         public MonitoringData MonitoringData { get; }
 
-        private void ScanHydrogen(IEnumerable<IMyGasTank> gasTanks)
+        public void UpdateData(
+            IEnumerable<BlockEntity<IMyPowerProducer>> powerBlocks,
+            IEnumerable<BlockEntity<IMyPowerProducer>> foreignPowerBlocks,
+            List<BlockEntity<IMyTerminalBlock>> withStorageBlocks,
+            IEnumerable<BlockEntity<IMyProductionBlock>> productionBlocks,
+            IEnumerable<BlockEntity<IMyGasTank>> gasTanks)
         {
-            gasTanks
+            MonitoringData.Reset();
+
+            ScanStorageCapacity(withStorageBlocks);
+            ScanAllInventory(withStorageBlocks);
+            ScanPower(powerBlocks);
+            ScanForeignPower(foreignPowerBlocks);
+            ScanProduction(productionBlocks);
+            ScanHydrogen(gasTanks);
+        }
+
+        private void ScanHydrogen(IEnumerable<BlockEntity<IMyGasTank>> gasTanks)
+        {
+            MonitoringData.HydrogenTanks.AddRange(gasTanks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
                 .Where(tank => tank.BlockDefinition.SubtypeName.ToUpper().Contains("HYDROGEN"))
-                .ToList()
-                .ForEach(tank =>
-                {
-                    MonitoringData.HydrogenTanks.Add(new HydrogenTankInfo
+                .Select(tank =>
+                    new HydrogenTankInfo
                     {
                         Name = tank.CustomName,
                         Capacity = tank.Capacity,
                         FilledRatio = tank.FilledRatio
-                    });
-                });
+                    }
+                ));
 
             _logger.LogInfo("GridMonitoring.ScanHydrogen_1", "");
             _logger.LogInfo("GridMonitoring.ScanHydrogen_2", "** Hydrogen **");
@@ -41,7 +58,7 @@ namespace MyGridAssistant
                 $"Current Hydrogen Filled Ratio: {MonitoringData.HydrogenTanks.Sum(h => h.FilledRatio) / MonitoringData.HydrogenTanks.Count:0.##} %");
         }
 
-        private void ScanPower(List<IMyPowerProducer> powerBlocks)
+        private void ScanPower(IEnumerable<BlockEntity<IMyPowerProducer>> powerBlocks)
         {
             var uraniumCount = MonitoringData.GetItems(Item.ItemTypes.Ingot)
                 .Where(i => i.ItemSubType == Item.ItemSubTypes.Uranium)
@@ -54,56 +71,60 @@ namespace MyGridAssistant
             MonitoringData.PowerConsumption.AvailableUranium = uraniumCount;
             MonitoringData.PowerConsumption.AvailableIce = iceCount;
 
-            powerBlocks.ForEach(block =>
-            {
-                var battery = block as IMyBatteryBlock;
-                var solarPanel = block as IMySolarPanel;
-                var reactor = block as IMyReactor;
+            powerBlocks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
+                .ToList()
+                .ForEach(block =>
+                {
+                    var battery = block as IMyBatteryBlock;
+                    var solarPanel = block as IMySolarPanel;
+                    var reactor = block as IMyReactor;
 
-                if (battery != null)
-                    MonitoringData.PowerConsumption.Batteries.Add(new BatteryInfo
-                    {
-                        Name = battery.CustomName,
-                        IsCharging = battery.IsCharging,
-                        CurrentStoredPower = battery.CurrentStoredPower,
-                        MaxStoredPower = battery.MaxStoredPower,
-                        CurrentOutput = battery.CurrentOutput,
-                        MaxOutput = battery.MaxOutput
-                    });
+                    if (battery != null)
+                        MonitoringData.PowerConsumption.Batteries.Add(new BatteryInfo
+                        {
+                            Name = battery.CustomName,
+                            IsCharging = battery.IsCharging,
+                            CurrentStoredPower = battery.CurrentStoredPower,
+                            MaxStoredPower = battery.MaxStoredPower,
+                            CurrentOutput = battery.CurrentOutput,
+                            MaxOutput = battery.MaxOutput
+                        });
 
-                if (solarPanel != null)
-                    MonitoringData.PowerConsumption.SolarPanels.Add(new SolarPanelInfo
-                    {
-                        Name = solarPanel.CustomName,
-                        CurrentOutput = solarPanel.CurrentOutput,
-                        MaxOutput = solarPanel.MaxOutput
-                    });
+                    if (solarPanel != null)
+                        MonitoringData.PowerConsumption.SolarPanels.Add(new SolarPanelInfo
+                        {
+                            Name = solarPanel.CustomName,
+                            CurrentOutput = solarPanel.CurrentOutput,
+                            MaxOutput = solarPanel.MaxOutput
+                        });
 
-                if (reactor != null)
-                    MonitoringData.PowerConsumption.Reactors.Add(new ReactorInfo
-                    {
-                        Name = reactor.CustomName,
-                        CurrentOutput = reactor.CurrentOutput,
-                        MaxOutput = reactor.MaxOutput
-                    });
+                    if (reactor != null)
+                        MonitoringData.PowerConsumption.Reactors.Add(new ReactorInfo
+                        {
+                            Name = reactor.CustomName,
+                            CurrentOutput = reactor.CurrentOutput,
+                            MaxOutput = reactor.MaxOutput
+                        });
 
-                if (block.GetType().Name.IndexOf("MyHydrogenEngine", StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    MonitoringData.PowerConsumption.HydrogenEngines.Add(new HydrogenEngineInfo
-                    {
-                        Name = block.CustomName,
-                        CurrentOutput = block.CurrentOutput,
-                        MaxOutput = block.MaxOutput,
-                        FilledRatio = (block as IMyGasTank)?.FilledRatio ?? 0
-                    });
+                    if (block.GetType().Name.IndexOf("MyHydrogenEngine", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                        MonitoringData.PowerConsumption.HydrogenEngines.Add(new HydrogenEngineInfo
+                        {
+                            Name = block.CustomName,
+                            CurrentOutput = block.CurrentOutput,
+                            MaxOutput = block.MaxOutput,
+                            FilledRatio = (block as IMyGasTank)?.FilledRatio ?? 0
+                        });
 
-                if (block.GetType().Name.IndexOf("MyWindTurbine", StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    MonitoringData.PowerConsumption.WindTurbines.Add(new WindTurbineInfo
-                    {
-                        Name = block.CustomName,
-                        CurrentOutput = block.CurrentOutput,
-                        MaxOutput = block.MaxOutput
-                    });
-            });
+                    if (block.GetType().Name.IndexOf("MyWindTurbine", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                        MonitoringData.PowerConsumption.WindTurbines.Add(new WindTurbineInfo
+                        {
+                            Name = block.CustomName,
+                            CurrentOutput = block.CurrentOutput,
+                            MaxOutput = block.MaxOutput
+                        });
+                });
 
             _logger.LogInfo("GridMonitoring.ScanPower_1", "");
             _logger.LogInfo("GridMonitoring.ScanPower_2", "** Power **");
@@ -120,41 +141,45 @@ namespace MyGridAssistant
             _logger.LogInfo("GridMonitoring.ScanPower_13", $"Available Ice: {MonitoringData.PowerConsumption.AvailableIce}");
         }
 
-        private void ScanForeignPower(List<IMyPowerProducer> powerBlocks)
+        private void ScanForeignPower(IEnumerable<BlockEntity<IMyPowerProducer>> powerBlocks)
         {
-            powerBlocks.ForEach(block =>
-            {
-                var battery = block as IMyBatteryBlock;
+            powerBlocks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
+                .ToList()
+                .ForEach(block =>
+                {
+                    var battery = block as IMyBatteryBlock;
 
-                if (battery != null)
-                    MonitoringData.ForeignPowerConsumption.Batteries.Add(new BatteryInfo
-                    {
-                        Name = battery.CustomName,
-                        IsCharging = battery.IsCharging,
-                        CurrentStoredPower = battery.CurrentStoredPower,
-                        MaxStoredPower = battery.MaxStoredPower,
-                        CurrentOutput = battery.CurrentOutput,
-                        MaxOutput = battery.MaxOutput
-                    });
-            });
+                    if (battery != null)
+                        MonitoringData.ForeignPowerConsumption.Batteries.Add(new BatteryInfo
+                        {
+                            Name = battery.CustomName,
+                            IsCharging = battery.IsCharging,
+                            CurrentStoredPower = battery.CurrentStoredPower,
+                            MaxStoredPower = battery.MaxStoredPower,
+                            CurrentOutput = battery.CurrentOutput,
+                            MaxOutput = battery.MaxOutput
+                        });
+                });
 
             _logger.LogInfo("GridMonitoring.ScanForeignPower_1", "");
             _logger.LogInfo("GridMonitoring.ScanForeignPower_2", "** Power **");
             _logger.LogInfo("GridMonitoring.ScanForeignPower_3", $"Foreign Battery Count: {MonitoringData.ForeignPowerConsumption.Batteries.Count}");
         }
 
-        private void ScanStorageCapacity(IEnumerable<IMyTerminalBlock> storageBlocks)
+        private void ScanStorageCapacity(IEnumerable<BlockEntity<IMyTerminalBlock>> withStorageBlocks)
         {
-            storageBlocks
-                .OfType<IMyCargoContainer>()
+            withStorageBlocks
+                .Where(block => block.Exists() && block.IsOfType<IMyCargoContainer>())
                 .ToList()
                 .ForEach(block =>
                 {
-                    var inventory = block.GetInventory();
+                    var inventory = block.Block.GetInventory();
 
                     MonitoringData.Cargos.Add(new CargoInfo
                     {
-                        Name = block.CustomName,
+                        Name = block.Block.CustomName,
                         MaxVolume = inventory.MaxVolume,
                         CurrentVolume = inventory.CurrentVolume
                     });
@@ -166,19 +191,18 @@ namespace MyGridAssistant
             _logger.LogInfo("GridMonitoring.ScanStorageCapacity_4", $"Current Storage Volume: {MonitoringData.Cargos.Sum(x => (float)x.CurrentVolume)} m^3");
         }
 
-        private void ScanAllInventory(List<IMyTerminalBlock> allBlocks)
+        private void ScanAllInventory(IEnumerable<BlockEntity<IMyTerminalBlock>> blocksWithStorage)
         {
-            allBlocks.ForEach(block =>
-            {
-                if (block.InventoryCount == 0) return;
+            blocksWithStorage
+                .Where(block => block.Exists())
+                .ToList()
+                .ForEach(block =>
+                {
+                    var inventoryCount = block.Block.InventoryCount;
 
-                Enumerable.Range(0, block.InventoryCount)
-                    .ToList()
-                    .ForEach(inventoryIndex =>
-                    {
-                        ScanInventory(block.GetInventory(inventoryIndex));
-                    });
-            });
+                    for (var index = 0; index < inventoryCount; index++)
+                        ScanInventory(block.Block.GetInventory(index));
+                });
 
             var components = MonitoringData.GetItems(Item.ItemTypes.Component);
             var ingots = MonitoringData.GetItems(Item.ItemTypes.Ingot);
@@ -193,19 +217,23 @@ namespace MyGridAssistant
             _logger.LogInfo("GridMonitoring.ScanAllInventory_5", $"Unknowns found: {unknowns.Count.ToString()}");
         }
 
-        private void ScanProduction(List<IMyProductionBlock> productionBlocks)
+        private void ScanProduction(IEnumerable<BlockEntity<IMyProductionBlock>> productionBlocks)
         {
-            productionBlocks.ForEach(block =>
-            {
-                var items = new List<MyProductionItem>();
-
-                block.GetQueue(items);
-
-                items.ForEach(item =>
+            productionBlocks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
+                .ToList()
+                .ForEach(block =>
                 {
-                    MonitoringData.AddToQueuedList(item);
+                    var items = new List<MyProductionItem>();
+
+                    block.GetQueue(items);
+
+                    items.ForEach(item =>
+                    {
+                        MonitoringData.AddToQueuedList(item);
+                    });
                 });
-            });
 
             var components = MonitoringData.GetItemsInProduction(Item.ItemTypes.Component);
             var ingots = MonitoringData.GetItemsInProduction(Item.ItemTypes.Ingot);
@@ -226,24 +254,6 @@ namespace MyGridAssistant
             {
                 MonitoringData.AddToInventory(item);
             });
-        }
-
-        public void UpdateData(
-            List<IMyTerminalBlock> allBlocks,
-            List<IMyPowerProducer> powerBlocks,
-            List<IMyPowerProducer> foreignPowerBlocks,
-            List<IMyTerminalBlock> storageBlocks,
-            List<IMyProductionBlock> productionBlocks,
-            IEnumerable<IMyGasTank> gasTanks)
-        {
-            MonitoringData.Reset();
-
-            ScanStorageCapacity(storageBlocks);
-            ScanAllInventory(allBlocks);
-            ScanPower(powerBlocks);
-            ScanForeignPower(foreignPowerBlocks);
-            ScanProduction(productionBlocks);
-            ScanHydrogen(gasTanks);
         }
     }
 }

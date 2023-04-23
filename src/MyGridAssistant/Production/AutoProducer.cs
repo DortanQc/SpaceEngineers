@@ -6,7 +6,7 @@ namespace MyGridAssistant
 {
     public class AutoProducer
     {
-        private static IMyGridAssistantLogger _logger;
+        private readonly IMyGridAssistantLogger _logger;
 
         public AutoProducer(IMyGridAssistantLogger logger)
         {
@@ -17,7 +17,7 @@ namespace MyGridAssistant
             List<Item> allItemsInInventory,
             List<Item> allItemsInProduction,
             IEnumerable<Item> itemsToProduce,
-            IEnumerable<IMyProductionBlock> blocksProducingItems)
+            IEnumerable<BlockEntity<IMyProductionBlock>> blocksProducingItems)
         {
             var allowedBlockForProduction = GetAllowedBlocksForProduction(blocksProducingItems);
 
@@ -42,9 +42,12 @@ namespace MyGridAssistant
             }
         }
 
-        private static List<IMyProductionBlock> GetAllowedBlocksForProduction(IEnumerable<IMyProductionBlock> blocks)
+        private List<IMyProductionBlock> GetAllowedBlocksForProduction(IEnumerable<BlockEntity<IMyProductionBlock>> blocks)
         {
-            return blocks.Where(block =>
+            return blocks
+                .Where(block => block.Exists())
+                .Select(block => block.Block)
+                .Where(block =>
                 {
                     var isIgnored = Configuration.GetBlockConfiguration(block, Settings.EXCLUDE_FROM_AUTO_PRODUCTION);
 
@@ -69,7 +72,7 @@ namespace MyGridAssistant
                 .ToList();
         }
 
-        private static void ProduceItem(Item itemToProduce, decimal amount, IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
+        private void ProduceItem(Item itemToProduce, decimal amount, IReadOnlyCollection<IMyProductionBlock> blocksProducingItems)
         {
             var best = GetBestBlockForJob(itemToProduce, blocksProducingItems);
 

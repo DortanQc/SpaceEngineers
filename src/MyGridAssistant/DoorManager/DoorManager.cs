@@ -8,28 +8,33 @@ namespace MyGridAssistant
     public class DoorManager
     {
         private const int ALLOWED_OPEN_SECOND = 5;
-        private static readonly Dictionary<long, DateTime> DoorOpenedCount = new Dictionary<long, DateTime>();
-        private IMyGridAssistantLogger _logger;
+        private readonly Dictionary<long, DateTime> _doorOpenedCount = new Dictionary<long, DateTime>();
+        private readonly IMyGridAssistantLogger _logger;
 
         public DoorManager(IMyGridAssistantLogger logger)
         {
             _logger = logger;
         }
 
-        public void ShutDownDoorWhenOpenedLongerThanExpected(List<IMyDoor> doors)
+        public void ShutDownDoorWhenOpenedLongerThanExpected(IEnumerable<BlockEntity<IMyDoor>> doors)
         {
-            foreach (var door in doors)
+            var doorsToScan = doors
+                .Where(door => door.Exists())
+                .Select(door => door.Block)
+                .ToList();
+
+            foreach (var door in doorsToScan)
             {
-                if (!DoorOpenedCount.ContainsKey(door.EntityId))
-                    DoorOpenedCount.Add(door.EntityId, DateTime.Now);
+                if (!_doorOpenedCount.ContainsKey(door.EntityId))
+                    _doorOpenedCount.Add(door.EntityId, DateTime.Now);
 
                 if (door.Status == DoorStatus.Closed)
                 {
-                    DoorOpenedCount[door.EntityId] = DateTime.Now;
+                    _doorOpenedCount[door.EntityId] = DateTime.Now;
                 }
                 else
                 {
-                    var totalSeconds = DateTime.Now.Subtract(DoorOpenedCount[door.EntityId]).TotalSeconds;
+                    var totalSeconds = DateTime.Now.Subtract(_doorOpenedCount[door.EntityId]).TotalSeconds;
 
                     if (totalSeconds > ALLOWED_OPEN_SECOND)
                         door.CloseDoor();
@@ -37,11 +42,16 @@ namespace MyGridAssistant
             }
         }
 
-        public void ManageAirLocks(List<IMyDoor> doors)
+        public void ManageAirLocks(IEnumerable<BlockEntity<IMyDoor>> doors)
         {
+            var doorsToScan = doors
+                .Where(door => door.Exists())
+                .Select(door => door.Block)
+                .ToList();
+
             var airlockDictionary = new Dictionary<string, List<IMyDoor>>();
 
-            doors.ForEach(door =>
+            doorsToScan.ForEach(door =>
             {
                 var group = Configuration.GetBlockConfiguration(door, Settings.IS_AIR_LOCK);
 

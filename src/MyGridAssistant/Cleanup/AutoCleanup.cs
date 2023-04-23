@@ -7,17 +7,29 @@ namespace MyGridAssistant
 {
     public class AutoCleanup
     {
-        private IMyGridAssistantLogger _logger;
+        private readonly IMyGridAssistantLogger _logger;
 
         public AutoCleanup(IMyGridAssistantLogger logger)
         {
             _logger = logger;
         }
 
-        public void Cleanup(List<IMyTerminalBlock> storageBlocks, List<IMyProductionBlock> producingItemBlocks)
+        public void Cleanup(
+            IEnumerable<BlockEntity<IMyTerminalBlock>> storageBlocks,
+            IEnumerable<BlockEntity<IMyProductionBlock>> producingItemBlocks)
         {
-            MoveItemsInProperContainer(storageBlocks, producingItemBlocks);
-            StackItems(storageBlocks, producingItemBlocks);
+            var blocksWithStorage = storageBlocks
+                .Where(x => x.Exists())
+                .Select(x => x.Block)
+                .ToList();
+
+            var blocksProducingItems = producingItemBlocks
+                .Where(x => x.Exists())
+                .Select(x => x.Block)
+                .ToList();
+
+            MoveItemsInProperContainer(blocksWithStorage, blocksProducingItems);
+            StackItems(blocksWithStorage, blocksProducingItems);
         }
 
         private static void MoveItemsInProperContainer(
@@ -35,7 +47,9 @@ namespace MyGridAssistant
             IReadOnlyCollection<IMyTerminalBlock> storageBlocks,
             IEnumerable<IMyProductionBlock> producingItemBlocks)
         {
-            var cargos = storageBlocks.Where(IsAmmoStorage).ToList();
+            var cargos = storageBlocks
+                .Where(IsAmmoStorage)
+                .ToList();
 
             if (!cargos.Any()) return;
 
@@ -59,12 +73,13 @@ namespace MyGridAssistant
 
                 inventory.GetItems(items);
 
-                items.Where(item => item.Type.GetItemInfo().IsAmmo)
+                items
+                    .Where(item => item.Type.GetItemInfo().IsAmmo)
                     .ToList()
                     .ForEach(item =>
                     {
                         foreach (var cargo in cargos)
-                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                            if (TryTransferTo(inventory, cargo, item))
                                 break;
                     });
             });
@@ -74,7 +89,9 @@ namespace MyGridAssistant
             IReadOnlyCollection<IMyTerminalBlock> storageBlocks,
             IEnumerable<IMyProductionBlock> producingItemBlocks)
         {
-            var cargos = storageBlocks.Where(IsToolStorage).ToList();
+            var cargos = storageBlocks
+                .Where(IsToolStorage)
+                .ToList();
 
             if (!cargos.Any()) return;
 
@@ -97,12 +114,13 @@ namespace MyGridAssistant
 
                 inventory.GetItems(items);
 
-                items.Where(item => item.Type.GetItemInfo().IsTool)
+                items
+                    .Where(item => item.Type.GetItemInfo().IsTool)
                     .ToList()
                     .ForEach(item =>
                     {
                         foreach (var cargo in cargos)
-                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                            if (TryTransferTo(inventory, cargo, item))
                                 break;
                     });
             });
@@ -112,7 +130,9 @@ namespace MyGridAssistant
             IReadOnlyCollection<IMyTerminalBlock> storageBlocks,
             IEnumerable<IMyProductionBlock> producingItemBlocks)
         {
-            var cargos = storageBlocks.Where(IsComponentStorage).ToList();
+            var cargos = storageBlocks
+                .Where(IsComponentStorage)
+                .ToList();
 
             if (!cargos.Any()) return;
 
@@ -135,12 +155,13 @@ namespace MyGridAssistant
 
                 inventory.GetItems(items);
 
-                items.Where(item => item.Type.GetItemInfo().IsComponent)
+                items
+                    .Where(item => item.Type.GetItemInfo().IsComponent)
                     .ToList()
                     .ForEach(item =>
                     {
                         foreach (var cargo in cargos)
-                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                            if (TryTransferTo(inventory, cargo, item))
                                 break;
                     });
             });
@@ -184,12 +205,13 @@ namespace MyGridAssistant
 
                 inventory.GetItems(items);
 
-                items.Where(item => item.Type.GetItemInfo().IsIngot)
+                items
+                    .Where(item => item.Type.GetItemInfo().IsIngot)
                     .ToList()
                     .ForEach(item =>
                     {
                         foreach (var cargo in cargos)
-                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                            if (TryTransferTo(inventory, cargo, item))
                                 break;
                     });
             });
@@ -223,12 +245,13 @@ namespace MyGridAssistant
 
                 inventory.GetItems(items);
 
-                items.Where(item => item.Type.GetItemInfo().IsOre)
+                items
+                    .Where(item => item.Type.GetItemInfo().IsOre)
                     .ToList()
                     .ForEach(item =>
                     {
                         foreach (var cargo in cargos)
-                            if (inventory.TransferItemTo(cargo.GetInventory(), item))
+                            if (TryTransferTo(inventory, cargo, item))
                                 break;
                     });
             });
@@ -282,5 +305,9 @@ namespace MyGridAssistant
                 }
             });
         }
+
+        private static bool TryTransferTo(IMyInventory inventory, IMyEntity cargo, MyInventoryItem item) =>
+            inventory.CanTransferItemTo(cargo.GetInventory(), item.Type) &&
+            inventory.TransferItemTo(cargo.GetInventory(), item);
     }
 }

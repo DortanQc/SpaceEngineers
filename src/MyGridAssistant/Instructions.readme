@@ -1,8 +1,6 @@
 R e a d m e
 -----------
 
-** Grid Manager **
-
 -- Setup --
 Within the Programmable block's custom data that runs the script:
 Set "auto-produce-items" to True if you wish to have auto production of items
